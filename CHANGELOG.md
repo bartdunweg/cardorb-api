@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-18
 
+- A binder's, the favourites' and the wishlist's value line is kept once it is worked out: the Pokédex binder's second visit is under 0.1 s where every visit took 3 s, with the same figures on every day. Every read of the collection also stops waiting for the store's write count before it looks in its cache.
+
 - `GET /v1/cards` takes `pictures=0`, for a caller that counts the copies rather than drawing them. The printings' own pictures are a second read over the page's card ids: nothing on a page of forty-eight, and 1,191 ms of the 1,442 ms a whole-collection page cost. The Pokémon tile on Home asks for that page, and now asks without them.
 
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.

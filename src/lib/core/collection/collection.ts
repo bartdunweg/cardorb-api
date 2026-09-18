@@ -96,7 +96,7 @@ import {
 import { rememberedScans } from "./remembered-scans";
 import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
-import { holdingsSeries } from "./folder-history";
+import { folderSeries, holdingsSeries } from "./folder-history";
 import { tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
@@ -136,33 +136,68 @@ export { valueHistoryTag } from "./value-snapshot";
  * plain data that carries no session of its own.
  */
 const cachedRows = async (userId: string, db: SupabaseClient | null) => {
-  // The store's count of writes to this person's cards, read before the rows and put in the
-  // key. The tag alone was a race: a read begun before a write finished after it and stored
-  // the rows from before under a tag the write had just dropped, and the list said ×4 behind
-  // a sheet saying 2 for an hour (cardorb-web #360). Under a version, that late read stores
-  // where nothing looks again. A store that cannot say (no migration yet, or a refused
-  // profile read) leaves the key as it was and the tag doing what it can.
-  const version = await timed("store cardsVersion", () =>
+  // The store's count of writes to this person's cards, and the key the rows are cached under.
+  // The tag alone was a race: a read begun before a write finished after it and stored the rows
+  // from before under a tag the write had just dropped, and the list said ×4 behind a sheet
+  // saying 2 for an hour (cardorb-web #360). Under a version, that late read stores where nothing
+  // looks again. A store that cannot say (no migration yet, or a refused profile read) leaves the
+  // key as it was and the tag doing what it can.
+  const version = timed("store cardsVersion", () =>
     Promise.resolve()
       .then(() => cardsVersion(userId, db))
       .catch(() => null),
   );
-  return timedCache("cache rows", (ran) =>
-    unstable_cache(
-      () => {
-        ran();
-        return timed("store listRows", () => listRows(userId, db));
-      },
-      // v4: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000); the
-      // migration moves stored rows without touching their version, as v3's did.
-      // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000); the migration moves stored rows without touching their version.
-      // The shape version belongs here too: #234 added foilPattern to what toRow builds, and
-      // without a version part there was no way to say so — every cached row kept the shape it
-      // had before.
-      ["collection-rows", "v4", userId, version === null ? "-" : String(version)],
-      { revalidate: 3600, tags: [cardsTag(userId)] },
-    )(),
-  );
+  /*
+   * The version is one row, 0.05 ms in Postgres (pg_stat_statements), and a median of 40 ms and a
+   * p90 of 93 ms to ask for (production, 2026-09-18): the round trip through Supabase's gateway is
+   * the whole of it, and every request paid it before the rows cache was even looked at, then that
+   * lookup's own 35 ms after it. So the lookup starts at once, under the version this instance last
+   * found, while the store is asked. Only a version the store confirms is ever answered from: where
+   * it agrees, that lookup is the one the old order would have made; where it moved (a write), the
+   * guess is dropped and the rows are looked up under the new version, as before. A guess that
+   * misses the cache never reads the rows: its fill waits for the store and gives up unless the
+   * store agrees, so a wrong guess costs a cache read and nothing else.
+   */
+  const lookup = (key: number | null, confirmed: boolean) =>
+    timedCache(confirmed ? "cache rows" : "cache rows early", (ran) =>
+      unstable_cache(
+        async () => {
+          ran();
+          if (!confirmed && (await version) !== key) throw new Error("rows version moved");
+          return timed("store listRows", () => listRows(userId, db));
+        },
+        // v4: every card of a promo set is a "Promo" (promo-sets.ts, migration 20260915250000); the
+        // migration moves stored rows without touching their version, as v3's did.
+        // v3: rarities in one spelling and old holo cards graded as TCGplayer does (rarity-names.ts, migration 20260914200000); the migration moves stored rows without touching their version.
+        // The shape version belongs here too: #234 added foilPattern to what toRow builds, and
+        // without a version part there was no way to say so: every cached row kept the shape it
+        // had before.
+        ["collection-rows", "v4", userId, key === null ? "-" : String(key)],
+        { revalidate: 3600, tags: [cardsTag(userId)] },
+      )(),
+    );
+  if (lastVersion.has(userId)) {
+    const guess = lastVersion.get(userId)!;
+    const early = lookup(guess, false);
+    // Unobserved where the guess is dropped: its answer, or its giving up, goes nowhere.
+    early.catch(() => {});
+    if ((await version) === guess) return early;
+  }
+  const confirmed = await version;
+  rememberVersion(userId, confirmed);
+  return lookup(confirmed, true);
+};
+
+/**
+ * The cards version each person's rows were last looked up under on this instance: which entry
+ * to start reading while the store is asked (cachedRows). A hint and never an answer, so nothing
+ * here can make a read stale; a few hundred people at most, and the oldest go first past that.
+ */
+const lastVersion = new Map<string, number | null>();
+const rememberVersion = (userId: string, version: number | null) => {
+  lastVersion.delete(userId);
+  lastVersion.set(userId, version);
+  if (lastVersion.size > 500) lastVersion.delete(lastVersion.keys().next().value!);
 };
 
 /**
@@ -1299,8 +1334,8 @@ async function storedPricesCurrent(db: SupabaseClient, since: string): Promise<b
  * callers keeps it to once per request.
  */
 async function assemble(userId: string, db: SupabaseClient | null): Promise<CardSet[]> {
-  const rows = await cachedRows(userId, db);
-  const usdToEur = await usdToEurForRequest();
+  // At once: neither waits on the other, and the rate's cache read hid behind the rows' before.
+  const [rows, usdToEur] = await Promise.all([cachedRows(userId, db), usdToEurForRequest()]);
   // The same rows and rate on the same instance within minutes: the same sets. A write changes
   // the rows (their cache is dropped by tag), so the key changes and the join runs again;
   // /folders, /stats and /cards on one screen, or the Pokédex's read after the count's, do not
@@ -1940,6 +1975,80 @@ export const getRecentValue = cache(
       return { snapshots, failed: false };
     } catch (err) {
       console.error("Recent value line unavailable, the stored points alone:", err);
+      return { snapshots: [], failed: true };
+    }
+  },
+);
+
+/**
+ * The copies a list's line is built from, as one short key: every field folderSeries reads off a
+ * copy. The card says which readings are asked for and so which days have a point, whether it is
+ * owned says whether it counts, and the printing and the count say what it counts for. Order does
+ * not matter, the set does.
+ */
+const listKey = (items: CardItem[]) =>
+  createHash("sha1")
+    .update(
+      items
+        .map(
+          (it) =>
+            `${it.tcgId ? historyKey(it.catalogue, it.tcgId) : ""}|${it.owned ? 1 : 0}|${it.finish ?? ""}|${it.edition ?? ""}|${it.quantity}`,
+        )
+        .sort()
+        .join("\n"),
+    )
+    .digest("hex");
+
+/**
+ * What a binder, the favourites or the wishlist has been worth over the last ninety days:
+ * folderSeries over its cards' readings, and the line kept rather than the readings.
+ *
+ * The route used to read the readings through getCardPrices and add them up on every visit. For a
+ * binder of any size those readings are past the Data Cache's 2 MB an entry (the Pokédex binder's
+ * are 17.8 MB, Kanto's 7.1 MB), so they were never kept and every visit read them again: 3.2 s for
+ * the Pokédex binder, measured locally against production on 2026-09-18. The line is ninety
+ * points. It is a pure function of what listKey hashes and of the readings since `since`, so it is
+ * keyed on the first and dropped with the second: the readings' tags (the nightly job drops
+ * priceHistoryTag the moment it writes the day), the cards' tag besides, and `since` in the key so
+ * the window moves with the day. A rule binder's membership is worked out from today's collection
+ * before this is asked, so a copy that joins or leaves it is another key.
+ *
+ * The miss reads in parallel chunks (listHistoryPrices, the Home line's read) where getCardPrices
+ * read one chunk after another; the same readings, and the same line, day by day.
+ */
+export const getListValue = cache(
+  async (
+    userId: string,
+    items: CardItem[],
+    list: "owned" | "wishlist",
+    token: string | undefined,
+  ): Promise<RecentValue> => {
+    const cards = pricedCardsOf(items);
+    if (!cards.length) return { snapshots: [], failed: false };
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      if (!db) return { snapshots: [], failed: false };
+      const since = new Date(Date.now() - WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+      const snapshots = await timedCache("cache list-value", (ran) =>
+        unstable_cache(
+          async () => {
+            ran();
+            const readings = await timed("list-value readings", () =>
+              listHistoryPrices(db, cards, since),
+            );
+            const start = performance.now();
+            const line = folderSeries(items, readings, list);
+            logTiming("list-value series", elapsed(start), `${readings.length} readings`);
+            return line;
+          },
+          // Versioned with getCardPrices: the same readings, so a change to how they are built is both.
+          ["list-value", "v14", userId, list, since, listKey(items)],
+          { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag, cardsTag(userId)] },
+        )(),
+      );
+      return { snapshots, failed: false };
+    } catch (err) {
+      console.error("List value line unavailable, retrying on the next render:", err);
       return { snapshots: [], failed: true };
     }
   },

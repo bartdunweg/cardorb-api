@@ -1,0 +1,1 @@
+- A binder's, the favourites' and the wishlist's value line is kept once it is worked out: the Pokédex binder's second visit is under 0.1 s where every visit took 3 s, with the same figures on every day. Every read of the collection also stops waiting for the store's write count before it looks in its cache.

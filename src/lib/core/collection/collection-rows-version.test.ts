@@ -76,7 +76,8 @@ const pikachu: CollectionRow = {
   collectionId: null,
 };
 
-const rowsKey = () => keys.find((k) => k[0] === "collection-rows");
+/** The key the rows were answered under: the last one looked up, after any early guess. */
+const rowsKey = () => keys.filter((k) => k[0] === "collection-rows").at(-1);
 
 beforeEach(() => {
   vi.clearAllMocks();
