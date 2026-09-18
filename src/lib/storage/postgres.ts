@@ -571,13 +571,23 @@ export async function replaceValueHistory(
   }
 }
 
-/** One printing of one TCGplayer product, as tcgplayer_prices holds it. Dollars. */
+/**
+ * One printing of one TCGplayer product, as tcgplayer_prices holds it. Dollars.
+ *
+ * `market` is TCGplayer's market figure; `listing` its lowest asking price, written only where it
+ * publishes no market figure (migration 20260918120000 holds exactly one of the two per row).
+ */
 export type TcgplayerPriceRecord = {
   product_id: number;
   printing: string;
-  market: number;
+  market: number | null;
+  listing?: number | null;
   updated_on: string;
 };
+
+/** The error PostgREST answers before migration 20260918120000 has added `listing`. */
+const missingListing = (message: string | undefined) =>
+  /\blisting\b/.test(message ?? "") && /does not exist|schema cache/.test(message ?? "");
 
 /**
  * The shelf's figures, written over what is there. Chunked for body size; a chunk is retried
@@ -589,9 +599,13 @@ export async function writeTcgplayerPrices(
   chunk = 2000,
 ): Promise<void> {
   for (let i = 0; i < rows.length; i += chunk) {
-    const part = rows.slice(i, i + chunk);
+    let part = rows.slice(i, i + chunk);
     let last: string | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
+      /* Before the migration has run (it applies on merge, beside the deploy), the market figures
+         alone: a listing row cannot be written yet, and the night's market figures still stand. */
+      if (last && missingListing(last))
+        part = part.flatMap(({ listing: _l, ...r }) => (r.market == null ? [] : [r]));
       const { error } = await db
         .from("tcgplayer_prices")
         .upsert(part, { onConflict: "product_id,printing" })
@@ -656,19 +670,29 @@ export async function readTcgplayerPrices(
   since: string,
 ): Promise<TcgplayerPriceRecord[]> {
   const out: TcgplayerPriceRecord[] = [];
+  const readPrices = (ids: number[], columns: string) =>
+    readAllPages<TcgplayerPriceRecord>("TCGplayer's prices", (page, counted) =>
+      db
+        .from("tcgplayer_prices")
+        .select(columns, counted ? { count: "exact" } : {})
+        .in("product_id", ids)
+        .gte("updated_on", since)
+        .order("product_id", { ascending: true })
+        .order("printing", { ascending: true })
+        .range(...pageRange(page))
+        .returns<TcgplayerPriceRecord[]>(),
+    );
   const BITE = 400;
   for (let at = 0; at < productIds.length; at += BITE) {
     const ids = productIds.slice(at, at + BITE);
     out.push(
-      ...(await readAllPages<TcgplayerPriceRecord>("TCGplayer's prices", (page, counted) =>
-        db
-          .from("tcgplayer_prices")
-          .select("product_id, printing, market, updated_on", counted ? { count: "exact" } : {})
-          .in("product_id", ids)
-          .gte("updated_on", since)
-          .order("product_id", { ascending: true })
-          .order("printing", { ascending: true })
-          .range(...pageRange(page)),
+      ...(await readPrices(ids, "product_id, printing, market, listing, updated_on").catch(
+        (err: unknown) => {
+          // Before migration 20260918120000: the market figures, as every read was until then.
+          if (err instanceof Error && missingListing(err.message))
+            return readPrices(ids, "product_id, printing, market, updated_on");
+          throw err;
+        },
       )),
     );
   }
@@ -1906,10 +1930,11 @@ export async function writeCatalogueSet(
 /**
  * One page of the copy, ranked, with how many the whole query matched.
  *
- * One call to search_catalogue_cards (migration 20260918090000), which is one query: the words
- * are contains clauses over the folded search column, AND'd, which is what the trigram index
- * answers; a word that names a set also takes that set; the filter mode's fields each take their
- * own column. The order is the name first ("charizard" answers Charizard before Dark Charizard
+ * One call to search_catalogue_cards (migrations 20260918090000 and 20260918130000), which is
+ * one query: the words are contains clauses over the folded search column, AND'd, which is what
+ * the trigram index answers; a word that is a set's id also takes that set, and a word that is a
+ * set's printed code narrows to it beside other words and adds it on its own; the filter mode's
+ * fields each take their own column. The order is the name first ("charizard" answers Charizard before Dark Charizard
  * before a Charizard-numbered card of another name), then newest set, set, number.
  *
  * It was PostgREST until 2026-09-18, with release_date as the only order. PostgREST can express

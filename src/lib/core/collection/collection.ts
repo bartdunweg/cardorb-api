@@ -52,6 +52,7 @@ import { fetchUsdToEur } from "../catalogue/rates";
 import { elapsed, logTiming, timed, timedCache } from "../timing";
 import {
   pricesFor,
+  usdFigureOf,
   usdFirstEdOf,
   usdFor,
   usdOf,
@@ -222,7 +223,8 @@ const rememberVersion = (userId: string, version: number | null) => {
  */
 type Printings = Record<
   string,
-  { marketPrice: number; lowPrice?: number | null; productId: number }
+  /* `lowPrice` is the lowest listing, there only where `marketPrice` is null (usdFigureOf). */
+  { marketPrice: number | null; lowPrice?: number | null; productId: number }
 >;
 
 /**
@@ -255,7 +257,7 @@ export async function printingsOfProducts(
     if (rows) {
       for (const r of rows) {
         const printings = out.get(r.product_id) ?? {};
-        printings[r.printing] = { marketPrice: Number(r.market), productId: r.product_id };
+        printings[r.printing] = storedFigure(r);
         out.set(r.product_id, printings);
       }
       return out;
@@ -491,9 +493,8 @@ export async function pricePatternPrints(
         });
   const out = new Map<string, PricedPatternPrint>();
   for (const p of patterns.prints) {
-    const usd = printings.get(p.productId)?.[p.printing]?.marketPrice;
-    const price =
-      usdToEur != null && typeof usd === "number" ? priceFromUsd({ market: usd }, usdToEur) : null;
+    const usd = usdFigureOf(printings.get(p.productId)?.[p.printing]);
+    const price = usdToEur != null && usd ? priceFromUsd(usd, usdToEur) : null;
     const key = `${p.finish}|${p.foilPattern}`;
     const had = out.get(key);
     if (had && (had.price || !price)) continue;
@@ -688,7 +689,8 @@ const keptFacts = (
     //
     // v5: a card's facts carry the printings and which market answered for a copy, and the
     // 52 Mega cards linked in #350 have a product to be priced from for the first time.
-    ["collection-facts", "v27", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
+    // v28: a price with no market figure is the printing's lowest listing, labelled (2026-09-18).
+    ["collection-facts", "v28", userId, usdToEur == null ? "-" : String(usdToEur), priceDay],
     { revalidate: DAY, tags: ["catalogue", factsTag(userId)] },
   )();
 
@@ -851,7 +853,8 @@ const cachedSetFacts = (
       // the entries already on disk.
       // v22: the facts carry TCGplayer's printings, which a v21 entry does not, and an entry
       // made while the Mega cards had no Cardmarket product holds no price for them (#350).
-      ["set-facts", "v37", setName, factsSignature(identities), priceDay],
+      // v38: a price with no market figure is the printing's lowest listing, labelled (2026-09-18).
+      ["set-facts", "v38", setName, factsSignature(identities), priceDay],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -880,7 +883,8 @@ const cachedTcgdexUsd = (setName: string, ids: string[]) =>
       // v3: the answer carries every printing TCGplayer prices now, and a v2 entry holds the two
       // runs alone. The Data Cache outlives a deploy, so a stale entry would leave every copy on
       // the old first-printing-wins figure until its day was up.
-      ["tcgdex-usd", "v3", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
+      // v4: a printing with no market figure carries its lowest listing (2026-09-18).
+      ["tcgdex-usd", "v4", setName, createHash("sha1").update(ids.join("\u0001")).digest("hex")],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -913,7 +917,8 @@ const cachedGroupPrintings = (groupId: number, category: number = TCGCSV_CATEGOR
         return Object.fromEntries(await groupPrintings(groupId, category));
       },
       // v2: keyed by the shelf too, now that the Japanese one is read the same way.
-      ["tcgcsv-group", "v2", String(category), String(groupId)],
+      // v3: a printing with no market figure carries its lowest listing (2026-09-18).
+      ["tcgcsv-group", "v3", String(category), String(groupId)],
       { revalidate: DAY, tags: ["catalogue"] },
     )(),
   );
@@ -1024,12 +1029,9 @@ export const finishPrintingsForSet = async (
       const tp = printings.get(p.productId);
       /* The printing the file names, or the product's one priced printing where TCGplayer has
          filed it under another subtype since the weekly run. */
-      const figure = tp?.[p.printing] ?? Object.values(tp ?? {})[0];
-      if (!figure || typeof figure.marketPrice !== "number") continue;
-      (out[id] ??= {})[finishPrintingKey(p.finish)] = {
-        market: figure.marketPrice,
-        productId: p.productId,
-      };
+      const figure = usdFigureOf(tp?.[p.printing] ?? Object.values(tp ?? {})[0]);
+      if (!figure) continue;
+      (out[id] ??= {})[finishPrintingKey(p.finish)] = { ...figure, productId: p.productId };
     }
   }
   return out;
@@ -1063,12 +1065,9 @@ export const japaneseFinishPrintingsFor = async (
   for (const [id, prints] of products) {
     for (const p of prints) {
       // A printing product has one priced subtype ("Holofoil" on the Japanese shelf): that one.
-      const figure = Object.values(printings.get(p.productId) ?? {})[0];
-      if (!figure || typeof figure.marketPrice !== "number") continue;
-      (out[id] ??= {})[printProductKey(p.finish)] = {
-        market: figure.marketPrice,
-        productId: p.productId,
-      };
+      const figure = usdFigureOf(Object.values(printings.get(p.productId) ?? {})[0]);
+      if (!figure) continue;
+      (out[id] ??= {})[printProductKey(p.finish)] = { ...figure, productId: p.productId };
     }
   }
   return out;
@@ -1278,20 +1277,13 @@ export async function storedPricesFor(ids: string[]): Promise<Map<string, CardPr
  */
 export function pricesFromStoredRows(
   links: readonly (readonly [string, number | null])[],
-  rows: readonly {
-    product_id: number;
-    printing: string;
-    market: number | string;
-  }[],
+  rows: readonly StoredPriceRow[],
 ): Map<string, CardPrices> {
   const out = new Map<string, CardPrices>();
-  const byProduct = new Map<number, Record<string, { marketPrice: number; productId: number }>>();
+  const byProduct = new Map<number, Printings>();
   for (const r of rows) {
     const printings = byProduct.get(r.product_id) ?? {};
-    printings[r.printing] = {
-      marketPrice: Number(r.market),
-      productId: r.product_id,
-    };
+    printings[r.printing] = storedFigure(r);
     byProduct.set(r.product_id, printings);
   }
   for (const [id, pid] of links) {
@@ -1305,6 +1297,24 @@ export function pricesFromStoredRows(
     });
   }
   return out;
+}
+
+/** One tcgplayer_prices row as PostgREST hands it: numeric columns may come back as strings. */
+type StoredPriceRow = {
+  product_id: number;
+  printing: string;
+  market: number | string | null;
+  listing?: number | string | null;
+};
+
+/**
+ * A stored row in TCGdex's shape: the market figure, or, in a row with none, the lowest listing
+ * (migration 20260918120000). A null is never read as a zero.
+ */
+export function storedFigure(r: StoredPriceRow): Printings[string] {
+  const market = r.market == null ? null : Number(r.market);
+  const listing = market == null && r.listing != null ? Number(r.listing) : null;
+  return { marketPrice: market, lowPrice: listing, productId: r.product_id };
 }
 
 /** Whether the table holds a figure written since `since`: one row asked, remembered ten minutes. */

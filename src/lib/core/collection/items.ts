@@ -1,7 +1,7 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice } from "./cards";
-import { copyPriceOf, printingKeysOf } from "../price-basis.mjs";
+import { copyPriceOf, pricedPrintingOf } from "../price-basis.mjs";
 import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
@@ -229,9 +229,8 @@ function sourceOf(
   tcgplayerId: number | null;
   printingPrice?: Price | null;
 } {
-  const printing = card.pricePrintings
-    ? printingKeysOf(v).find((key) => card.pricePrintings?.[key])
-    : undefined;
+  // A market figure on any of its printings first, a lowest listing only where none has one.
+  const printing = pricedPrintingOf(v, card.pricePrintings);
   if (printing) {
     return {
       priceSource: "tcgplayer",
@@ -435,7 +434,17 @@ export type Order = "asc" | "desc";
 export const copyPrice = (it: CardItem): number | null =>
   shownPrice(it.printingPrice ?? copyPriceOf(it, it));
 
-export type ListValue = { value: number; unpriced: number; copies: number };
+/** Whether a copy with no market figure is shown at its lowest listing, which no total counts. */
+export const listedOnly = (it: CardItem): boolean => {
+  const p = it.printingPrice ?? copyPriceOf(it, it);
+  return p?.market == null && p?.basis === "lowest-listing";
+};
+
+/**
+ * `listed` is how many of the `unpriced` copies have a lowest listing on TCGplayer and no market
+ * figure (since 2026-09-18): shown at the listing, left out of `value`, as the line leaves them out.
+ */
+export type ListValue = { value: number; unpriced: number; listed: number; copies: number };
 
 /**
  * How many cards a list is, counted the way a person counts them: an owned copy `quantity`
@@ -458,13 +467,16 @@ export function countCopies(items: CardItem[]): number {
 export function sumValue(items: CardItem[]): ListValue {
   let value = 0;
   let unpriced = 0;
+  let listed = 0;
   for (const it of items) {
     const n = it.owned ? Math.max(0, it.quantity) : 1;
     const price = copyPrice(it);
-    if (price == null) unpriced += n;
-    else value += price * n;
+    if (price == null) {
+      unpriced += n;
+      if (listedOnly(it)) listed += n;
+    } else value += price * n;
   }
-  return { value: Math.round(value * 100) / 100, unpriced, copies: countCopies(items) };
+  return { value: Math.round(value * 100) / 100, unpriced, listed, copies: countCopies(items) };
 }
 
 /**

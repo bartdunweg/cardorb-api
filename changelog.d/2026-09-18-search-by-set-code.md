@@ -1,0 +1,1 @@
+- A set's printed code finds the set in the card search: "pal 123" is Paldea Evolved's 123, "svi" is every Scarlet & Violet card, and a code two sets share ("BRS") finds both. A name search is answered as before: "charizard ex" is still every Charizard ex, and "mew" still lists the Mew cards first, with 151's cards after them.

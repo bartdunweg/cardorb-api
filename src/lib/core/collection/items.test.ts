@@ -834,8 +834,28 @@ describe("sumValue", () => {
         card("Snorlax", [variant({ id: "c", quantity: 2 })]),
       ]),
     ]);
-    expect(sumValue(items)).toEqual({ value: 106, unpriced: 2, copies: 6 });
-    expect(sumValue([])).toEqual({ value: 0, unpriced: 0, copies: 0 });
+    expect(sumValue(items)).toEqual({ value: 106, unpriced: 2, listed: 0, copies: 6 });
+    expect(sumValue([])).toEqual({ value: 0, unpriced: 0, listed: 0, copies: 0 });
+  });
+
+  /* Bart, 2026-09-18: a card with no market figure shows its lowest listing. The list's value is
+     what its value line sums, the cards' sold prices, so a listed copy is left out of it and
+     counted apart. */
+  it("leaves a copy shown at its lowest listing out of the value, and says how many", () => {
+    const listing: Price = { market: null, lowestListing: 7000, basis: "lowest-listing" };
+    const items = flattenItems([
+      set("30th Celebration", [
+        card("Mew", [variant({ id: "r", quantity: 2, finish: "holo" })], {
+          price: listing,
+          pricePrintings: { holofoil: listing },
+        }),
+        card("Pikachu", [variant({ id: "p" })], { price: price(2) }),
+      ]),
+    ]);
+    expect(sumValue(items)).toEqual({ value: 2, unpriced: 2, listed: 2, copies: 3 });
+    const mew = items.find((it) => it.id === "r")!;
+    expect(mew.printingPrice).toEqual(listing);
+    expect(mew.pricePrinting).toBe("holofoil");
   });
 });
 

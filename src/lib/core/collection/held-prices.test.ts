@@ -32,7 +32,10 @@ describe("holdStrayPrices", () => {
   it("holds a printing's price where the line holds its figure, at today's rate", () => {
     const [out] = holdStrayPrices([set()], [point], "2026-07-15");
     const card = out!.cards[0]!;
-    expect(card.pricePrintings?.["1st-edition-holofoil"]).toEqual({ market: 8645.17 });
+    expect(card.pricePrintings?.["1st-edition-holofoil"]).toEqual({
+      market: 8645.17,
+      basis: "market",
+    });
     // The other printings and the card's own price are not stray, and stand.
     expect(card.pricePrintings?.holofoil).toEqual({ market: 752 });
     expect(card.price).toEqual({ market: 752 });
@@ -52,7 +55,7 @@ describe("holdStrayPrices", () => {
     const own = { ...charizard, price: { market: 216.5 } };
     const sets = [{ ...set(), cards: [own] }] as unknown as CardSet[];
     const card = holdStrayPrices(sets, [point], "2026-07-15")[0]!.cards[0]!;
-    expect(card.price).toEqual({ market: 8645.17 });
+    expect(card.price).toEqual({ market: 8645.17, basis: "market" });
   });
 });
 
@@ -66,7 +69,10 @@ describe("holdShelfPrice", () => {
       firstEd: null,
       printings: { "1st-edition-holofoil": { market: 250, productId: 1 } },
     };
-    expect(holdShelfPrice({ market: 216.5 }, pair, day)).toEqual({ market: 8645.17 });
+    expect(holdShelfPrice({ market: 216.5 }, pair, day)).toEqual({
+      market: 8645.17,
+      basis: "market",
+    });
   });
 
   it("leaves it where the card's figure is another printing's", () => {

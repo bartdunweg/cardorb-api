@@ -74,7 +74,7 @@ describe("tcgplayerPricesFor", () => {
   it("prices an English card from its product's group, in euros", async () => {
     const prices = await tcgplayerPricesFor(["base1-4"]);
     expect(groupPrintings).toHaveBeenCalledWith(604, 3);
-    expect(prices.get("base1-4")?.price).toEqual({ market: 400 });
+    expect(prices.get("base1-4")?.price).toEqual({ market: 400, basis: "market" });
   });
 
   it("reads the Japanese shelf for a Japanese page", async () => {
@@ -193,7 +193,7 @@ describe("a Japanese card in a collection", () => {
     const card = set!.cards[0]!;
     expect(groupPrintings).toHaveBeenCalledWith(24001, 85);
     // $4 at 0.5 a dollar. Cardmarket's €99 on the record is nowhere.
-    expect(card.price).toEqual({ market: 2 });
+    expect(card.price).toEqual({ market: 2, basis: "market" });
     expect(card.pricePrintings?.normal?.market).toBe(2);
     expect(card.printingIds).toEqual({ normal: 640001, "master-ball-reverse-holofoil": 640002 });
     expect(JSON.stringify(card)).not.toContain("99");
@@ -206,7 +206,10 @@ describe("a Japanese card in a collection", () => {
     const card = set!.cards[0]!;
     expect(card.pricePrintings?.["master-ball-reverse-holofoil"]?.market).toBe(20);
     // What the copy is worth reads that printing, not the card's plain headline figure ($4, €2).
-    expect(copyPriceOf({ finish: "master-ball", edition: null }, card)).toEqual({ market: 20 });
+    expect(copyPriceOf({ finish: "master-ball", edition: null }, card)).toEqual({
+      market: 20,
+      basis: "market",
+    });
   });
 
   it("has no price where TCGplayer has no product for it, rather than Cardmarket's", async () => {
@@ -285,7 +288,12 @@ describe("pricePatternPrints", () => {
     expect(answer).toEqual({
       standard: true,
       prints: [
-        { foilPattern: "cosmos", finish: "holo", tcgplayerId: 42382, price: { market: 400 } },
+        {
+          foilPattern: "cosmos",
+          finish: "holo",
+          tcgplayerId: 42382,
+          price: { market: 400, basis: "market" },
+        },
         { foilPattern: "cosmos", finish: "reverse-holo", tcgplayerId: 42383, price: null },
       ],
     });

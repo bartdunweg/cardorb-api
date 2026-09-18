@@ -109,9 +109,44 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     expect(res.status).toBe(200);
     expect(shelfPrintings).toHaveBeenCalledWith(3);
     expect(writeTcgplayerPrices).toHaveBeenCalledWith(expect.anything(), [
-      { product_id: 42382, printing: "holofoil", market: 112.5, updated_on: "2026-09-14" },
+      {
+        product_id: 42382,
+        printing: "holofoil",
+        market: 112.5,
+        listing: null,
+        updated_on: "2026-09-14",
+      },
     ]);
     expect(await res.json()).toMatchObject({ ok: true, groups: 10, answered: 10, written: 1 });
+  });
+
+  /* Bart, 2026-09-18: a printing TCGplayer lists and has no market figure for is stored at its
+     lowest listing, and never becomes a point in the price history. */
+  it("stores a printing with no market figure at its lowest listing, and keeps it out of the history", async () => {
+    monday();
+    shelfPrintings.mockResolvedValue({
+      rows: [
+        ...CHARIZARD,
+        { productId: 717607, printing: "holofoil", market: null, listing: 6789.99 },
+      ],
+      groups: 10,
+      answered: 10,
+    });
+
+    const res = await get("Bearer s3cret");
+
+    expect(writeTcgplayerPrices.mock.calls[0]?.[1]).toContainEqual({
+      product_id: 717607,
+      printing: "holofoil",
+      market: null,
+      listing: 6789.99,
+      updated_on: "2026-09-14",
+    });
+    expect(await res.json()).toMatchObject({ ok: true, written: CHARIZARD.length + 1, listed: 1 });
+    // 30th-R is linked to 717607 in the committed map; its listing is no point in its line.
+    const points = writeCardPrices.mock.calls[0]?.[1] as { tcgId: string }[];
+    expect(points.length).toBeGreaterThan(0);
+    expect(points.some((p) => p.tcgId === "30th-R")).toBe(false);
   });
 
   it("writes nothing at all when most of the shelf did not answer, so yesterday's figures stand", async () => {
@@ -316,7 +351,13 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
 
       expect(shelfPrintings).toHaveBeenCalledWith(85);
       expect(writeTcgplayerPrices).toHaveBeenCalledWith(expect.anything(), [
-        { product_id: 605292, printing: "holofoil", market: 3, updated_on: "2026-09-14" },
+        {
+          product_id: 605292,
+          printing: "holofoil",
+          market: 3,
+          listing: null,
+          updated_on: "2026-09-14",
+        },
       ]);
       expect(writeCardPrices.mock.calls[0]![1]).toContainEqual(
         expect.objectContaining({
@@ -327,7 +368,7 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
           price: 2.7,
         }),
       );
-      expect(body.japanese).toEqual({ groups: 20, answered: 20, written: 1 });
+      expect(body.japanese).toEqual({ groups: 20, answered: 20, written: 1, listed: 0 });
     });
 
     // S4a-003 Charizard V: a set TCGdex lists without cards, filled from TCGplayer's Japanese shelf

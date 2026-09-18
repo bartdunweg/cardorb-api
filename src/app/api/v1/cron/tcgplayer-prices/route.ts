@@ -2,7 +2,7 @@ import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { apiError, refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
-import { TCGCSV_CATEGORY, shelfPrintings } from "@/lib/core/catalogue/tcgcsv";
+import { TCGCSV_CATEGORY, shelfPrintings, type ShelfPrinting } from "@/lib/core/catalogue/tcgcsv";
 import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
 import { allFinishPrints, allPatternPrints } from "@/lib/core/catalogue/card-printings";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
@@ -41,6 +41,19 @@ const JAPANESE_LINKS: Record<string, TcgplayerLink> = Object.fromEntries(
   ]),
 );
 
+/**
+ * A shelf row as tcgplayer_prices keeps it: the market figure, or, where TCGplayer publishes none,
+ * the lowest listing (shelfFigureOf, Bart 2026-09-18). A printing that gains a market figure is
+ * written over with it and its listing cleared, so a row never holds both.
+ */
+const storedRow = (r: ShelfPrinting, day: string) => ({
+  product_id: r.productId,
+  printing: r.printing,
+  market: r.market,
+  listing: r.market == null ? (r.listing ?? null) : null,
+  updated_on: day,
+});
+
 /** The UTC day tcgcsv last published its files, from its last-updated.txt. */
 async function publishedDay(): Promise<string> {
   const res = await fetch("https://tcgcsv.com/last-updated.txt", {
@@ -61,7 +74,8 @@ async function publishedDay(): Promise<string> {
  * at 21:15 and reads them once, for two tables:
  *
  * 1. tcgplayer_prices, what the collection prices every card from (collection.ts, storedPricesFor):
- *    one query instead of a request per card to TCGdex. A shelf where fewer than nine groups in ten
+ *    one query instead of a request per card to TCGdex. A printing with no market figure is written
+ *    with its lowest listing instead (since 2026-09-18), shown labelled and never summed. A shelf where fewer than nine groups in ten
  *    answered is not written at all, neither table: the rows already there are yesterday's figures,
  *    which is better than today's for some sets and none for the rest.
  *
@@ -125,12 +139,7 @@ export async function GET(req: Request) {
     }
     await writeTcgplayerPrices(
       db,
-      shelf.rows.map((r) => ({
-        product_id: r.productId,
-        printing: r.printing,
-        market: r.market,
-        updated_on: today,
-      })),
+      shelf.rows.map((r) => storedRow(r, today)),
     );
   } catch (err) {
     console.error("[cron] copying TCGplayer's prices failed:", err);
@@ -140,10 +149,17 @@ export async function GET(req: Request) {
 
   // The Japanese shelf, on its own: a failure or a thin answer here leaves its rows for tonight and
   // nothing else.
-  const japanese: { groups: number; answered: number; written: number; skipped?: string } = {
+  const japanese: {
+    groups: number;
+    answered: number;
+    written: number;
+    listed: number;
+    skipped?: string;
+  } = {
     groups: 0,
     answered: 0,
     written: 0,
+    listed: 0,
   };
   let japaneseRows: typeof rows = [];
   try {
@@ -155,15 +171,11 @@ export async function GET(req: Request) {
     } else {
       await writeTcgplayerPrices(
         db,
-        ja.rows.map((r) => ({
-          product_id: r.productId,
-          printing: r.printing,
-          market: r.market,
-          updated_on: today,
-        })),
+        ja.rows.map((r) => storedRow(r, today)),
       );
       japaneseRows = ja.rows;
       japanese.written = ja.rows.length;
+      japanese.listed = ja.rows.filter((r) => r.market == null).length;
     }
   } catch (err) {
     console.error("[cron] copying TCGplayer's Japanese prices failed:", err);
@@ -291,6 +303,8 @@ export async function GET(req: Request) {
     groups,
     answered,
     written: rows.length,
+    // Of those, the printings with no market figure, written at their lowest listing.
+    listed: rows.filter((r) => r.market == null).length,
     japanese,
     rate: usdEur,
     history,

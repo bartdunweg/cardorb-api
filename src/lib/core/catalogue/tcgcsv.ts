@@ -1,3 +1,4 @@
+import { shelfFigureOf } from "../price-basis.mjs";
 import { catalogueTimeout, mapLimit } from "../util";
 
 /**
@@ -67,21 +68,37 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
   return out;
 }
 
-/** One printing of one product on a shelf, as tcgplayer_prices stores it. Dollars. */
+/**
+ * One printing of one product on a shelf, as tcgplayer_prices stores it. Dollars.
+ *
+ * `market` is TCGplayer's market figure. Where it has none (a card listed and never sold, since
+ * 2026-09-18) the row carries `listing`, the lowest asking price, and `market` is null: never both.
+ */
 export type ShelfPrinting = {
   productId: number;
   printing: string;
-  market: number;
+  market: number | null;
+  listing?: number | null;
+};
+
+/** A shelf row as tcgcsv publishes it: the figures this app reads. */
+type TcgcsvPriceRow = {
+  productId: number;
+  subTypeName: string;
+  marketPrice: number | null;
+  lowPrice?: number | null;
 };
 
 /** tcgcsv's "Reverse Holofoil" is TCGdex's "reverse-holofoil": the names the pickers read. */
 export const printingName = (subTypeName: string) => subTypeName.toLowerCase().replace(/\s+/g, "-");
 
 /**
- * Every priced printing on one shelf, its market figure, for the table the collection reads.
+ * Every priced printing on one shelf, its market figure or its lowest listing where it has no
+ * market figure (shelfFigureOf), for the table the collection reads.
  *
  * The same files shelfPrices() reads, kept whole. Tolerant per group like it, and it says how
  * many groups answered, so a cron can refuse to call a shelf with most of its sets missing a day.
+ * shelfPrices(), which the price history reads, stays market figures only.
  */
 export async function shelfPrintings(
   category: number,
@@ -92,11 +109,7 @@ export async function shelfPrintings(
   const rows: ShelfPrinting[] = [];
   let answered = 0;
   await mapLimit(groups, 8, async (g) => {
-    let results: {
-      productId: number;
-      subTypeName: string;
-      marketPrice: number | null;
-    }[];
+    let results: TcgcsvPriceRow[];
     try {
       ({ results } = await read<{ results: typeof results }>(
         `${BASE}/${category}/${g.groupId}/prices`,
@@ -106,12 +119,9 @@ export async function shelfPrintings(
     }
     answered++;
     for (const r of results) {
-      if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
-      rows.push({
-        productId: r.productId,
-        printing: printingName(r.subTypeName),
-        market: r.marketPrice,
-      });
+      const figure = shelfFigureOf(r);
+      if (!figure) continue;
+      rows.push({ productId: r.productId, printing: printingName(r.subTypeName), ...figure });
     }
   });
   return { rows, groups: groups.length, answered };
@@ -128,26 +138,31 @@ export async function shelfPrintings(
 export async function groupPrintings(
   groupId: number,
   category: number = TCGCSV_CATEGORY.en,
-): Promise<Map<number, Record<string, { marketPrice: number; productId: number }>>> {
-  const { results } = await read<{
-    results: {
-      productId: number;
-      subTypeName: string;
-      marketPrice: number | null;
-    }[];
-  }>(`${BASE}/${category}/${groupId}/prices`);
-  const out = new Map<number, Record<string, { marketPrice: number; productId: number }>>();
+): Promise<Map<number, Record<string, GroupPrinting>>> {
+  const { results } = await read<{ results: TcgcsvPriceRow[] }>(
+    `${BASE}/${category}/${groupId}/prices`,
+  );
+  const out = new Map<number, Record<string, GroupPrinting>>();
   for (const r of results) {
-    if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
+    const figure = shelfFigureOf(r);
+    if (!figure) continue;
     const printings = out.get(r.productId) ?? {};
     printings[printingName(r.subTypeName)] = {
-      marketPrice: r.marketPrice,
+      marketPrice: figure.market,
+      lowPrice: figure.listing,
       productId: r.productId,
     };
     out.set(r.productId, printings);
   }
   return out;
 }
+
+/** One printing of a group file, in TCGdex's shape: `lowPrice` only where `marketPrice` is null. */
+export type GroupPrinting = {
+  marketPrice: number | null;
+  lowPrice: number | null;
+  productId: number;
+};
 
 /** One product of a group as tcgcsv lists it: its name and TCGplayer's card facts beside it. */
 export type GroupProduct = {
