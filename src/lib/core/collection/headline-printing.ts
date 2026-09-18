@@ -6,7 +6,8 @@ import type { PriceLanguage } from "../price-months.mjs";
 import type { CardPricePoint } from "./movers";
 
 /**
- * Which printing a set page's tile prices a card at: the one the card's sheet opens on.
+ * Which printing a card's one figure is at: the one the card's sheet opens on. A set page's tile,
+ * a search hit, the catalogue's card list and the sheet's own headline all read it.
  *
  * A tile carries one figure a card, and it was TCGplayer's first printing with a market in
  * TCGplayer's own order (usdOf: normal, holofoil, reverse-holofoil, then the runs). The sheet lists

@@ -12,6 +12,8 @@ if the two have drifted apart.
 
 - The collection answers sooner once the direct database connection is switched on: the check for a newer copy of your cards no longer waits on Supabase's gateway.
 
+- The search, the catalogue's card list and a card's sheet price a card as its set page does: at the first printing in the sheet's order that TCGplayer prices, and they say which (`printing`). A holo rare that also came as a reverse now shows the reverse's price in the search and above its sheet, the figure its tile shows. What a copy you hold is worth is unchanged.
+
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.
 
 - The lowest listing reaches the two answers that still left it out. `GET /v1/public/{username}/cards` gives a card `listingPrice` where no copy has a market figure and every copy is listed at one figure, and `listed` beside `value` and `unpriced`; both only for an owner who shows prices. `GET /v1/cards/{tcgId}/prices` gains `listings`: today's lowest listing of each printing with no market figure, keyed as a point's `printings`, so a sheet pressing a printing that has never sold can show its listing. Nothing existing changes.

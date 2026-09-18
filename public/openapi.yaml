@@ -443,7 +443,10 @@ components:
             total: { type: [integer, "null"] }
         cmId: { type: [integer, "null"], description: "Cardmarket's product id." }
         cmUrl: { type: [string, "null"], description: "Where to buy it. Null since 2026-09-11: the address could not be guaranteed to land on the card's own page, so no client shows a button until it can." }
-        price: { oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }] }
+        price:
+          oneOf: [{ $ref: "#/components/schemas/Price" }, { type: "null" }]
+          description: "TCGplayer's price, in euros, at the card's headline printing (`printing`): the first of `printings` that TCGplayer prices, the figure a set tile and a search hit show for the card. What a copy someone holds is worth is priced by its own printing, on the collection's routes."
+        printing: { type: [string, "null"], description: "Which printing `price` is, keyed as `BrowseCard.printing` is (`reverse-holo`, `holo/cosmos`). Null where the card has no TCGplayer price, or is priced at a printing its catalogue does not list; absent on a card with no TCGplayer product, which keeps TCGdex's figure." }
         market:
           type: [object, "null"]
           properties:
@@ -633,10 +636,10 @@ components:
         fullArt: { type: boolean, description: "The illustration covers the whole card, as the catalogue's copy decides it at night. Only sent by GET /catalog/sets/{setId}, and only for a set read out of the copy: a set read live from the catalogue leaves it out rather than guess." }
         price:
           $ref: "#/components/schemas/Price"
-          description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card; only sent by GET /catalog/sets/{setId}. On that route it is the price of `printing`: the first printing in the card sheet's order (`CardDetail.printings`: normal, reverse holo, holo, the ball reverses) that TCGplayer prices, the unlimited run before the stamped one, so a holo rare with a reverse is priced at its reverse, the printing its sheet opens on. The search and the catalogue's card list keep TCGplayer's first printing with a market."
+          description: "TCGplayer's price, in euros, from the day's figures for the card's set. Null where TCGplayer does not price the card. Sent by GET /catalog/sets/{setId}, GET /catalog/search and GET /catalog/cards, and on each it is the price of `printing`: the first printing in the card sheet's order (`CardDetail.printings`: normal, reverse holo, holo, the ball reverses) that TCGplayer prices, the unlimited run before the stamped one, so a holo rare with a reverse is priced at its reverse, the printing its sheet opens on. A market figure on any printing comes before a lowest listing on an earlier one. `CardDetail.price` is the same figure."
         printing:
           type: [string, "null"]
-          description: "Only sent by GET /catalog/sets/{setId}: which printing `price` is, keyed as the card sheet keys its printings, the finish and a foil pattern after a slash (`normal`, `reverse-holo`, `holo`, `poke-ball`, `reverse-holo/cosmos`). Null where the card has no price, and on the rare card priced at a printing its catalogue does not list."
+          description: "Sent by GET /catalog/sets/{setId}, GET /catalog/search and GET /catalog/cards: which printing `price` is, keyed as the card sheet keys its printings, the finish and a foil pattern after a slash (`normal`, `reverse-holo`, `holo`, `poke-ball`, `reverse-holo/cosmos`). Null where the card has no price, and on the rare card priced at a printing its catalogue does not list."
         priceChange:
           description: "Only sent by GET /catalog/sets/{setId}, and only with `from`: what `printing` did since then, its first and last reading in the window, in euros. Null without two readings of that printing in the window, or without a price."
           oneOf:

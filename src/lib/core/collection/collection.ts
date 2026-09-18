@@ -342,6 +342,9 @@ export const shelfUsdFor = async (
   return out;
 };
 
+/** One card's browse price, and, where its printings were given, which printing that is. */
+export type ShelfPrice = { price: Price; printing?: string | null; series?: string | null };
+
 /**
  * TCGplayer's prices for these cards, from their tcgcsv groups: the browse surfaces' price.
  *
@@ -361,26 +364,43 @@ export const tcgplayerPricesFor = async (
   language: BrowseLanguage | null = null,
   /**
    * Each card's printings in its sheet's order (printingsOf), by the same ids, for a caller whose
-   * figure has to be the one the sheet opens on (headlinePrinting): the set page. Each answer then
-   * says which printing it priced, and the series its figure is filed under. Left out, a card is
-   * priced at TCGplayer's first printing with a market (usdOf), as the search and the catalogue's
-   * card list have always been; a promise, so the caller can read the printings while this reads
-   * the prices.
+   * figure has to be the one the sheet opens on (headlinePrinting): the set page, the search and
+   * the catalogue's card list. Each answer then says which printing it priced, and the series its
+   * figure is filed under. Left out, a card is priced at TCGplayer's first printing with a market
+   * (usdOf); a promise, so the caller can read the printings while this reads the prices.
    */
   printingsRead?: Promise<Map<string, Printing[]>>,
-): Promise<Map<string, { price: Price; printing?: string | null; series?: string | null }>> => {
-  const out = new Map<string, { price: Price; printing?: string | null; series?: string | null }>();
-  if (!ids.length) return out;
+): Promise<Map<string, ShelfPrice>> => {
+  if (!ids.length) return new Map();
   const rate = await usdToEurForRequest();
-  if (rate == null) return out;
+  if (rate == null) return new Map();
   const pairs = await shelfUsdFor(ids, language);
   const printings = printingsRead ? await printingsRead : null;
+  return priceShelfPairs(pairs, language, rate, printings);
+};
+
+/**
+ * Shelf pairs (shelfUsdFor) as prices in euros: each at its headline printing where the printings
+ * are given, then held over a stray sale the way the collection's are. What tcgplayerPricesFor
+ * answers a page with, and what detailPrice answers one card's sheet with, so the sheet's figure
+ * is the tile's to the cent, the hold included.
+ */
+async function priceShelfPairs(
+  pairs: Record<string, UsdPair>,
+  language: BrowseLanguage | null,
+  rate: number,
+  printings: Map<string, Printing[]> | null,
+): Promise<Map<string, ShelfPrice>> {
+  const out = new Map<string, ShelfPrice>();
+  /* A copy of the pairs, since the hold below reads each one at its headline figure and the
+     caller's own stay as shelfUsdFor gave them. */
+  const held: Record<string, UsdPair> = { ...pairs };
   for (const [id, pair] of Object.entries(pairs)) {
     if (printings) {
       const headline = headlinePrinting(printings.get(id) ?? [], pair.printings, pair.usd);
       const price = headline ? priceFromUsd(headline.usd, rate) : null;
       /* The pair as the hold below reads it: the headline is the figure it looks for. */
-      if (headline) pairs[id] = { ...pair, usd: headline.usd };
+      if (headline) held[id] = { ...pair, usd: headline.usd };
       if (price) out.set(id, { price, printing: headline!.printing, series: headline!.series });
       continue;
     }
@@ -392,20 +412,20 @@ export const tcgplayerPricesFor = async (
      held the figure before it. Only the cards priced here, so a page of them is one line read,
      kept a day under the price day. */
   const priceLanguage = priceLanguageOf(language ?? "en");
-  const held = await timed(
+  const points = await timed(
     "held shelf prices",
     () => heldPointsFor([...out.keys()].map((tcgId) => ({ tcgId, language: priceLanguage }))),
     `${out.size} cards`,
   );
-  if (held) {
-    const days = heldDays(held.points, held.priceDay);
+  if (points) {
+    const days = heldDays(points.points, points.priceDay);
     for (const [id, { price }] of out) {
       const day = days.get(historyKey(priceLanguage, id));
-      if (day) out.set(id, { ...out.get(id)!, price: holdShelfPrice(price, pairs[id]!, day) });
+      if (day) out.set(id, { ...out.get(id)!, price: holdShelfPrice(price, held[id]!, day) });
     }
   }
   return out;
-};
+}
 
 /**
  * A card's detail with TCGplayer's price on it, read the way every other price is
@@ -417,15 +437,27 @@ export const tcgplayerPricesFor = async (
  * route hands the detail here, and the price and product id come from the same read as the set
  * page's, the search's and the collection's. A card with no TCGplayer product keeps TCGdex's
  * figure on the English shelf, the one place a price can come from for it; no rate, no price.
+ *
+ * `price` is the headline printing's (headlinePrinting), the first of the card's `printings` in
+ * the sheet's order that TCGplayer prices, held over a stray sale as a tile's is, and `printing`
+ * names it: the figure the sheet shows on the printing it opens on is the set tile's and the
+ * search hit's. It was usdOf's (holo before reverse), so a holo rare with a reverse opened on its
+ * reverse under the holo's figure. A card without `printings` is priced at usdOf's, as before.
  */
 export const detailPrice = async <
-  T extends { id: string; price: unknown; tcgplayerId: number | null },
+  T extends {
+    id: string;
+    price: unknown;
+    tcgplayerId: number | null;
+    printings?: readonly Printing[] | null;
+  },
 >(
   card: T,
   language: BrowseLanguage | null,
   usdToEur: number | null,
 ): Promise<
   T & {
+    printing?: string | null;
     pricePrintings?: Record<string, ReturnType<typeof priceFromUsd>>;
     printingIds?: Record<string, number>;
   }
@@ -437,12 +469,21 @@ export const detailPrice = async <
   /* Every printing's figure beside the headline one, the Shadowless group's runs included, so a
      sheet opened from a set page or a search can show normal against reverse and 1st Edition,
      Unlimited and Shadowless, as a copy in the collection already could (pricing audit). */
+  /* The headline figure read beside the printings below rather than after them: its hold is one
+     cached line read (priceShelfPairs). */
+  const headlineRead = priceShelfPairs(
+    { [card.id]: pair! },
+    language,
+    usdToEur,
+    new Map([[card.id, [...(card.printings ?? [])]]]),
+  ).then((prices) => prices.get(card.id) ?? null);
   const [runs, finishes] =
     language === "ja"
       ? [{}, await japaneseFinishPrintingsFor([card.id])]
       : language
         ? [{}, {}]
         : await Promise.all([runPrintingsForSet([card.id]), finishPrintingsForSet([card.id])]);
+  const headline = await headlineRead;
   const printings = {
     ...(runs[card.id as keyof typeof runs]?.printings ?? {}),
     ...(pair?.printings ?? {}),
@@ -458,7 +499,8 @@ export const detailPrice = async <
   );
   return {
     ...card,
-    price: priceFromUsd(usd, usdToEur),
+    price: headline?.price ?? null,
+    printing: headline?.printing ?? null,
     tcgplayerId: usd.productId ?? null,
     pricePrintings,
     printingIds,

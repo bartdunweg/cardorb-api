@@ -116,9 +116,27 @@ describe("tcgplayerPricesFor", () => {
       printing: "reverse-holo",
       series: "reverse-holofoil",
     });
-    // Without them, the search's and the card list's figure as before.
+    // Without them, usdOf's figure as before.
     expect((await tcgplayerPricesFor(["base1-4"])).get("base1-4")).toEqual({
       price: { market: 400, basis: "market" },
+    });
+  });
+
+  /* #561 under the headline rule: a card TCGplayer lists and has never sold keeps its "From". */
+  it("prices a card with only a listing at that listing, and names the printing", async () => {
+    groupPrintings.mockImplementation(
+      async () =>
+        new Map([[42382, { holofoil: { marketPrice: null, lowPrice: 30, productId: 42382 } }]]),
+    );
+    const headline = await tcgplayerPricesFor(
+      ["base1-4"],
+      null,
+      Promise.resolve(new Map([["base1-4", [{ finish: "holo" as const, foilPattern: null }]]])),
+    );
+    expect(headline.get("base1-4")).toEqual({
+      price: { market: null, lowestListing: 15, basis: "lowest-listing" },
+      printing: "holo",
+      series: "holofoil",
     });
   });
 });
@@ -239,6 +257,65 @@ describe("detailPrice", () => {
     expect(card).toMatchObject({ id: "base1-4", price: { market: 400 }, tcgplayerId: 42382 });
     // Every printing beside it, so the sheet can show them apart.
     expect(card.printingIds).toMatchObject({ holofoil: 42382 });
+  });
+
+  /* The sheet's headline is the set tile's and the search hit's: a holo rare with a reverse opens on
+     the reverse, so that is its figure, and `printing` says so. Held copies are priced apart
+     (copyPriceOf), by their own printing, and are not this. */
+  it("prices a holo rare with a reverse at the reverse, the printing its sheet opens on", async () => {
+    groupPrintings.mockImplementation(
+      async () =>
+        new Map([
+          [
+            42382,
+            {
+              holofoil: { marketPrice: 800, productId: 42382 },
+              "reverse-holofoil": { marketPrice: 10, productId: 42382 },
+            },
+          ],
+        ]),
+    );
+    const printings = [
+      { finish: "reverse-holo" as const, foilPattern: null },
+      { finish: "holo" as const, foilPattern: null },
+    ];
+    const card = await detailPrice(
+      { id: "base1-4", price: null, tcgplayerId: null, printings },
+      null,
+      0.5,
+    );
+    expect(card).toMatchObject({
+      price: { market: 5, basis: "market" },
+      printing: "reverse-holo",
+      tcgplayerId: 42382,
+    });
+    // Every printing's own figure is still beside it, the holo's included.
+    expect(card.pricePrintings?.holofoil?.market).toBe(400);
+    // Without the printings, usdOf's figure, as before.
+    expect(
+      await detailPrice({ id: "base1-4", price: null, tcgplayerId: null }, null, 0.5),
+    ).toMatchObject({ price: { market: 400 } });
+  });
+
+  it("prices a card with only a listing at that listing on its sheet", async () => {
+    groupPrintings.mockImplementation(
+      async () =>
+        new Map([[42382, { holofoil: { marketPrice: null, lowPrice: 30, productId: 42382 } }]]),
+    );
+    const card = await detailPrice(
+      {
+        id: "base1-4",
+        price: null,
+        tcgplayerId: null,
+        printings: [{ finish: "holo" as const, foilPattern: null }],
+      },
+      null,
+      0.5,
+    );
+    expect(card).toMatchObject({
+      price: { market: null, lowestListing: 15, basis: "lowest-listing" },
+      printing: "holo",
+    });
   });
 
   it("keeps TCGdex's figure for an English card with no TCGplayer product", async () => {

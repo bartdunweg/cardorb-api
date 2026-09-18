@@ -69,9 +69,10 @@ const scaledBy = (market: number, kept: number, stray: number): Price => ({
 });
 
 /**
- * A browse card's one price with a stray sale held over, the same way: the set page, a search and
- * the catalogue's card list carry one figure a card, TCGplayer's first printing with a market
- * (usdOf), so the held printing is found by that dollar figure among the card's printings.
+ * A browse card's one price with a stray sale held over, the same way: the set page, a search, the
+ * catalogue's card list and a card's sheet carry one figure a card, its headline printing's
+ * (headlinePrinting), so the held printing is found by that dollar figure among the card's
+ * printings.
  */
 export function holdShelfPrice(price: Price, pair: UsdPair, day: HeldDay): Price {
   const headline = pair.usd?.market;
