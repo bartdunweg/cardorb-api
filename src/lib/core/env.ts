@@ -89,6 +89,14 @@ const CHECKS: Check[] = [
   // snapshot refuses to run at all rather than running unauthenticated. A
   // deployment that has not set it loses a chart, which is the cheap failure;
   // the expensive one would be an open write endpoint.
+  // Optional and off by default: without it every read goes through PostgREST, as it always
+  // did. With it the hot single-row reads skip Supabase's gateway (storage/direct.ts).
+  {
+    name: "DATABASE_POOLER_URL",
+    required: false,
+    without:
+      "the cards version and the dollar rate are read through Supabase's gateway (about 40 ms each)",
+  },
   {
     name: "CRON_SECRET",
     required: false,
@@ -133,6 +141,15 @@ const SHAPES = z.object({
     .min(40, "far too short to be a Supabase key")
     .optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(40, "far too short to be a Supabase key").optional(),
+  /* The Supavisor transaction pooler as cardorb_direct (docs/direct-db.md). The message never
+     repeats the value: it holds a password. */
+  DATABASE_POOLER_URL: z
+    .string()
+    .refine(
+      (v) => /^postgres(ql)?:\/\/cardorb_direct\.[a-z0-9]+:[^@\s]+@[^/\s:]+(:\d+)?\/\w+$/.test(v),
+      "must be postgresql://cardorb_direct.<project-ref>:<password>@<pooler host>:6543/postgres",
+    )
+    .optional(),
   /* Comma-separated origins, each a scheme + host with no path. A trailing
      slash is the common one and it makes sameOrigin() refuse silently. */
   ALLOWED_ORIGINS: z

@@ -78,7 +78,13 @@ import TCGPLAYER_GROUPS from "../tcgplayer-groups.generated.json";
 import type { BrowseLanguage } from "../catalogue/tcgdex-browse";
 import { cardsTag, foldersTag, type CollectionRow } from "./collection-row";
 import { valueHistoryTag, type ValueSnapshot } from "./value-snapshot";
-import { cardsVersion, listRows, listSnapshots, publicProfile } from "../../storage/collection";
+import {
+  cardsVersion,
+  latestUsdEurRate,
+  listRows,
+  listSnapshots,
+  publicProfile,
+} from "../../storage/collection";
 import {
   getFolder,
   catalogueLanguagesOfCard,
@@ -89,7 +95,6 @@ import {
   listPublicFolders,
   rememberScans,
   type Folder,
-  readLatestUsdEurRate,
   readTcgplayerPrices,
   catalogueProductIds,
   printProductsOfCards,
@@ -1163,7 +1168,7 @@ export async function storedUsdToEur(): Promise<number> {
   const db = adminClient();
   if (db) {
     try {
-      const stored = await readLatestUsdEurRate(db);
+      const stored = await latestUsdEurRate(db);
       if (stored) return stored.rate;
       console.error("No stored dollar rate, asking frankfurter");
     } catch (err) {

@@ -1,0 +1,1 @@
+- The collection answers sooner once the direct database connection is switched on: the check for a newer copy of your cards no longer waits on Supabase's gateway.

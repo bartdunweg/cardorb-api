@@ -48,6 +48,7 @@ import type {
 } from "../core/collection/collection-row";
 import type { CopyChanges } from "../core/collection/collection-row";
 import type { ValueSnapshot } from "../core/collection/value-snapshot";
+import { directCardsVersion, directLatestUsdEurRate } from "./direct";
 import { StoreNotConfigured } from "./errors";
 import * as postgres from "./postgres";
 import type { SplitResult } from "./postgres";
@@ -86,14 +87,38 @@ export async function listRows(
   return postgres.listRows(client, userId);
 }
 
-/** The person's cards version (see postgres.cardsVersion), or null where there is no store to ask. */
+/**
+ * The person's cards version (see postgres.cardsVersion), or null where there is no store to ask.
+ *
+ * Over the direct connection (direct.ts) when there is one and a caller-resolved `db` came with
+ * the id: then `userId` is the viewer authorise() verified, or a public owner read through the
+ * service role, and either client could already read that row, so asking without RLS answers
+ * nothing it would not. The anonymous fallback stays on the gateway, where profiles_read keeps a
+ * private profile's row from it. Where the direct read cannot answer, the gateway is asked.
+ */
 export async function cardsVersion(
   userId: string,
   db?: SupabaseClient | null,
 ): Promise<number | null> {
   const client = db ?? readClient();
   if (!client) return null;
+  if (db) {
+    const direct = await directCardsVersion(userId);
+    if (direct !== undefined) return direct;
+  }
   return postgres.cardsVersion(client, userId);
+}
+
+/**
+ * The latest stored dollar rate (see postgres.readLatestUsdEurRate), over the direct connection
+ * when there is one: the rate belongs to nobody, and `db` is the service role that reads it today.
+ */
+export async function latestUsdEurRate(
+  db: SupabaseClient,
+): Promise<{ day: string; rate: number } | null> {
+  const direct = await directLatestUsdEurRate();
+  if (direct !== undefined) return direct;
+  return postgres.readLatestUsdEurRate(db);
 }
 
 /**

@@ -89,5 +89,9 @@ product, no photo), Pikachu at the Museum (a jumbo card) and the five Poké Card
 - **Search**: the copy, then tcgcsv and Frankfurter for prices; TCGdex only when the copy cannot
   answer.
 
+Postgres itself is reached through PostgREST, except the cards version and the dollar rate where
+`DATABASE_POOLER_URL` is set: those ask Supavisor directly as `cardorb_direct`
+(`docs/direct-db.md`, R-SEC-002) and fall back to PostgREST on a failure.
+
 Every catalogue fetch has an 8 s timeout (`CATALOGUE_TIMEOUT_MS`, `util.ts`); TCGdex's client
 retries three times and trips a breaker when refused (`tcgdex-client.ts`).
