@@ -258,6 +258,43 @@ export async function searchCards(
     });
     if (copied) return copied;
   }
+  /* Everything past here is TCGdex, asked because the copy holds nothing of this shelf yet. It is
+     the fallback, not the road, so it gets a budget of its own: three attempts eight seconds
+     apart is twenty-five seconds of somebody watching a spinner, and a search nobody waits that
+     long for is better answered with "the catalogue did not answer" (the route's 502) than with
+     nothing at all after half a minute. The breaker in tcgdex-client.ts then holds the next
+     twenty seconds of searches off TCGdex entirely. */
+  return withinBudget(() => searchTcgdex(input, page, language, { fullArt }));
+}
+
+/** How long the fallback may take before a search gives up on it. */
+const FALLBACK_BUDGET_MS = 4_000;
+
+/** The work, or a refusal once the budget is spent. The work is left to finish into the cache. */
+async function withinBudget<T>(work: () => Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`TCGdex did not answer in ${FALLBACK_BUDGET_MS} ms`)),
+          FALLBACK_BUDGET_MS,
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** The search TCGdex answers, for a shelf the copy does not hold yet. */
+async function searchTcgdex(
+  input: string | SearchFilters,
+  page: number,
+  language: BrowseLanguage | null,
+  { fullArt }: { fullArt: boolean },
+): Promise<{ cards: CatalogueMatch[]; total: number }> {
   if (fullArt) return { cards: [], total: 0 };
   const quick = typeof input === "string" ? quickQuery(input) : null;
   const params = typeof input === "string" ? quick?.params : filterQuery(input);
