@@ -14,6 +14,8 @@ if the two have drifted apart.
 
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.
 
+- A card list asked with `from` (and no change sort) answers each card on the page with what its price did since that day, so the collection, the wishlist and a binder can show it under the price as a set page does.
+
 - The lowest listing reaches the two answers that still left it out. `GET /v1/public/{username}/cards` gives a card `listingPrice` where no copy has a market figure and every copy is listed at one figure, and `listed` beside `value` and `unpriced`; both only for an owner who shows prices. `GET /v1/cards/{tcgId}/prices` gains `listings`: today's lowest listing of each printing with no market figure, keyed as a point's `printings`, so a sheet pressing a printing that has never sold can show its listing. Nothing existing changes.
 
 - A printing TCGplayer lists and has never sold has a price again: its lowest listing, only where there is no market figure (the R/G/B Mew of 30th Celebration). `Price` gains `lowestListing` and `basis` (`market` or `lowest-listing`); `market` keeps its meaning and is null on a listing. A listing is shown, never summed: the lists' `value` leaves it out and the new `listed` says how many of the `unpriced` copies have one. `tcgplayer_prices` stores the listing for those printings only, and the price history stays market figures only.

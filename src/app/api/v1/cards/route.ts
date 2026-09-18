@@ -146,6 +146,21 @@ export async function GET(req: Request) {
     ? sortByChange(filtered, changes, order ?? "desc")
     : sortItems(filtered, sort, order);
   const paged = pageOf(shown, read.query);
+  /* `from` without `sort=change`: the same change, for the page's items only, so a tile can say
+     what its price did (Bart, 2026-09-18: every list, as the set page does since #562). The page is
+     a batch of the list, so this reads a batch's lines rather than the whole collection's. A line
+     read that fails leaves every item's change null rather than failing a page that has
+     everything else. */
+  if (!changes && read.query.from) {
+    const from = read.query.from;
+    const to = read.query.to ?? new Date().toISOString().slice(0, 10);
+    const prices = await timed(
+      "cards page changes",
+      () => getCardPrices(who.userId, pricedCardsOf(paged.items), token, from),
+      `${paged.items.length} items`,
+    );
+    changes = prices.failed ? new Map() : priceChanges(paged.items, prices.points, from, to);
+  }
   /* `pictures=0` from a caller that will not draw the copies, only count them: the Pokémon tile
      on Home reads every card to count the species it covers, and the printings' pictures of a
      collection-wide page were a second read of nineteen hundred ids, 1,191 ms of the 1,442 ms that
