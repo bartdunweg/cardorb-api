@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timed } from "@/lib/core/timing";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { revalidateTag } from "next/cache";
 import { cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
@@ -145,16 +146,25 @@ export async function GET(req: Request) {
     ? sortByChange(filtered, changes, order ?? "desc")
     : sortItems(filtered, sort, order);
   const paged = pageOf(shown, read.query);
-  const pictures = await pagePictures(paged.items);
+  /* `pictures=0` from a caller that will not draw the copies, only count them: the Pokémon tile
+     on Home reads every card to count the species it covers, and the printings' pictures of a
+     collection-wide page were a second read of nineteen hundred ids, 1,191 ms of the 1,442 ms that
+     read cost (2026-09-18). Without them the items carry no `printImage`, which is what an item
+     whose printing has no picture of its own carries anyway. */
+  const wantsPictures = new URL(req.url).searchParams.get("pictures") !== "0";
+  const pictures = wantsPictures
+    ? await timed("cards pictures", () => pagePictures(paged.items), `${paged.items.length} items`)
+    : new Map<string, Map<string, string | null>>();
   const total = paged.total;
   const items = (
     changes
       ? paged.items.map((it) => ({ ...it, priceChange: changes.get(it.id) ?? null }))
       : paged.items
-  ).map((it) => ({
-    ...it,
-    printImage: copyPictureOf(pictures.get(`${it.catalogue}|${it.tcgId}`), it),
-  }));
+  ).map((it) =>
+    wantsPictures
+      ? { ...it, printImage: copyPictureOf(pictures.get(`${it.catalogue}|${it.tcgId}`), it) }
+      : it,
+  );
   // The facets ride along with every page, over the owned collection (the wishes when
   // `owned=false`) whatever the other filters: the web app used to fetch GET /v1/collection —
   // a megabyte — to draw the two menus.

@@ -1911,7 +1911,13 @@ export const getRecentValue = cache(
         unstable_cache(
           async () => {
             ran();
-            return holdingsSeries(items, await listHistoryPrices(db, cards, since));
+            const readings = await timed("recent-value readings", () =>
+              listHistoryPrices(db, cards, since),
+            );
+            const start = performance.now();
+            const line = holdingsSeries(items, readings);
+            logTiming("recent-value series", elapsed(start), `${readings.length} readings`);
+            return line;
           },
           // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
           ["recent-value", "v14", userId, since, holdingsKey(items)],

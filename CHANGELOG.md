@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-18
 
+- `GET /v1/cards` takes `pictures=0`, for a caller that counts the copies rather than drawing them. The printings' own pictures are a second read over the page's card ids: nothing on a page of forty-eight, and 1,191 ms of the 1,442 ms a whole-collection page cost. The Pokémon tile on Home asks for that page, and now asks without them.
+
 - A card linked to a TCGplayer product now offers every printing TCGplayer lists for it, not only the ones that sold that week, so a card linked in a quiet week no longer starts with no printing at all. The three R/G/B Mew of 30th Celebration have their holofoil back.
 
 - Card search is answered by our own copy of the catalogue and never by TCGdex while somebody waits: the copy is there when it holds cards, not when a nightly run left a record, so a database filled any other way no longer answered "The card service didn't answer." with every card in it.
