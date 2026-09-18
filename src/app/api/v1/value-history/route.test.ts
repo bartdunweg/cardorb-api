@@ -32,13 +32,13 @@ vi.mock("@/lib/api/viewer", () => ({
 }));
 const findFolder = vi.fn();
 const getCollection = vi.fn();
-const getCardPrices = vi.fn();
+const getListValue = vi.fn();
 const getRecentValue = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
   findFolder: (...a: unknown[]) => findFolder(...a),
   getCollection: (...a: unknown[]) => getCollection(...a),
-  getCardPrices: (...a: unknown[]) => getCardPrices(...a),
+  getListValue: (...a: unknown[]) => getListValue(...a),
   getRecentValue: (...a: unknown[]) => getRecentValue(...a),
 }));
 
@@ -53,6 +53,8 @@ vi.mock("@/lib/core/collection/items", async (actual) => {
 });
 
 const { GET } = await import("./route");
+const { folderSeries } = await import("@/lib/core/collection/folder-history");
+type CardItem = import("@/lib/core/collection/items").CardItem;
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
 
@@ -167,7 +169,7 @@ describe("GET /api/v1/value-history, the recent days", () => {
     getRecentValue.mockResolvedValue({ snapshots: [], failed: true });
     const body = await (await get()).json();
     expect(body.snapshots).toEqual([SNAPSHOT]);
-    expect(getCardPrices).not.toHaveBeenCalled();
+    expect(getListValue).not.toHaveBeenCalled();
   });
 });
 
@@ -270,22 +272,42 @@ describe("GET /api/v1/value-history", () => {
         ],
         failed: false,
       });
-      getCardPrices.mockResolvedValue({
-        points: [
-          { language: "en", tcgId: "base1-25", date: "2026-09-01", market: 10, holo: null },
-          { language: "en", tcgId: "base1-4", date: "2026-09-01", market: 100, holo: null },
-        ],
-        failed: false,
-      });
+      // The line is built by folderSeries over these readings, as getListValue builds it.
+      getListValue.mockImplementation(
+        async (_user: string, items: CardItem[], list: "owned" | "wishlist") => ({
+          snapshots: folderSeries(
+            items,
+            [
+              {
+                language: "en" as const,
+                tcgId: "base1-25",
+                date: "2026-09-01",
+                market: 10,
+                holo: null,
+              },
+              {
+                language: "en" as const,
+                tcgId: "base1-4",
+                date: "2026-09-01",
+                market: 100,
+                holo: null,
+              },
+            ].filter((p) => items.some((it) => it.tcgId === p.tcgId)),
+            list,
+          ),
+          failed: false,
+        }),
+      );
     });
 
     it("builds a manual folder's line from the copies filed in it", async () => {
       findFolder.mockResolvedValue({ id: FOLDER, rule: null });
       const body = await (await get("t.o.k.e.n", `?folder=${FOLDER}`)).json();
       expect(getValueHistory).not.toHaveBeenCalled();
-      expect(getCardPrices).toHaveBeenCalledWith(
+      expect(getListValue).toHaveBeenCalledWith(
         "me-uuid",
-        [{ tcgId: "base1-25", language: "en" }],
+        [expect.objectContaining({ tcgId: "base1-25", quantity: 2 })],
+        "owned",
         "t.o.k.e.n",
       );
       expect(body).toEqual({
@@ -323,7 +345,7 @@ describe("GET /api/v1/value-history", () => {
 
     it("answers 503 when the per-card readings could not be read", async () => {
       findFolder.mockResolvedValue({ id: FOLDER, rule: null });
-      getCardPrices.mockResolvedValue({ points: [], failed: true });
+      getListValue.mockResolvedValue({ snapshots: [], failed: true });
       const res = await get("t.o.k.e.n", `?folder=${FOLDER}`);
       expect(res.status).toBe(503);
     });

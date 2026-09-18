@@ -4,14 +4,14 @@ import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/g
 import { bearer } from "@/lib/api/viewer";
 import {
   findFolder,
-  getCardPrices,
   getCollection,
+  getListValue,
   getRecentValue,
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { folderSeries, joinHistory } from "@/lib/core/collection/folder-history";
-import { filterItems, flattenItems, pricedCardsOf } from "@/lib/core/collection/items";
+import { joinHistory } from "@/lib/core/collection/folder-history";
+import { filterItems, flattenItems } from "@/lib/core/collection/items";
 import { recentFrom } from "@/lib/core/collection/value-history";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
@@ -40,8 +40,8 @@ import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
  * missed, and nothing is drawn over a point that already says it.
  *
  * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
- * the per-card daily readings (see folderSeries): the same shape, a shorter
- * history, since the readings start where the nightly card prices do.
+ * the per-card daily readings (see folderSeries) and kept as the line (getListValue): the same
+ * shape, a shorter history, since the readings start where the nightly card prices do.
  *
  * Both branches answer 503 when the read behind them failed, and that used to
  * be true of one of them. The folder branch already refused to draw a line out
@@ -127,16 +127,16 @@ export async function GET(req: Request) {
       headers: readHeaders(req),
     });
   const items = filterItems(flattenItems(sets), filter);
-  const prices = await getCardPrices(viewer.userId, pricedCardsOf(items), token);
-  if (prices.failed)
+  const line = await getListValue(
+    viewer.userId,
+    items,
+    folder === "wishlist" ? "wishlist" : "owned",
+    token,
+  );
+  if (line.failed)
     return unavailable(
       "The value history could not be read. Try again in a moment.",
       readHeaders(req),
     );
-  return NextResponse.json(
-    {
-      snapshots: folderSeries(items, prices.points, folder === "wishlist" ? "wishlist" : "owned"),
-    },
-    { headers: readHeaders(req) },
-  );
+  return NextResponse.json({ snapshots: line.snapshots }, { headers: readHeaders(req) });
 }
