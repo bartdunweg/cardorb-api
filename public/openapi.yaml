@@ -1601,6 +1601,11 @@ paths:
         An English search reads the catalogue's nightly copy, rarity and types included;
         a Japanese search asks the catalogue itself. A set the catalogue added today is
         in the copy tomorrow.
+
+        A word of `query` that is a set's printed code (SVI, PAL, MEW) narrows to that set
+        beside other words ("pal 123"), unless a matching card holds it as a word of its name
+        ("charizard ex") or the set holds no card the other words find. On its own it adds the
+        set's cards after every name that starts with it. A code two sets share names both.
       parameters:
         - { name: query, in: query, schema: { type: string, minLength: 2 } }
         - { name: name, in: query, schema: { type: string } }
@@ -1634,7 +1639,7 @@ paths:
       summary: The English catalogue as one document, for searching in the browser
       description: |
         Every English card the nightly copy holds, compact: `sets` by id with name, era, release
-        date and scan folder; `cards` as arrays of id, set id, number, name, rarity and types,
+        date, scan folder and printed code; `cards` as arrays of id, set id, number, name, rarity and types,
         with a seventh element only where the scan is not at `sets[set].image + "/" + number`
         (a stem, or null for none). Cards come newest set first, by number within one. Cached a
         day in the browser under its `ETag`; a request carrying `If-None-Match` gets 304. What
@@ -1662,6 +1667,9 @@ paths:
                         series: { type: [string, "null"] }
                         date: { type: [string, "null"], description: "YYYY/MM/DD" }
                         image: { type: [string, "null"], description: "The set's scan folder." }
+                        code:
+                          type: string
+                          description: The code the set prints (SVI, MEW), only where it has one.
                   cards:
                     type: array
                     items: { type: array, minItems: 6, maxItems: 7, items: {} }
