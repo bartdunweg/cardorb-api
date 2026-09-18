@@ -151,6 +151,28 @@ describe("GET /api/v1/public/{username}/cards", () => {
     expect(wishes.value).toBe(9);
   });
 
+  /* cardorb-api#561: a card listed and never sold shows its lowest listing on the owner's own list,
+     and on their public one the same, labelled by its own field and never summed into the value. */
+  it("shows a card's lowest listing where no copy has a market figure, never in the value, and only with prices shown", async () => {
+    const listing = { market: null, lowestListing: 5771.49, basis: "lowest-listing" };
+    getPublicCollection.mockResolvedValue({
+      sets: [{ ...SETS[0], cards: [card("Pikachu", [variant("a")]), { ...card("Mew", [variant("c"), variant("d")]), price: listing }] }],
+      failed: false,
+    });
+    const hidden = await (await get()).json();
+    expect(JSON.stringify(hidden)).not.toContain("5771");
+    expect(hidden).not.toHaveProperty("listed");
+    ownerOf.mockResolvedValue({ id: "owner-1", username: "bart", displayName: null, avatarUrl: null, wishlistPublic: false, favoritesPublic: false, pricesPublic: true });
+    const body = await (await get()).json();
+    const mew = body.cards.find((c: { name: string }) => c.name === "Mew");
+    const pikachu = body.cards.find((c: { name: string }) => c.name === "Pikachu");
+    expect(mew).toMatchObject({ price: null, listingPrice: 5771.49 });
+    expect(pikachu.price).toBe(9);
+    expect(pikachu).not.toHaveProperty("listingPrice");
+    // The two Mew copies are left out of the value and said as listed.
+    expect(body).toMatchObject({ value: 9, unpriced: 2, listed: 2 });
+  });
+
   it("pages and searches, and refuses a query it cannot mean", async () => {
     expect((await (await get("?q=pika&limit=1")).json()).total).toBe(1);
     expect((await get("?limit=0")).status).toBe(400);

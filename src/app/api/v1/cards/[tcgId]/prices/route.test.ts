@@ -18,6 +18,11 @@ vi.mock("@/lib/core/collection/collection", () => ({
   defaultPriceLanguage: (...a: unknown[]) => defaultPriceLanguage(...a),
 }));
 
+const printingListingsOf = vi.fn();
+vi.mock("@/lib/core/collection/printing-listings", () => ({
+  printingListingsOf: (...a: unknown[]) => printingListingsOf(...a),
+}));
+
 const { GET } = await import("./route");
 
 const get = (tcgId = "base1-4", query = "") =>
@@ -32,6 +37,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
   defaultPriceLanguage.mockResolvedValue("en");
+  printingListingsOf.mockResolvedValue({});
   getCardPrices.mockResolvedValue({
     points: [
       { language: "en", tcgId: "base1-4", date: "2026-09-01", market: 120.5, holo: null },
@@ -61,6 +67,22 @@ describe("GET /api/v1/cards/{tcgId}/prices", () => {
         { date: "2026-09-02", market: 121, holo: 300 },
       ],
     });
+  });
+
+  /* cardorb-api#561: a printing listed and never sold has no line, so a sheet pressing it had
+     nothing to show. Its lowest listing comes beside the line, keyed as the line keys printings. */
+  it("says each printing's lowest listing where it has no market figure, and still answers the line when that read fails", async () => {
+    printingListingsOf.mockResolvedValue({ "reverse-holofoil": 5771.49 });
+    const body = await (await get()).json();
+    expect(printingListingsOf).toHaveBeenCalledWith("base1-4", "en");
+    expect(body.listings).toEqual({ "reverse-holofoil": 5771.49 });
+    expect(body.points).toHaveLength(2);
+    printingListingsOf.mockRejectedValue(new Error("store down"));
+    const res = await get();
+    expect(res.status).toBe(200);
+    const again = await res.json();
+    expect(again).not.toHaveProperty("listings");
+    expect(again.points).toHaveLength(2);
   });
 
   it("hands out this card's points only, whatever wider answer the reader gives", async () => {
