@@ -1192,6 +1192,18 @@ describe("buildIndex", () => {
     ]);
   });
 
+  it("writes a set's printed code where it has one, for the browser's search", () => {
+    const index = buildIndex(
+      "v1",
+      [row(), row({ id: "xyp-XY124", set_id: "xyp", local_id: "XY124" })],
+      {
+        "sv03.5": "MEW",
+      },
+    );
+    expect(index.sets["sv03.5"]?.code).toBe("MEW");
+    expect(index.sets.xyp).not.toHaveProperty("code");
+  });
+
   it("names no folder and no scan that is not a file of ours", () => {
     const index = buildIndex("v1", [
       row(),
@@ -1234,18 +1246,24 @@ describe("catalogueIndex", () => {
   it("builds again a document stored before the cards were in binder order", async () => {
     const { db, written } = store({ version: "2026-09-12T02:00:00+00:00", body: "{}" });
     const index = await catalogueIndex(db);
-    expect(index?.version).toBe("2026-09-12T02:00:00+00:00#n3");
+    expect(index?.version).toBe("2026-09-12T02:00:00+00:00#n4");
     expect(written).toHaveLength(1);
   });
 
   it("builds again a document stored before every picture was our own", async () => {
     const { db, written } = store({ version: "2026-09-12T02:00:00+00:00#n2", body: "{}" });
-    expect((await catalogueIndex(db))?.version).toBe("2026-09-12T02:00:00+00:00#n3");
+    expect((await catalogueIndex(db))?.version).toBe("2026-09-12T02:00:00+00:00#n4");
+    expect(written).toHaveLength(1);
+  });
+
+  it("builds again a document stored before its sets carried their printed code", async () => {
+    const { db, written } = store({ version: "2026-09-12T02:00:00+00:00#n3", body: "{}" });
+    expect((await catalogueIndex(db))?.version).toBe("2026-09-12T02:00:00+00:00#n4");
     expect(written).toHaveLength(1);
   });
 
   it("keeps a document built in the current format from the same copy", async () => {
-    const stored = { version: "2026-09-12T02:00:00+00:00#n3", body: "{}" };
+    const stored = { version: "2026-09-12T02:00:00+00:00#n4", body: "{}" };
     const { db, written } = store(stored);
     expect(await catalogueIndex(db)).toEqual(stored);
     expect(written).toHaveLength(0);
