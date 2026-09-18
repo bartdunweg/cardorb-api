@@ -56,6 +56,17 @@ export function seriesOf(p: Printing, run: Run): string[] {
   return foil === "normal" ? ["1st-edition"] : [`1st-edition-${foil}`];
 }
 
+/**
+ * The print run a headline's series is, for a card TCGplayer sells in runs: "unlimited-holofoil" is
+ * the unlimited run, "1st-edition" the stamped one. Null for a card sold in one run, whose series
+ * is the bare foil. The run is what such a card's sheet offers under it (Unlimited, 1st Edition),
+ * so it is the word its tile says (Bart, 2026-09-18: Base Set Charizard, Dark Dragonite).
+ */
+export function editionOfSeries(series: string | null | undefined): string | null {
+  const run = series?.match(/^(1st-edition|unlimited|shadowless)(?:-|$)/)?.[1];
+  return run ?? null;
+}
+
 /** One card's headline: the printing, the series its figure is filed under, and the figure. */
 export type Headline = { printing: string | null; series: string | null; usd: UsdPrice };
 

@@ -1,0 +1,2 @@
+- A card list asked with `from` (and no change sort) answers each card on the page with what its price did since that day, so the collection, the wishlist and a binder can show it under the price as a set page does.
+- A set page names the print run of a card sold in runs (`edition`: unlimited, 1st Edition, Shadowless) beside the printing, so Base Set Charizard or Dark Dragonite says which run its price is.

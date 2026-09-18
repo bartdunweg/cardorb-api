@@ -195,3 +195,30 @@ describe("GET /api/v1/cards?sort=change", () => {
     expect((await get("?sort=change&from=2026-09-01")).status).toBe(503);
   });
 });
+
+/* `from` on any list: each item of the page carries what its price did, for a tile to say so.
+   Only the page's cards are read, and a read that fails leaves the list answering. */
+describe("GET /api/v1/cards?from=", () => {
+  it("answers each item of the page with its priceChange, reading the page's cards only", async () => {
+    getCardPrices.mockResolvedValue({ points: [], failed: false });
+    const res = await get("?limit=1&from=2026-09-11");
+    expect(res.status).toBe(200);
+    expect(getCardPrices.mock.calls[0]![3]).toBe("2026-09-11");
+    expect((getCardPrices.mock.calls[0]![1] as unknown[]).length).toBeLessThanOrEqual(1);
+    const body = await res.json();
+    expect(body.cards).toHaveLength(1);
+    expect(body.cards[0]).toHaveProperty("priceChange", null);
+  });
+
+  it("still answers the list when the readings could not be read", async () => {
+    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    const res = await get("?from=2026-09-11");
+    expect(res.status).toBe(200);
+    for (const card of (await res.json()).cards) expect(card.priceChange).toBeNull();
+  });
+
+  it("reads no lines without from", async () => {
+    await get("");
+    expect(getCardPrices).not.toHaveBeenCalled();
+  });
+});

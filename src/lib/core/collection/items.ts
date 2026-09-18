@@ -564,7 +564,11 @@ export type ItemQuery = Omit<ItemFilter, (typeof REPEATED)[number]> &
     fullArt?: boolean;
     /** `?counts=1`: the answer carries filterCounts() beside the page. */
     counts?: boolean;
-    /** `sort=change`'s window, yyyy-mm-dd: required `from`, `to` today when left out. */
+    /**
+     * The change window, yyyy-mm-dd: required with `sort=change`, `to` today when left out. Without
+     * that sort, `from` still puts each item of the page's `priceChange` over the window, for a
+     * tile that says what its price did (the web asks seven days back).
+     */
     from?: string;
     to?: string;
   };
