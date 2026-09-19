@@ -108,8 +108,9 @@ export async function GET(req: Request) {
        it covers unless it is an import's dip, a night that held under half of the copies added by
        that day (importDips), which the worked-out day replaces; the early line then reaches past the
        first point to the last such night (earlyUntil). An account whose first stored point is its
-       first card's day asks for nothing, and neither does one with no stored point, whose recent
-       days start at its first card.
+       first card's day asks for nothing, and neither does one with no stored point: its recent days
+       start at its first card or ninety days back (HISTORY_WINDOW_DAYS), whichever is later, until
+       the cron stores its first night and the days before that are worked out here.
 
        Home does not wait for an early line that is not kept yet. The route waits EARLY_WAIT_MS for
        it, which a kept line answers well within, and otherwise answers the stored and recent points
