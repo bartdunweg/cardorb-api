@@ -28802,7 +28802,8 @@
   "ecard3-116": {
     "productId": 90682,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "ecard3-117": {
@@ -117132,7 +117133,8 @@
     "productId": 213073,
     "variants": [
       "normal",
-      "reverse-holofoil"
+      "reverse-holofoil",
+      "holofoil"
     ]
   },
   "swsh2-30": {
