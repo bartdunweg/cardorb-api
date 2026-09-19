@@ -43,6 +43,15 @@ export function folderSeries(
   prices: CardPricePoint[],
   list: "owned" | "wishlist" = "owned",
 ): ValueSnapshot[] {
+  return seriesDays(items, prices, list).map((p) => ({ ...p, value: Math.round(p.value) }));
+}
+
+/** folderSeries before its euros are rounded, so parts of one collection can be added up exactly. */
+function seriesDays(
+  items: CardItem[],
+  prices: CardPricePoint[],
+  list: "owned" | "wishlist",
+): ValueSnapshot[] {
   const byDate = new Map<string, CardPricePoint[]>();
   for (const p of prices) {
     const day = byDate.get(p.date);
@@ -87,7 +96,7 @@ export function folderSeries(
         value += price * n;
       }
     }
-    return { date, value: Math.round(value), cards, priced, unpriced };
+    return { date, value, cards, priced, unpriced };
   });
 }
 
@@ -189,4 +198,143 @@ export function joinHistory(stored: ValueSnapshot[], recent: ValueSnapshot[]): V
   if (!recent.length) return stored;
   const from = recent[0]!.date;
   return [...stored.filter((p) => p.date < from), ...recent];
+}
+
+/** What part of the held copies was worth on each day: unrounded euros, and how many copies priced. */
+export type DayTotals = Map<string, { value: number; priced: number }>;
+
+const nextDay = (date: string) =>
+  new Date(Date.parse(`${date}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * What these copies were worth on every day from `from` up to (not including) `until`, at that
+ * day's prices: folderSeries' pricing, every copy on every day whenever it was added.
+ *
+ * The part of the Home line before an account's first stored point (earlyLine). Worked out for one
+ * chunk of the collection at a time, so a collection of two thousand cards over nineteen months is
+ * never a million readings in memory at once: each chunk is summed and its readings let go. A copy
+ * is priced by its own card's readings alone, so the chunks add up to what the whole would. Every
+ * calendar day is asked, not only the days this chunk has a reading on, because a card with no
+ * reading on a day stands at its last one (CARRY_DAYS) and another chunk may have one that day.
+ */
+export function dayTotals(
+  items: CardItem[],
+  prices: CardPricePoint[],
+  from: string,
+  until: string,
+): DayTotals {
+  const days: CardPricePoint[] = [];
+  // A reading with no figure and no printings prices nothing: it only makes folderSeries ask the day.
+  for (let day = from; day < until; day = nextDay(day))
+    days.push({ language: "en", tcgId: "", date: day, market: null, holo: null });
+  const out: DayTotals = new Map();
+  for (const p of seriesDays(
+    items.filter((it) => it.owned),
+    [...prices.filter((p) => p.date >= from && p.date < until), ...days],
+    "owned",
+  ))
+    out.set(p.date, { value: p.value, priced: p.priced });
+  return out;
+}
+
+/**
+ * The Home line before an account's first stored point, from what the account holds now.
+ *
+ * `parts` are dayTotals over chunks of the held copies, `cards` how many copies are held in all,
+ * the copies with no catalogue id among them (they are in no chunk, and count as unpriced as they
+ * do everywhere). Every copy counts on every day, also before it was added (Bart, 2026-09-19: the
+ * price history of your cards, also before you added them), so this is what today's collection was
+ * worth then, not what the account held then. A day on which no copy has a price, a reading that
+ * day or one standing from the fourteen before, is left out rather than drawn as zero: before a
+ * set was released, or before the readings begin.
+ */
+export function earlyLine(parts: DayTotals[], cards: number): ValueSnapshot[] {
+  const sum = new Map<string, { value: number; priced: number }>();
+  for (const part of parts)
+    for (const [date, t] of part) {
+      const day = sum.get(date);
+      if (day) {
+        day.value += t.value;
+        day.priced += t.priced;
+      } else sum.set(date, { ...t });
+    }
+  return [...sum.keys()].sort().flatMap((date) => {
+    const { value, priced } = sum.get(date)!;
+    if (!priced) return [];
+    return [{ date, value: Math.round(value), cards, priced, unpriced: cards - priced }];
+  });
+}
+
+/**
+ * Whether a stored point is an import's dip, to be drawn from the worked-out line instead.
+ *
+ * A stored point counts what the account held that night; the early line counts every copy held
+ * now. An account that was made with one card and filled by an import a few days later has stored
+ * points of one card between them: jasperdenouden held 1 card from 2026-09-09 to 09-13 and 2,261
+ * from 09-14, so its line fell from some EUR 8,000 worked out to EUR 122 stored and climbed back,
+ * which the collection never did (Bart, 2026-09-19: replace those points).
+ *
+ * The rule: the stored point counts fewer than half the copies the worked-out line has a price for
+ * that day (`priced`, the day's own holdings with a reading, not today's total). Half, because the
+ * two counts differ in ordinary ways that must not replace anything: a card sold or added since is
+ * one or a few copies either way, and a copy with no reading that day is in neither. A night that
+ * held under half of what has a price that day is not a sale; it is the collection not yet being
+ * there. A large purchase reads the same way, and is drawn as if it had always been held, which is
+ * what the line before the first point does too.
+ */
+export const replacesStored = (stored: ValueSnapshot, worked: ValueSnapshot) =>
+  stored.cards * 2 < worked.priced;
+
+/**
+ * The day the early line has to reach to (exclusive): the first stored point, or the day after the
+ * leading run of stored nights holding under half of the copies held now, whichever is later. Only
+ * those can be an import's dip (replacesStored needs the worked-out day beside them, and
+ * withEarlyLine replaces a leading run alone), and an account that never had one is asked for
+ * nothing after its first point. `copiesNow` is the copies with a catalogue id, the ones a reading
+ * can price. The run is fixed once a night holds the collection, so `until`, which is in every
+ * part's cache key, moves only while the account is still growing past twice its first nights.
+ */
+export function earlyUntil(stored: ValueSnapshot[], copiesNow: number): string | null {
+  if (!stored.length) return null;
+  let until = stored[0]!.date;
+  for (const p of stored) {
+    if (p.cards * 2 >= copiesNow) break;
+    until = nextDay(p.date);
+  }
+  return until;
+}
+
+/**
+ * `early` before the stored points, then the stored points, the leading run of them replaced by
+ * the early line's days where they are an import's dip (replacesStored). Only a leading run: a dip
+ * after a night that held the collection is not a collection that was not there yet. Every other stored point wins the day it covers,
+ * and the early line otherwise ends the day before the first of them. With nothing stored, `early`
+ * alone.
+ */
+export function withEarlyLine(early: ValueSnapshot[], stored: ValueSnapshot[]): ValueSnapshot[] {
+  if (!early.length) return stored;
+  if (!stored.length) return early;
+  const first = stored[0]!.date;
+  const worked = new Map(early.map((p) => [p.date, p]));
+  let replaced = false;
+  let settled = false;
+  return [
+    ...early.filter((p) => p.date < first),
+    ...stored.map((p) => {
+      const w = worked.get(p.date);
+      if (!settled && w && replacesStored(p, w)) {
+        replaced = true;
+        return w;
+      }
+      if (settled || !replaced) {
+        settled = true;
+        return p;
+      }
+      settled = true;
+      /* The first stored point after a dip says the import added its cards that night. The
+         worked-out line already counts them on every day, so the chart would mark growth the line
+         does not show: jasperdenouden's 2,260 cards "added" on 2026-09-14 on a flat line. */
+      return { ...p, added: 0, addedValue: 0 };
+    }),
+  ];
 }

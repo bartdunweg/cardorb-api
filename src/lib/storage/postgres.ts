@@ -452,6 +452,8 @@ export async function listCardPrices(
   db: SupabaseClient,
   cards: PricedCard[],
   since: string,
+  /** The first day not wanted, yyyy-mm-dd: the months after its own are not read. Everything when left out. */
+  until?: string,
 ): Promise<CardPricePoint[]> {
   const out: CardPricePoint[] = [];
   const PAGE = 1000;
@@ -463,12 +465,14 @@ export async function listCardPrices(
   for (const { language, ids: chunk } of chunks) {
     const rows: PriceMonthRecord[] = [];
     for (let page = 0; ; page++) {
-      const { data, error } = await db
+      let query = db
         .from("card_price_months")
         .select("language,tcg_id,printing,month,cents")
         .eq("language", language)
         .in("tcg_id", chunk)
-        .gte("month", monthOf(since))
+        .gte("month", monthOf(since));
+      if (until) query = query.lte("month", monthOf(until));
+      const { data, error } = await query
         .order("tcg_id", { ascending: true })
         .order("printing", { ascending: true })
         .order("month", { ascending: true })
