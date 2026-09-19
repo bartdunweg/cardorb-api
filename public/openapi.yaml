@@ -1916,8 +1916,9 @@ paths:
       description: >-
         Needs a bearer token or a session. Without `folder`, the nightly readings of the whole
         collection; the days before the account's first reading, back to 2024-02-08 where its
-        cards have prices, are what the cards held now were worth on each day. With one, the same shape for that list, built from the daily per-card prices:
-        a shorter history, starting where those do.
+        cards have prices, are what the cards held now were worth on each day. With one, the
+        same shape for that list, built from the daily per-card prices: a shorter history,
+        starting where those do.
       parameters:
         - name: folder
           in: query

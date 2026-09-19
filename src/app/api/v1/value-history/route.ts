@@ -86,13 +86,14 @@ export async function GET(req: Request) {
        the stored points, which win every day they cover (prependHistory). Only the owner's account
        was backfilled to 2024-02-08; every other account's points start the day its first card was
        added, which drew a flat or two-point line. An account with no stored point at all has its
-       early line end where the worked-out recent days begin.
+       early line cut where the worked-out recent days begin.
 
        Where the collection or its readings cannot be read, each part falls back on its own: the
        stored points alone, as before, and the error logged. */
+    const today = new Date().toISOString().slice(0, 10);
     const since = recentFrom(
       snapshots.map((p) => p.date),
-      new Date().toISOString().slice(0, 10),
+      today,
     );
     const firstStored = snapshots[0]?.date;
     const early = !firstStored || firstStored > HISTORY_FROM;
@@ -117,8 +118,8 @@ export async function GET(req: Request) {
             console.error("Recent value line unavailable, the stored points alone:", err);
           }
         };
-        const readEarly = async (until: string | undefined) => {
-          if (!early || !until || until <= HISTORY_FROM) return;
+        const readEarly = async (until: string) => {
+          if (!early || until <= HISTORY_FROM) return;
           try {
             const line = await getEarlyValue(
               viewer.userId,
@@ -131,12 +132,10 @@ export async function GET(req: Request) {
             console.error("Early value line unavailable, the stored points alone:", err);
           }
         };
-        // Side by side where the first stored point is known; after the recent days where it is not.
-        if (firstStored) await Promise.all([readRecent(), readEarly(firstStored)]);
-        else {
-          await readRecent();
-          await readEarly(recent[0]?.date);
-        }
+        /* With no stored point the early line is built to today, a key that holds for the day
+           (recent[0] need not: a copy with no date moves it with the window), and prependHistory
+           cuts it where the recent days begin. The cron stores the first point the next night. */
+        await Promise.all([readRecent(), readEarly(firstStored ?? today)]);
       }
     }
     return NextResponse.json(

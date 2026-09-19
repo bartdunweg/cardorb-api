@@ -242,16 +242,20 @@ describe("GET /api/v1/value-history, the days before the first stored point", ()
     expect(getEarlyValue).not.toHaveBeenCalled();
   });
 
-  it("ends the early line where the recent days begin for an account with no stored point", async () => {
+  it("cuts the early line where the recent days begin for an account with no stored point", async () => {
     vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
     getValueHistory.mockResolvedValue({ snapshots: [], failed: false });
     getCollection.mockResolvedValue({ sets: [], failed: false });
     flattenItems.mockReturnValueOnce([solgaleo]);
     getRecentValue.mockResolvedValue({ snapshots: [point("2026-09-17", 281)], failed: false });
-    getEarlyValue.mockResolvedValue({ snapshots: [point("2026-09-16", 279)], failed: false });
+    getEarlyValue.mockResolvedValue({
+      snapshots: [point("2026-09-16", 279), point("2026-09-17", 280), point("2026-09-18", 280)],
+      failed: false,
+    });
     const body = await (await get()).json();
     vi.useRealTimers();
-    expect(getEarlyValue).toHaveBeenCalledWith("me-uuid", [solgaleo], "t.o.k.e.n", "2026-09-17");
+    // Built to today, a key that holds for the day, and cut where the recent days begin.
+    expect(getEarlyValue).toHaveBeenCalledWith("me-uuid", [solgaleo], "t.o.k.e.n", "2026-09-19");
     expect(body.snapshots.map((p: { date: string }) => p.date)).toEqual([
       "2026-09-16",
       "2026-09-17",
