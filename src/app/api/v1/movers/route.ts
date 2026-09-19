@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
-import { ALL_READINGS, getCollection, getMoverPrices } from "@/lib/core/collection/collection";
-import { copiesHeld } from "@/lib/core/collection/cards-stats";
+import {
+  ALL_READINGS,
+  findFolder,
+  getCollection,
+  getMoverPrices,
+} from "@/lib/core/collection/collection";
+import { UUID } from "@/lib/core/collection/collection-row";
 import { moversOf } from "@/lib/core/collection/movers";
-import { agreedOn } from "@/lib/core/collection/items";
+import { agreedOn, type ItemFilter, narrowSets } from "@/lib/core/collection/items";
 import { printedNumberOf } from "@/lib/core/catalogue/set-codes";
 import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
 
@@ -18,6 +23,13 @@ import { historyKey, priceLanguageOf } from "@/lib/core/price-months.mjs";
  * read the same window. Each card is compared between its earliest and its
  * latest reading in the window (moversOf), per copy at its own printing, and ranked by what the
  * move did to the collection: the change times the copies held. `top` is how many each way.
+ *
+ * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, read as
+ * /v1/value-history reads it: favourite copies held, a binder's copies (a rule binder by its
+ * rule), or the wished cards. The collection is cut to the list before the readings are asked
+ * for, so only its cards are read. On the wishlist a card is priced at the printing wished and
+ * counts as one copy, so `copies` is 1 and `total` is the change. A folder id that is not the
+ * caller's is 404; anything else that is not one of the three is 400.
  *
  * 503 where the collection or the readings could not be read: an empty list means nothing moved,
  * and a store that is down is not that.
@@ -56,11 +68,34 @@ export async function GET(req: Request) {
     });
 
   const token = bearer(req) ?? undefined;
-  const { sets, failed } = await getCollection(viewer.userId, token);
-  if (failed)
+  const folder = params.get("folder");
+  let filter: ItemFilter | null = null;
+  if (folder) {
+    if (folder !== "favorites" && folder !== "wishlist" && !UUID.test(folder))
+      return apiError(400, "folder must be a folder id, `favorites` or `wishlist`.", undefined, {
+        headers: readHeaders(req),
+      });
+    filter = folder === "wishlist" ? { owned: false } : { owned: true, favorite: true };
+    if (folder !== "favorites" && folder !== "wishlist") {
+      let found;
+      try {
+        found = await findFolder(viewer.userId, folder, token);
+      } catch (err) {
+        return storeErrorResponse(err, req, "Reading the folder failed");
+      }
+      if (!found)
+        return apiError(404, "No folder by that id.", undefined, { headers: readHeaders(req) });
+      filter = found.rule ? { rule: found.rule } : { owned: true, collection: folder };
+    }
+  }
+  const wished = folder === "wishlist";
+  const collection = await getCollection(viewer.userId, token);
+  if (collection.failed)
     return apiError(503, "The collection is unavailable.", undefined, {
       headers: readHeaders(req),
     });
+  // Cut to the list first, so the readings asked for are the list's cards and no others.
+  const sets = filter ? narrowSets(collection.sets, filter) : collection.sets;
   // Each card by its id and its set's catalogue: the two catalogues share ids (neo4-106).
   const cards = [
     ...new Map(
@@ -85,12 +120,13 @@ export async function GET(req: Request) {
       readHeaders(req),
     );
 
-  const { up, down } = moversOf(sets, prices.points, { top });
+  const { up, down } = moversOf(sets, prices.points, { top, wished });
   const out = (m: (typeof up)[number]) => {
     /* Which printing the copies are and what state they are in, for the line under the name
        ("Holo · Near Mint"), and only where every copy held answers the same: a card held twice,
-       once graded and once loose, says nothing rather than the first row's answer (agreedOn). */
-    const held = m.card.variants.filter((v) => v.owned);
+       once graded and once loose, says nothing rather than the first row's answer (agreedOn).
+       On the wishlist, the same of the printings wished. */
+    const held = m.card.variants.filter((v) => v.owned !== wished);
     return {
       tcgId: m.card.tcgId,
       name: m.card.name,
@@ -99,14 +135,14 @@ export async function GET(req: Request) {
       set: m.set,
       setAbbr: m.setAbbr,
       // The rarity of a printing held, so the line under the name reads as every list's: "PFL 004 · Double Rare".
-      rarity: m.card.variants.find((v) => v.owned && v.rarity)?.rarity ?? null,
+      rarity: held.find((v) => v.rarity)?.rarity ?? null,
       image: m.card.image,
       finish: agreedOn(held.map((v) => v.finish)),
       foilPattern: agreedOn(held.map((v) => v.foilPattern)),
       edition: agreedOn(held.map((v) => v.edition)),
       condition: agreedOn(held.map((v) => v.condition)),
       grade: agreedOn(held.map((v) => v.grade)),
-      copies: copiesHeld(m.card),
+      copies: m.copies,
       was: m.was,
       now: m.now,
       change: m.change,

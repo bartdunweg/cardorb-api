@@ -889,7 +889,7 @@ components:
         edition: { type: [string, "null"], description: "The print run, on the same terms as finish." }
         condition: { type: [string, "null"], description: "The copies' condition (\"Near Mint\"), on the same terms as finish." }
         grade: { type: [string, "null"], description: "The copies' grade as written on the slab (\"PSA 10\"), on the same terms as finish." }
-        copies: { type: integer, description: "Copies held." }
+        copies: { type: integer, description: "Copies held; 1 for a wished card (`folder=wishlist`)." }
         was: { type: number, description: "One copy at the earliest reading in the window, euros." }
         now: { type: number, description: "One copy at the latest reading, euros." }
         change: { type: number, description: "now minus was, per copy." }
@@ -1955,8 +1955,14 @@ paths:
         Needs a bearer token or a session. Each owned card is compared between its earliest and latest
         reading in the window, per copy at its own printing, and ranked by the change times the copies
         held. `up` is largest gain first, `down` largest loss first. A card with one reading in the
-        window, or a move under ten cents a copy, is left out.
+        window, or a move under ten cents a copy, is left out. With `folder`, the same for that list
+        alone; on the wishlist a card is priced at the printing wished and counts as one copy.
       parameters:
+        - name: folder
+          in: query
+          required: false
+          schema: { type: string }
+          description: A folder id, `favorites`, or `wishlist` (the wished cards, one copy each).
         - name: days
           in: query
           required: false
@@ -1982,7 +1988,9 @@ paths:
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorised" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+        "502": { $ref: "#/components/responses/BadGateway" }
         "503":
           description: The collection or its readings could not be read. Never an empty list.
           content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }

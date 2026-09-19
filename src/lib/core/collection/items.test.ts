@@ -8,6 +8,7 @@ import {
   filterPublicItems,
   sumValue,
   flattenItems,
+  narrowSets,
   pageOf,
   publicItems,
   readItemQuery,
@@ -921,5 +922,46 @@ describe("facetsOf over the wishes", () => {
     ]);
     expect(facetsOf(withFacts).gens).toEqual(["Base"]);
     expect(facetsOf(withFacts).types).toEqual(["Colorless", "Lightning"]);
+  });
+});
+
+describe("narrowSets", () => {
+  it("keeps the copies a filter keeps, grouped as before, and drops what is left empty", () => {
+    const out = narrowSets(SETS, { owned: true, favorite: true });
+    expect(out.map((s) => s.name)).toEqual(["Base Set"]);
+    expect(out[0]!.cards.map((c) => c.name)).toEqual(["Pikachu"]);
+    expect(out[0]!.cards[0]!.variants.map((v) => v.id)).toEqual(["a"]);
+  });
+
+  it("keeps one copy of a card and not its other", () => {
+    const sets = [
+      set("Jungle", [
+        card("Snorlax", [variant({ id: "c", collectionId: "f-2" }), variant({ id: "d" })]),
+      ]),
+    ];
+    const out = narrowSets(sets, { owned: true, collection: "f-2" });
+    expect(out[0]!.cards[0]!.variants.map((v) => v.id)).toEqual(["c"]);
+  });
+
+  it("answers the wishes for the wishlist", () => {
+    const out = narrowSets(SETS, { owned: false });
+    expect(out.flatMap((s) => s.cards.map((c) => c.name))).toEqual(["Charizard"]);
+  });
+
+  it("judges duplicates over the whole list, not card by card", () => {
+    const sets = [
+      set("Jungle", [
+        card("Snorlax", [variant({ id: "c" }), variant({ id: "d" })], { tcgId: "base2-11" }),
+        card("Eevee", [variant({ id: "e" })], { tcgId: "base2-51" }),
+      ]),
+    ];
+    const out = narrowSets(sets, { duplicates: true });
+    expect(out[0]!.cards.map((c) => c.name)).toEqual(["Snorlax"]);
+    expect(out[0]!.cards[0]!.variants.map((v) => v.id)).toEqual(["c", "d"]);
+  });
+
+  it("never keeps a copy without a row id", () => {
+    const sets = [set("Base Set", [card("Mew", [variant({ id: null as unknown as string })])])];
+    expect(narrowSets(sets, {})).toEqual([]);
   });
 });

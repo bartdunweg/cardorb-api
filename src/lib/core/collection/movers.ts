@@ -100,7 +100,12 @@ export type Mover = {
   change: number;
   /** The same as a fraction of `was`. */
   pct: number;
-  /** change × copies held, which is what it did to the collection's total. */
+  /**
+   * How many copies the move is counted over: the copies held, or one for a wished card
+   * (MoversOptions.wished), since a wish is one card wanted however many rows say it.
+   */
+  copies: number;
+  /** change × copies, which is what it did to the collection's total. */
   total: number;
   from: string;
   to: string;
@@ -115,10 +120,10 @@ export type Mover = {
  * because a mover is about the card and showing it twice under one name would
  * read as a duplicate.
  */
-function held(card: OwnedCard, point: CardPricePoint): number | null {
+function held(card: OwnedCard, point: CardPricePoint, wished = false): number | null {
   let best: number | null = null;
   for (const v of card.variants) {
-    if (!v.owned) continue;
+    if (v.owned === wished) continue;
     const each = priceOfCopy(v, point);
     if (each != null && (best == null || each > best)) best = each;
   }
@@ -137,6 +142,11 @@ export type MoversOptions = {
    * noise.
    */
   minChange?: number;
+  /**
+   * The wishlist: price each card's wished printings rather than the ones held, and count it
+   * once, so `total` is the change. Without it a wished card holds no copies and never moves.
+   */
+  wished?: boolean;
 };
 
 /**
@@ -180,7 +190,7 @@ export function endsOfLines(points: CardPricePoint[]): CardPricePoint[] {
 export function moversOf(
   sets: CardSet[],
   points: CardPricePoint[],
-  { top = 5, minChange = 0.1 }: MoversOptions = {},
+  { top = 5, minChange = 0.1, wished = false }: MoversOptions = {},
 ): { up: Mover[]; down: Mover[] } {
   const byCard = new Map<string, CardPricePoint[]>();
   for (const p of points) {
@@ -193,7 +203,7 @@ export function moversOf(
   for (const set of sets) {
     for (const card of set.cards) {
       if (!card.tcgId) continue;
-      const copies = copiesHeld(card);
+      const copies = wished ? (card.variants.some((v) => !v.owned) ? 1 : 0) : copiesHeld(card);
       if (!copies) continue;
 
       // Sorted here rather than trusted from the query: this is a pure
@@ -206,8 +216,8 @@ export function moversOf(
 
       const first = series[0]!;
       const last = series.at(-1)!;
-      const was = held(card, first);
-      const now = held(card, last);
+      const was = held(card, first, wished);
+      const now = held(card, last, wished);
       if (was == null || now == null || was <= 0) continue;
 
       const change = now - was;
@@ -221,6 +231,7 @@ export function moversOf(
         now,
         change,
         pct: change / was,
+        copies,
         total: change * copies,
         from: first.date,
         to: last.date,

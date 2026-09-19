@@ -371,6 +371,28 @@ export function filterItems(items: CardItem[], f: ItemFilter): CardItem[] {
   });
 }
 
+/**
+ * The collection cut down to the copies a filter keeps, still grouped by set and card: what a
+ * reader that works on sets (moversOf) asks for one list. Each copy is judged as its own item,
+ * all of them in one filterItems call so a filter that counts across the list (`duplicates`)
+ * still sees the whole of it. A copy without a row id is never kept, as flattenItems never lists
+ * one; a card left with no copies is dropped, and a set left with no cards.
+ */
+export function narrowSets(sets: CardSet[], f: ItemFilter): CardSet[] {
+  const items: CardItem[] = [];
+  for (const set of sets)
+    for (const card of set.cards)
+      for (const v of card.variants) if (v.id) items.push(itemOf(set, card, v, v.id));
+  const kept = new Set(filterItems(items, f).map((it) => it.id));
+  return sets.flatMap((set) => {
+    const cards = set.cards.flatMap((card) => {
+      const variants = card.variants.filter((v) => v.id && kept.has(v.id));
+      return variants.length ? [{ ...card, variants }] : [];
+    });
+    return cards.length ? [{ ...set, cards }] : [];
+  });
+}
+
 export type FilterCounts = {
   /** Keyed by the set's title, the name a filter sheet shows. */
   set: Record<string, number>;

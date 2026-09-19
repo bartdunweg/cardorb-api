@@ -239,3 +239,45 @@ describe("priceOfCopy", () => {
     expect(priceOfCopy({ finish: "normal" }, point({ normal: 0.4 }))).toBe(0.4);
   });
 });
+
+describe("moversOf on the wishlist", () => {
+  it("prices the printing wished and counts the card once", () => {
+    const r = moversOf(
+      [
+        set([
+          card({
+            tcgId: "a",
+            variants: [
+              variant({ owned: false, quantity: 3, finish: "reverse-holo" }),
+              variant({ owned: true, quantity: 2 }),
+            ],
+          }),
+        ]),
+      ],
+      [
+        { ...at("a", "2026-07-01", 10), holo: 20 },
+        { ...at("a", "2026-08-01", 12), holo: 30 },
+      ],
+      { wished: true },
+    );
+    expect(r.up).toHaveLength(1);
+    expect(r.up[0]).toMatchObject({ was: 20, now: 30, change: 10, copies: 1, total: 10 });
+  });
+
+  it("leaves out a card nobody wishes for", () => {
+    const r = moversOf(
+      [set([card({ tcgId: "a" })])],
+      [at("a", "2026-07-01", 10), at("a", "2026-08-01", 40)],
+      { wished: true },
+    );
+    expect(r.up).toEqual([]);
+  });
+
+  it("counts the copies held without it", () => {
+    const r = moversOf(
+      [set([card({ tcgId: "a", variants: [variant({ quantity: 3 })] })])],
+      [at("a", "2026-07-01", 10), at("a", "2026-08-01", 12)],
+    );
+    expect(r.up[0]).toMatchObject({ copies: 3, total: 6 });
+  });
+});
