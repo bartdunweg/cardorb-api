@@ -462,6 +462,24 @@ describe("withEarlyLine", () => {
     ]);
   });
 
+  it("says the night after a replaced dip added nothing, since the line already holds its cards", () => {
+    const early = [point("2026-09-13", 8038, 2265, 2264)];
+    const stored = [
+      point("2026-09-13", 85, 1),
+      { ...point("2026-09-14", 7761, 2261), added: 2260, addedValue: 7700 },
+      { ...point("2026-09-16", 8067, 2265), added: 4, addedValue: 300 },
+    ];
+    const line = withEarlyLine(early, stored);
+    expect(line[1]).toMatchObject({ date: "2026-09-14", added: 0, addedValue: 0 });
+    expect(line[2]).toMatchObject({ date: "2026-09-16", added: 4, addedValue: 300 });
+  });
+
+  it("replaces a leading run alone, not a dip after a night that held the collection", () => {
+    const early = [point("2026-09-09", 800, 10, 10), point("2026-09-11", 810, 10, 10)];
+    const stored = [point("2026-09-10", 790, 10), point("2026-09-11", 20, 1)];
+    expect(withEarlyLine(early, stored).map((p) => p.value)).toEqual([800, 790, 20]);
+  });
+
   it("keeps the stored point of a day a card was sold", () => {
     const early = [point("2026-09-09", 8050, 2265, 2264), point("2026-09-10", 8060, 2265, 2264)];
     const stored = [point("2026-09-09", 8040, 2264), point("2026-09-10", 8030, 2264)];
@@ -499,7 +517,7 @@ describe("earlyUntil", () => {
     expect(earlyUntil([point("2026-09-17", 2264)], 2265)).toBe("2026-09-17");
   });
 
-  it("reaches to the day after the last night that held under half", () => {
+  it("reaches to the day after the leading nights that held under half", () => {
     const stored = [
       point("2026-09-09", 1),
       point("2026-09-13", 1),
@@ -507,6 +525,10 @@ describe("earlyUntil", () => {
       point("2026-09-18", 2265),
     ];
     expect(earlyUntil(stored, 2265)).toBe("2026-09-14");
+  });
+
+  it("stops at the first night that held the collection", () => {
+    expect(earlyUntil([point("2026-09-09", 10), point("2026-09-12", 1)], 10)).toBe("2026-09-09");
   });
 
   it("is null with nothing stored", () => {

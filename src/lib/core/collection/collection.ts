@@ -2177,56 +2177,79 @@ export const getEarlyValue = cache(
     userId: string,
     items: CardItem[],
     token: string | undefined,
-    /** The first stored point's date, yyyy-mm-dd: the line ends the day before it. */
+    /** The first day not wanted, yyyy-mm-dd (earlyUntil): the first stored point, or past a dip. */
     until: string,
   ): Promise<RecentValue> => {
     const owned = items.filter((it) => it.owned);
     const cards = pricedCardsOf(owned);
     if (!cards.length || until <= HISTORY_FROM) return { snapshots: [], failed: false };
-    try {
-      const db = token ? userClient(token) : await serverClient();
-      if (!db) return { snapshots: [], failed: false };
-      const start = performance.now();
-      const byPart = new Map<number, PricedCard[]>();
-      for (const card of cards) {
-        const part = earlyPartOf(card);
-        const list = byPart.get(part);
-        if (list) list.push(card);
-        else byPart.set(part, [card]);
-      }
-      let missed = 0;
-      const parts = await mapLimit([...byPart.values()], EARLY_PARALLEL, async (chunk) => {
-        const keys = new Set(chunk.map((c) => historyKey(c.language, c.tcgId)));
-        const held = owned.filter((it) => it.tcgId && keys.has(historyKey(it.catalogue, it.tcgId)));
-        // Kept as rows, not a Map: the Data Cache stores what JSON can say.
-        const days = await unstable_cache(
-          async () => {
-            missed++;
-            const points = await listCardPrices(db, chunk, HISTORY_FROM, until);
-            return [...dayTotals(held, points, HISTORY_FROM, until)].map(
-              ([date, t]) => [date, t.value, t.priced] as [string, number, number],
-            );
-          },
-          // v15: `until` may reach past the first stored point, to the last night of an import's dip.
-          ["early-value", "v15", userId, until, listKey(held)],
-          { revalidate: 86_400, tags: [cardPricesTag(userId)] },
-        )();
-        return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));
-      });
-      const copies = owned.reduce((n, it) => n + Math.max(0, it.quantity), 0);
-      const snapshots = earlyLine(parts, copies);
-      logTiming(
-        "early-value",
-        elapsed(start),
-        `${cards.length} cards, ${missed} of ${parts.length} parts read, ${snapshots.length} days`,
-      );
-      return { snapshots, failed: false };
-    } catch (err) {
-      console.error("Early value line unavailable, the stored points alone:", err);
-      return { snapshots: [], failed: true };
-    }
+    /* One read at a time for the same line on this instance. The Data Cache keeps a part only once
+       it is read, and the route finishes a cold read after its response, so a Home reload or the web
+       and iOS asking together within those seconds would each start the whole read again. */
+    const key = `${userId}|${until}|${listKey(owned)}`;
+    const running = earlyReads.get(key);
+    if (running) return running;
+    const read = readEarlyValue(userId, owned, cards, token, until).finally(() =>
+      earlyReads.delete(key),
+    );
+    earlyReads.set(key, read);
+    return read;
   },
 );
+
+/** The early lines being read on this instance, by account, `until` and what is held. */
+const earlyReads = new Map<string, Promise<RecentValue>>();
+
+async function readEarlyValue(
+  userId: string,
+  owned: CardItem[],
+  cards: PricedCard[],
+  token: string | undefined,
+  until: string,
+): Promise<RecentValue> {
+  try {
+    const db = token ? userClient(token) : await serverClient();
+    if (!db) return { snapshots: [], failed: false };
+    const start = performance.now();
+    const byPart = new Map<number, PricedCard[]>();
+    for (const card of cards) {
+      const part = earlyPartOf(card);
+      const list = byPart.get(part);
+      if (list) list.push(card);
+      else byPart.set(part, [card]);
+    }
+    let missed = 0;
+    const parts = await mapLimit([...byPart.values()], EARLY_PARALLEL, async (chunk) => {
+      const keys = new Set(chunk.map((c) => historyKey(c.language, c.tcgId)));
+      const held = owned.filter((it) => it.tcgId && keys.has(historyKey(it.catalogue, it.tcgId)));
+      // Kept as rows, not a Map: the Data Cache stores what JSON can say.
+      const days = await unstable_cache(
+        async () => {
+          missed++;
+          const points = await listCardPrices(db, chunk, HISTORY_FROM, until);
+          return [...dayTotals(held, points, HISTORY_FROM, until)].map(
+            ([date, t]) => [date, t.value, t.priced] as [string, number, number],
+          );
+        },
+        // v15: `until` may reach past the first stored point, to the last night of an import's dip.
+        ["early-value", "v15", userId, until, listKey(held)],
+        { revalidate: 86_400, tags: [cardPricesTag(userId)] },
+      )();
+      return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));
+    });
+    const copies = owned.reduce((n, it) => n + Math.max(0, it.quantity), 0);
+    const snapshots = earlyLine(parts, copies);
+    logTiming(
+      "early-value",
+      elapsed(start),
+      `${cards.length} cards, ${missed} of ${parts.length} parts read, ${snapshots.length} days`,
+    );
+    return { snapshots, failed: false };
+  } catch (err) {
+    console.error("Early value line unavailable, the stored points alone:", err);
+    return { snapshots: [], failed: true };
+  }
+}
 
 /**
  * Whose collection /user/<name> shows, or null where nobody's is.

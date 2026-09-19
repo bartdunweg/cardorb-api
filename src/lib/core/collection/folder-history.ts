@@ -287,21 +287,27 @@ export const replacesStored = (stored: ValueSnapshot, worked: ValueSnapshot) =>
 
 /**
  * The day the early line has to reach to (exclusive): the first stored point, or the day after the
- * last stored point holding under half of the copies held now, whichever is later. Only those can
- * be an import's dip (replacesStored needs the worked-out day beside them), and an account that
- * never had one is asked for nothing after its first point.
+ * leading run of stored nights holding under half of the copies held now, whichever is later. Only
+ * those can be an import's dip (replacesStored needs the worked-out day beside them, and
+ * withEarlyLine replaces a leading run alone), and an account that never had one is asked for
+ * nothing after its first point. `copiesNow` is the copies with a catalogue id, the ones a reading
+ * can price. The run is fixed once a night holds the collection, so `until`, which is in every
+ * part's cache key, moves only while the account is still growing past twice its first nights.
  */
 export function earlyUntil(stored: ValueSnapshot[], copiesNow: number): string | null {
   if (!stored.length) return null;
   let until = stored[0]!.date;
-  for (const p of stored)
-    if (p.cards * 2 < copiesNow && nextDay(p.date) > until) until = nextDay(p.date);
+  for (const p of stored) {
+    if (p.cards * 2 >= copiesNow) break;
+    until = nextDay(p.date);
+  }
   return until;
 }
 
 /**
- * `early` before the stored points, then the stored points, each replaced by the early line's day
- * where it is an import's dip (replacesStored). Every other stored point wins the day it covers,
+ * `early` before the stored points, then the stored points, the leading run of them replaced by
+ * the early line's days where they are an import's dip (replacesStored). Only a leading run: a dip
+ * after a night that held the collection is not a collection that was not there yet. Every other stored point wins the day it covers,
  * and the early line otherwise ends the day before the first of them. With nothing stored, `early`
  * alone.
  */
@@ -310,11 +316,25 @@ export function withEarlyLine(early: ValueSnapshot[], stored: ValueSnapshot[]): 
   if (!stored.length) return early;
   const first = stored[0]!.date;
   const worked = new Map(early.map((p) => [p.date, p]));
+  let replaced = false;
+  let settled = false;
   return [
     ...early.filter((p) => p.date < first),
     ...stored.map((p) => {
       const w = worked.get(p.date);
-      return w && replacesStored(p, w) ? w : p;
+      if (!settled && w && replacesStored(p, w)) {
+        replaced = true;
+        return w;
+      }
+      if (settled || !replaced) {
+        settled = true;
+        return p;
+      }
+      settled = true;
+      /* The first stored point after a dip says the import added its cards that night. The
+         worked-out line already counts them on every day, so the chart would mark growth the line
+         does not show: jasperdenouden's 2,260 cards "added" on 2026-09-14 on a flat line. */
+      return { ...p, added: 0, addedValue: 0 };
     }),
   ];
 }

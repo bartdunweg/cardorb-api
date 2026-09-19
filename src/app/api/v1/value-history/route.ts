@@ -140,7 +140,7 @@ export async function GET(req: Request) {
         const until = early
           ? (earlyUntil(
               snapshots,
-              owned.reduce((n, it) => n + Math.max(0, it.quantity), 0),
+              owned.reduce((n, it) => n + (it.tcgId ? Math.max(0, it.quantity) : 0), 0),
             ) ?? today)
           : null;
         const readEarly = async (): Promise<ValueSnapshot[]> => {
