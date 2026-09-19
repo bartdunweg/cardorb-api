@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   parseExpansionCards,
   parseExpansions,
+  scrydexCodeByName,
   scrydexLogoFor,
   scrydexNumbers,
   scrydexRealLogo,
@@ -132,5 +133,104 @@ describe("scrydexRealLogo", () => {
       "https://images.scrydex.com/pokemon/mcd23-logo/logo",
     );
     vi.unstubAllGlobals();
+  });
+});
+
+describe("scrydexCodeByName", () => {
+  const logo = (code: string) => ({ logo: `https://images.scrydex.com/pokemon/${code}-logo/logo` });
+  const sets = [
+    { id: "me55", name: "30th Celebration", images: logo("me55") },
+    { id: "me55c", name: "30th Celebration: Classic Collection", images: logo("me55c") },
+    {
+      id: "sv1",
+      name: "Scarlet & Violet",
+      images: { logo: "https://images.pokemontcg.io/sv1/logo.png" },
+    },
+  ];
+
+  it("finds the one set carrying the name exactly, by its Scrydex logo's code", () => {
+    expect(scrydexCodeByName(sets, "30th Celebration")).toBe("me55");
+    expect(scrydexCodeByName(sets, "30th Celebration: Classic Collection")).toBe("me55c");
+  });
+
+  it("takes the set's own id where its logo is not a Scrydex address", () => {
+    expect(scrydexCodeByName(sets, "Scarlet & Violet")).toBe("sv1");
+  });
+
+  it("does not take a near name for the set: punctuation, case and a subset's longer name", () => {
+    expect(scrydexCodeByName(sets, "30th Celebration Classic Collection")).toBeNull();
+    expect(scrydexCodeByName(sets, "30th celebration")).toBeNull();
+    expect(scrydexCodeByName(sets, "30th")).toBeNull();
+  });
+
+  it("gives nothing where two sets carry the name", () => {
+    expect(
+      scrydexCodeByName(
+        [...sets, { id: "me55x", name: "30th Celebration", images: logo("me55x") }],
+        "30th Celebration",
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("scrydexEnglishLogo", () => {
+  const REAL = '"cfAAgeVIgeVw8r-OTYwsfQ4URUgITfWme2fetQNLVvDQ"';
+  /** Scrydex answering a real logo for every code; pokemontcg.io as `ptcg` says. */
+  const stub = (ptcg: () => Response) => {
+    const asked: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(url);
+      return url.startsWith("https://api.pokemontcg.io/")
+        ? ptcg()
+        : new Response(null, { status: 200, headers: { etag: REAL } });
+    });
+    return asked;
+  };
+  const fresh = async () => {
+    vi.resetModules();
+    return (await import("./scrydex-japan-logos")).scrydexEnglishLogo;
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it("gives 30th Celebration its logo from the written code, without asking pokemontcg.io", async () => {
+    const asked = stub(() => new Response(null, { status: 502 }));
+    const logo = await (await fresh())("30th", "30th Celebration");
+    expect(logo).toBe("https://images.scrydex.com/pokemon/me55-logo/logo");
+    expect(asked.some((u) => u.includes("pokemontcg.io"))).toBe(false);
+  });
+
+  it("finds a set nobody wrote down by its exact name on pokemontcg.io", async () => {
+    stub(() =>
+      Response.json({
+        data: [
+          {
+            id: "me9",
+            name: "Brand New Set",
+            images: { logo: "https://images.scrydex.com/pokemon/me9-logo/logo" },
+          },
+        ],
+      }),
+    );
+    expect(await (await fresh())("me09", "Brand New Set")).toBe(
+      "https://images.scrydex.com/pokemon/me9-logo/logo",
+    );
+  });
+
+  it("gives nothing, rather than failing the set, where pokemontcg.io refuses every try", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout"] });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const asked = stub(() => new Response(null, { status: 502 }));
+    const scrydexEnglishLogo = await fresh();
+    const pending = scrydexEnglishLogo("me09", "Brand New Set");
+    await vi.runAllTimersAsync();
+    expect(await pending).toBeNull();
+    expect(asked.filter((u) => u.includes("pokemontcg.io"))).toHaveLength(3);
+    // The run's next set without a logo does not spend three more tries on it.
+    expect(await scrydexEnglishLogo("me10", "Another New Set")).toBeNull();
+    expect(asked.filter((u) => u.includes("pokemontcg.io"))).toHaveLength(3);
   });
 });

@@ -165,7 +165,9 @@ export async function scrydexRealLogo(address: string | null): Promise<string | 
 /**
  * Scrydex's code for the English sets TCGdex publishes no logo for, read by hand on 2026-09-14: the
  * trainer kits (whose logo is the kit line's wordmark), the McDonald's collections, the Poké Card
- * Creator Pack and the Mega Evolution Energy.
+ * Creator Pack and the Mega Evolution Energy. And 30th Celebration (2026-09-19), which TCGdex listed
+ * without one the day it came out: written here too, so it holds on a night pokemontcg.io refuses
+ * the lookup below. Scrydex answers its Classic Collection (me55c) with the same file, byte for byte.
  */
 const ENGLISH_LOGO_CODES: Record<string, string> = {
   "tk-dp-m": "tk3a",
@@ -188,10 +190,88 @@ const ENGLISH_LOGO_CODES: Record<string, string> = {
   "2024sv": "mcd24",
   "ex5.5": "wb1",
   mee: "mee",
+  "30th": "me55",
+  "30th-c": "me55c",
 };
 
-/** Scrydex's logo for an English set TCGdex has none for, where Scrydex has a real one. */
-export const scrydexEnglishLogo = (setId: string): Promise<string | null> => {
-  const code = ENGLISH_LOGO_CODES[setId];
+/** One set as pokemontcg.io's set list has it: its id (Scrydex's code) and the logo it publishes. */
+export type PtcgSetEntry = { id: string; name: string; images?: { logo?: string } };
+
+/**
+ * Scrydex's code for an English set, found by its name in pokemontcg.io's set list (which Scrydex
+ * serves: its ids are Scrydex's codes, and its newer logos are Scrydex addresses).
+ *
+ * The name has to be the same to the letter, case and punctuation as published, and only one set
+ * may carry it: "30th Celebration" is me55, and "30th Celebration: Classic Collection" (me55c) is
+ * another set that a folded or prefix match would have taken for it. No match, or two, is no code.
+ */
+export function scrydexCodeByName(sets: readonly PtcgSetEntry[], name: string): string | null {
+  const named = sets.filter((s) => s.name === name);
+  if (named.length !== 1) return null;
+  const set = named[0]!;
+  const fromLogo = /^https:\/\/images\.scrydex\.com\/pokemon\/([a-z0-9_]+)-logo\/logo$/.exec(
+    set.images?.logo ?? "",
+  )?.[1];
+  return fromLogo ?? (/^[a-z0-9_]+$/.test(set.id) ? set.id : null);
+}
+
+const HOUR_MS = 3_600_000;
+/** How long a refused list is kept: the rest of the night's run, which has 45 seconds. */
+const REFUSED_MS = 600_000;
+let ptcgSets: { at: number; keep: number; list: Promise<PtcgSetEntry[] | null> } | null = null;
+
+/**
+ * pokemontcg.io's whole set list, read for the night's run and kept an hour.
+ *
+ * Three tries, because the host refuses about three requests in five (since 2026-09). A list that
+ * could not be read is null, kept ten minutes so the run's other sets do not each spend three
+ * timeouts on it; a set that finds nothing keeps the logo it had (mirror.ts).
+ */
+export function ptcgSetList(): Promise<PtcgSetEntry[] | null> {
+  if (ptcgSets && Date.now() - ptcgSets.at < ptcgSets.keep) return ptcgSets.list;
+  const entry: { at: number; keep: number; list: Promise<PtcgSetEntry[] | null> } = {
+    at: Date.now(),
+    keep: HOUR_MS,
+    list: Promise.resolve(null),
+  };
+  entry.list = (async () => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch("https://api.pokemontcg.io/v2/sets?pageSize=250", {
+          cache: "no-store",
+          signal: catalogueTimeout(),
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const body = (await res.json()) as { data?: PtcgSetEntry[] };
+        if (body.data?.length) return body.data;
+        throw new Error("empty set list");
+      } catch (err) {
+        if (attempt === 2) {
+          console.error(
+            "[cron] pokemontcg.io set list unavailable:",
+            err instanceof Error ? err.message : err,
+          );
+          entry.keep = REFUSED_MS;
+          return null;
+        }
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+    return null;
+  })();
+  ptcgSets = entry;
+  return entry.list;
+}
+
+/**
+ * Scrydex's logo for an English set TCGdex has none for, where Scrydex has a real one: by the code
+ * written above, or else by the set's exact name on pokemontcg.io, so a set new tonight is found
+ * without anyone writing it down. Only the nightly copy asks (mirror.ts), which puts the file in our
+ * bucket; a request never does.
+ */
+export const scrydexEnglishLogo = async (setId: string, name?: string): Promise<string | null> => {
+  const code =
+    ENGLISH_LOGO_CODES[setId] ??
+    (name ? scrydexCodeByName((await ptcgSetList()) ?? [], name) : null);
   return scrydexRealLogo(code ? `https://images.scrydex.com/pokemon/${code}-logo/logo` : null);
 };
