@@ -216,18 +216,25 @@ export function scrydexCodeByName(sets: readonly PtcgSetEntry[], name: string): 
 }
 
 const HOUR_MS = 3_600_000;
-let ptcgSets: { at: number; list: Promise<PtcgSetEntry[] | null> } | null = null;
+/** How long a refused list is kept: the rest of the night's run, which has 45 seconds. */
+const REFUSED_MS = 600_000;
+let ptcgSets: { at: number; keep: number; list: Promise<PtcgSetEntry[] | null> } | null = null;
 
 /**
  * pokemontcg.io's whole set list, read for the night's run and kept an hour.
  *
  * Three tries, because the host refuses about three requests in five (since 2026-09). A list that
- * could not be read is null, and not kept, so the next set asks again; a set that finds nothing
- * keeps the logo it had (mirror.ts).
+ * could not be read is null, kept ten minutes so the run's other sets do not each spend three
+ * timeouts on it; a set that finds nothing keeps the logo it had (mirror.ts).
  */
 export function ptcgSetList(): Promise<PtcgSetEntry[] | null> {
-  if (ptcgSets && Date.now() - ptcgSets.at < HOUR_MS) return ptcgSets.list;
-  const list = (async () => {
+  if (ptcgSets && Date.now() - ptcgSets.at < ptcgSets.keep) return ptcgSets.list;
+  const entry: { at: number; keep: number; list: Promise<PtcgSetEntry[] | null> } = {
+    at: Date.now(),
+    keep: HOUR_MS,
+    list: Promise.resolve(null),
+  };
+  entry.list = (async () => {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await fetch("https://api.pokemontcg.io/v2/sets?pageSize=250", {
@@ -244,7 +251,7 @@ export function ptcgSetList(): Promise<PtcgSetEntry[] | null> {
             "[cron] pokemontcg.io set list unavailable:",
             err instanceof Error ? err.message : err,
           );
-          ptcgSets = null;
+          entry.keep = REFUSED_MS;
           return null;
         }
         await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
@@ -252,8 +259,8 @@ export function ptcgSetList(): Promise<PtcgSetEntry[] | null> {
     }
     return null;
   })();
-  ptcgSets = { at: Date.now(), list };
-  return list;
+  ptcgSets = entry;
+  return entry.list;
 }
 
 /**

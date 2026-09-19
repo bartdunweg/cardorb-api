@@ -224,9 +224,13 @@ describe("scrydexEnglishLogo", () => {
     vi.useFakeTimers({ toFake: ["setTimeout"] });
     vi.spyOn(console, "error").mockImplementation(() => {});
     const asked = stub(() => new Response(null, { status: 502 }));
-    const pending = (await fresh())("me09", "Brand New Set");
+    const scrydexEnglishLogo = await fresh();
+    const pending = scrydexEnglishLogo("me09", "Brand New Set");
     await vi.runAllTimersAsync();
     expect(await pending).toBeNull();
+    expect(asked.filter((u) => u.includes("pokemontcg.io"))).toHaveLength(3);
+    // The run's next set without a logo does not spend three more tries on it.
+    expect(await scrydexEnglishLogo("me10", "Another New Set")).toBeNull();
     expect(asked.filter((u) => u.includes("pokemontcg.io"))).toHaveLength(3);
   });
 });
