@@ -9,7 +9,11 @@ const setScans = vi.fn(async (_setId: string) => ({
   code: null as string | null,
 }));
 vi.mock("./card-languages", () => ({ languagesOfSet: async () => () => ["en"] }));
-vi.mock("./scrydex-japan-logos", () => ({ scrydexEnglishLogo: async () => null }));
+/** Scrydex's logo for a set TCGdex has none for: none unless a test says so. */
+const scrydexEnglishLogo = vi.fn(async (_id: string, _name?: string) => null as string | null);
+vi.mock("./scrydex-japan-logos", () => ({
+  scrydexEnglishLogo: (...a: unknown[]) => scrydexEnglishLogo(...(a as [string, string])),
+}));
 vi.mock("./tcgdex-browse", () => ({
   englishSets: () => englishSets(),
   englishSet: (...a: unknown[]) => englishSet(...a),
@@ -784,6 +788,38 @@ describe("syncMirror", () => {
       logo: "https://images.cardorb.com/en/swsh/swsh11/logo.webp",
       symbol: "https://images.cardorb.com/en/swsh/swsh11/symbol.webp",
     });
+  });
+
+  it("asks Scrydex by the set's name for a set with no logo, and writes what it finds", async () => {
+    englishSets.mockResolvedValue([set("30th", 1, "2026/09/16")]);
+    englishSet.mockResolvedValue({
+      set: { ...set("30th", 1, "2026/09/16"), name: "30th Celebration" },
+      cards: [hit("30th-001", "001")],
+    });
+    scrydexEnglishLogo.mockResolvedValueOnce("https://images.scrydex.com/pokemon/me55-logo/logo");
+    const { db, calls } = fakeStore({});
+    await syncMirror(db);
+    expect(scrydexEnglishLogo).toHaveBeenCalledWith("30th", "30th Celebration");
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({ logo: "https://images.scrydex.com/pokemon/me55-logo/logo" });
+  });
+
+  it("keeps the logo a set holds where the lookup finds nothing", async () => {
+    englishSets.mockResolvedValue([set("me09", 1, "2026/11/01")]);
+    englishSet.mockResolvedValue({
+      set: { ...set("me09", 1, "2026/11/01"), name: "Brand New Set" },
+      cards: [hit("me09-001", "001")],
+    });
+    scrydexEnglishLogo.mockResolvedValueOnce(null);
+    const { db, calls } = fakeStore({
+      catalogue_sync: [{ set_id: "me09", cards: 1, synced_at: "2026-11-02T00:00:00Z", format: 1 }],
+      catalogue_sets: [{ id: "me09", logo: "https://images.scrydex.com/pokemon/me9-logo/logo" }],
+    });
+    await syncMirror(db);
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({ logo: "https://images.scrydex.com/pokemon/me9-logo/logo" });
   });
 
   it("asks nobody for a card held as our copy of another source's picture, in a full pass too", async () => {

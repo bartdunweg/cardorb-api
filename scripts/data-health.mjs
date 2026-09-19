@@ -143,6 +143,37 @@ for (const p of pictures) {
 }
 
 /**
+ * An English set with cards on the shelf and no logo. 30th Celebration came out on 2026-09-16 with
+ * none from TCGdex and none in the hand-written Scrydex codes, and was seen by eye; the nightly copy
+ * now finds a new set's Scrydex logo by its exact name on pokemontcg.io (scrydex-japan-logos.ts),
+ * and a set listed here is one that rule did not reach. The sets below have no logo anywhere, as
+ * looked for on 2026-09-19 (TCGdex, pokemontcg.io's host and list, Scrydex): they are listed in
+ * the detail and do not fail the check.
+ */
+const NO_LOGO_ANYWHERE = {
+  // Miscellaneous Promos: Scrydex answers its miscp code with the plain Pokémon TCG wordmark.
+  miscp: "Miscellaneous Promos",
+  // Yellow A Alternate: Scrydex's stand-in, and pokemontcg.io lists no such set.
+  xya: "Yellow A Alternate",
+};
+const logoless = await query(
+  `select s.id, s.name from catalogue_sets s
+   where s.language = 'en' and s.logo is null and s.cards_recorded
+     and exists (select 1 from catalogue_cards c where c.language = 'en' and c.set_id = s.id)
+   order by s.id`,
+);
+const logolessUnknown = logoless.filter((r) => !(r.id in NO_LOGO_ANYWHERE));
+check(
+  "Every English set with cards has a logo",
+  logolessUnknown.length === 0,
+  `${logolessUnknown.length} sets${
+    logolessUnknown.length ? `: ${logolessUnknown.map((r) => `${r.id} ${r.name}`).join(", ")}` : ""
+  }; ${logoless.length - logolessUnknown.length} with no logo anywhere (${Object.keys(
+    NO_LOGO_ANYWHERE,
+  ).join(", ")})`,
+);
+
+/**
  * A picture copied from a Limitless folder whose code more than one English set prints. The folder
  * is one of those sets' cards, and a HEAD answers 200 for the other's number all the same: the 30
  * cards of 30th Classic Collection were copied from 30th Celebration's 30C folder, Charizard as
