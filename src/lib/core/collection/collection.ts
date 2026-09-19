@@ -2141,7 +2141,13 @@ const earlyPartOf = (card: PricedCard) =>
 
 /**
  * The Home line before an account's first stored point, `until`: what the copies held today were
- * worth on each day from HISTORY_FROM, at that day's prices (earlyLine).
+ * worth on each day from the account's first card (`from`, firstCardOf) or HISTORY_FROM, whichever
+ * is later, at that day's prices (earlyLine).
+ *
+ * Since 2026-09-19 (Bart) the line starts at the first card, so this is only the days between the
+ * first card and the first stored point, and an account whose first stored point is its first
+ * card's day (most: the cron stores from the first night) asks for nothing. What is below about
+ * the cost is the worst case, an account whose cards were added with dates before its first point.
  *
  * Every account but the one backfilled to 2024-02-08 has stored points from the day its first card
  * was added, so its Home chart was a flat or two-point line: `pikachu` two points, an account of
@@ -2168,7 +2174,7 @@ const earlyPartOf = (card: PricedCard) =>
  * built bumps the version in the key.
  *
  * `until` is past the first stored point where the account's stored points hold an import's dip
- * (earlyUntil), so the route can draw those nights from this line instead (replacesStored). A cold
+ * (importDips, earlyUntil), so the route can draw those nights from this line instead. A cold
  * read is seconds for a large account, so the route does not wait for it: it is finished after the
  * response and kept for the next request.
  */
@@ -2177,19 +2183,22 @@ export const getEarlyValue = cache(
     userId: string,
     items: CardItem[],
     token: string | undefined,
+    /** The first day wanted, yyyy-mm-dd: the first card (firstCardOf), or HISTORY_FROM. */
+    from: string,
     /** The first day not wanted, yyyy-mm-dd (earlyUntil): the first stored point, or past a dip. */
     until: string,
   ): Promise<RecentValue> => {
     const owned = items.filter((it) => it.owned);
     const cards = pricedCardsOf(owned);
-    if (!cards.length || until <= HISTORY_FROM) return { snapshots: [], failed: false };
+    const start = from < HISTORY_FROM ? HISTORY_FROM : from;
+    if (!cards.length || until <= start) return { snapshots: [], failed: false };
     /* One read at a time for the same line on this instance. The Data Cache keeps a part only once
        it is read, and the route finishes a cold read after its response, so a Home reload or the web
        and iOS asking together within those seconds would each start the whole read again. */
-    const key = `${userId}|${until}|${listKey(owned)}`;
+    const key = `${userId}|${start}|${until}|${listKey(owned)}`;
     const running = earlyReads.get(key);
     if (running) return running;
-    const read = readEarlyValue(userId, owned, cards, token, until).finally(() =>
+    const read = readEarlyValue(userId, owned, cards, token, start, until).finally(() =>
       earlyReads.delete(key),
     );
     earlyReads.set(key, read);
@@ -2205,6 +2214,7 @@ async function readEarlyValue(
   owned: CardItem[],
   cards: PricedCard[],
   token: string | undefined,
+  from: string,
   until: string,
 ): Promise<RecentValue> {
   try {
@@ -2226,13 +2236,14 @@ async function readEarlyValue(
       const days = await unstable_cache(
         async () => {
           missed++;
-          const points = await listCardPrices(db, chunk, HISTORY_FROM, until);
-          return [...dayTotals(held, points, HISTORY_FROM, until)].map(
+          const points = await listCardPrices(db, chunk, tailReadFrom(from), until);
+          return [...dayTotals(held, points, from, until)].map(
             ([date, t]) => [date, t.value, t.priced] as [string, number, number],
           );
         },
         // v15: `until` may reach past the first stored point, to the last night of an import's dip.
-        ["early-value", "v15", userId, until, listKey(held)],
+        // v16: the line starts at the first card (`from`), its readings TAIL_READ_DAYS before it.
+        ["early-value", "v16", userId, from, until, listKey(held)],
         { revalidate: 86_400, tags: [cardPricesTag(userId)] },
       )();
       return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));
