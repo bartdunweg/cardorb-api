@@ -1,0 +1,1 @@
+- The risers and fallers can be asked for one list (`GET /v1/movers?folder=`): a folder id, `favorites` or `wishlist`, read as the value history reads them. Only that list's cards are priced; on the wishlist a card counts as one copy, at the printing wished.

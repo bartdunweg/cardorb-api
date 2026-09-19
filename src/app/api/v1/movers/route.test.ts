@@ -7,16 +7,20 @@ vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
+  storeErrorResponse: (_e: unknown, _r: Request, op: string) =>
+    Response.json({ error: op }, { status: 503 }),
 }));
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
 }));
 const getCollection = vi.fn();
 const getMoverPrices = vi.fn();
+const findFolder = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   ALL_READINGS: "2000-01-01",
   getCollection: (...a: unknown[]) => getCollection(...a),
   getMoverPrices: (...a: unknown[]) => getMoverPrices(...a),
+  findFolder: (...a: unknown[]) => findFolder(...a),
 }));
 
 const { GET } = await import("./route");
@@ -196,5 +200,121 @@ describe("GET /v1/movers", () => {
     const body = await (await ask("?days=7")).json();
     // The finish is one answer across the copies held; the condition is not, and the wish is not counted.
     expect(body.up[0]).toMatchObject({ finish: "holo", condition: null });
+  });
+
+  describe("for one list", () => {
+    const FOLDER = "11111111-2222-4333-8444-555555555555";
+    const row = (over: Record<string, unknown>) => ({
+      owned: true,
+      quantity: 1,
+      finish: null,
+      edition: null,
+      rarity: "Holo Rare",
+      isFavorite: false,
+      collectionId: null,
+      ...over,
+    });
+    const listCard = (tcgId: string, name: string, variants: Record<string, unknown>[]) => ({
+      ...card,
+      key: tcgId,
+      tcgId,
+      name,
+      variants,
+    });
+    const points = (...ids: string[]) =>
+      ids.flatMap((tcgId) => [
+        { language: "en", tcgId, date: "2026-09-07", market: 300, holo: null },
+        { language: "en", tcgId, date: "2026-09-14", market: 320, holo: null },
+      ]);
+    beforeEach(() => {
+      getCollection.mockResolvedValue({
+        sets: [
+          {
+            name: "Base Set",
+            title: "Base Set",
+            cards: [
+              listCard("base1-4", "Charizard", [
+                row({ id: "r1", quantity: 2, isFavorite: true }),
+                row({ id: "r2", quantity: 1 }),
+              ]),
+              listCard("base1-2", "Blastoise", [row({ id: "r3", collectionId: FOLDER })]),
+              listCard("base1-15", "Venusaur", [
+                row({ id: "r4", owned: false, quantity: 4, finish: "holo", rarity: "Rare Holo" }),
+              ]),
+            ],
+          },
+        ],
+        failed: false,
+      });
+      getMoverPrices.mockImplementation(async (_u, cards: { tcgId: string }[]) => ({
+        failed: false,
+        points: points(...cards.map((c) => c.tcgId)),
+      }));
+    });
+
+    it("answers the favourite copies held, and asks prices for those cards only", async () => {
+      const res = await ask("?days=7&folder=favorites");
+      expect(res.status).toBe(200);
+      expect(getMoverPrices.mock.calls[0]![1]).toEqual([{ tcgId: "base1-4", language: "en" }]);
+      const body = await res.json();
+      expect(body.up).toEqual([
+        expect.objectContaining({ tcgId: "base1-4", copies: 2, total: 40 }),
+      ]);
+    });
+
+    it("answers a wished card once, at the printing wished", async () => {
+      const body = await (await ask("?days=7&folder=wishlist")).json();
+      expect(getMoverPrices.mock.calls[0]![1]).toEqual([{ tcgId: "base1-15", language: "en" }]);
+      expect(body.up).toEqual([
+        expect.objectContaining({
+          tcgId: "base1-15",
+          copies: 1,
+          change: 20,
+          total: 20,
+          finish: "holo",
+          rarity: "Rare Holo",
+        }),
+      ]);
+    });
+
+    it("answers a binder's own copies", async () => {
+      findFolder.mockResolvedValue({ id: FOLDER, rule: null });
+      const body = await (await ask(`?days=7&folder=${FOLDER}`)).json();
+      expect(findFolder).toHaveBeenCalledWith("me-uuid", FOLDER, "t");
+      expect(getMoverPrices.mock.calls[0]![1]).toEqual([{ tcgId: "base1-2", language: "en" }]);
+      expect(body.up.map((m: { tcgId: string }) => m.tcgId)).toEqual(["base1-2"]);
+    });
+
+    it("answers a rule binder by its rule, copies held only", async () => {
+      findFolder.mockResolvedValue({ id: FOLDER, rule: { sets: ["Base Set"] } });
+      const body = await (await ask(`?days=7&folder=${FOLDER}`)).json();
+      expect(getMoverPrices.mock.calls[0]![1]).toEqual([
+        { tcgId: "base1-4", language: "en" },
+        { tcgId: "base1-2", language: "en" },
+      ]);
+      expect(body.up.map((m: { tcgId: string }) => m.tcgId).sort()).toEqual(["base1-2", "base1-4"]);
+    });
+
+    it("answers 404 for a folder id that is not the caller's", async () => {
+      findFolder.mockResolvedValue(null);
+      const res = await ask(`?folder=${FOLDER}`);
+      expect(res.status).toBe(404);
+      expect(await res.json()).toEqual({ error: "No folder by that id." });
+      expect(getMoverPrices).not.toHaveBeenCalled();
+    });
+
+    it("refuses a value that is no list", async () => {
+      const res = await ask("?folder=binder-1");
+      expect(res.status).toBe(400);
+      expect(findFolder).not.toHaveBeenCalled();
+    });
+
+    it("answers the store's error when the folder could not be read", async () => {
+      findFolder.mockRejectedValue(new Error("down"));
+      const res = await ask(`?folder=${FOLDER}`);
+      expect(res.status).toBe(503);
+      expect(await res.json()).toEqual({ error: "Reading the folder failed" });
+      expect(getCollection).not.toHaveBeenCalled();
+    });
   });
 });
