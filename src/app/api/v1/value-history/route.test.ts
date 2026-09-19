@@ -54,6 +54,13 @@ vi.mock("@/lib/core/collection/items", async (actual) => {
   };
 });
 
+const after = vi.fn();
+vi.mock("next/server", async (actual) => ({
+  ...(await actual<typeof import("next/server")>()),
+  // The real after() needs a request scope that plain vitest has none of.
+  after: (...a: unknown[]) => after(...a),
+}));
+
 const { GET } = await import("./route");
 const { folderSeries } = await import("@/lib/core/collection/folder-history");
 type CardItem = import("@/lib/core/collection/items").CardItem;
@@ -260,6 +267,59 @@ describe("GET /api/v1/value-history, the days before the first stored point", ()
       "2026-09-16",
       "2026-09-17",
     ]);
+  });
+
+  it("draws an import's dip from the worked-out line, reaching past the first stored point", async () => {
+    // jasperdenouden: one card stored 09-09 to 09-13, the import on 09-14.
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    const many = { ...solgaleo, quantity: 10 };
+    getValueHistory.mockResolvedValue({
+      snapshots: [
+        point("2026-09-09", 122),
+        point("2026-09-10", 122),
+        { ...point("2026-09-11", 800), cards: 10, priced: 10 },
+        { ...point("2026-09-18", 810), cards: 9, priced: 9 },
+      ],
+      failed: false,
+    });
+    flattenItems.mockReturnValueOnce([many]);
+    getEarlyValue.mockResolvedValue({
+      snapshots: [
+        { ...point("2026-09-08", 790), cards: 10, priced: 10 },
+        { ...point("2026-09-09", 795), cards: 10, priced: 10 },
+        { ...point("2026-09-10", 798), cards: 10, priced: 10 },
+      ],
+      failed: false,
+    });
+    const body = await (await get()).json();
+    vi.useRealTimers();
+    expect(getEarlyValue).toHaveBeenCalledWith("me-uuid", [many], "t.o.k.e.n", "2026-09-11");
+    expect(body.snapshots.map((p: { date: string; value: number }) => [p.date, p.value])).toEqual([
+      ["2026-09-08", 790],
+      ["2026-09-09", 795],
+      ["2026-09-10", 798],
+      ["2026-09-11", 800],
+      // A card sold since keeps its stored point.
+      ["2026-09-18", 810],
+    ]);
+  });
+
+  it("answers at once and finishes an early line that is not kept yet after the response", async () => {
+    vi.useFakeTimers({ now: new Date("2026-09-19T09:00:00Z") });
+    getValueHistory.mockResolvedValue({ snapshots: [point("2026-09-17", 281)], failed: false });
+    flattenItems.mockReturnValueOnce([solgaleo]);
+    let finish: (v: unknown) => void = () => {};
+    getEarlyValue.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const info = vi.spyOn(console, "info").mockImplementation(() => {});
+    const pending = get();
+    await vi.advanceTimersByTimeAsync(1500);
+    const body = await (await pending).json();
+    expect(body.snapshots.map((p: { date: string }) => p.date)).toEqual(["2026-09-17"]);
+    expect(after).toHaveBeenCalledTimes(1);
+    finish({ snapshots: [point("2026-09-16", 279)], failed: false });
+    await expect(after.mock.calls[0]![0]).resolves.toEqual([point("2026-09-16", 279)]);
+    info.mockRestore();
+    vi.useRealTimers();
   });
 
   it("answers the stored and recent points alone when only the early line fails", async () => {

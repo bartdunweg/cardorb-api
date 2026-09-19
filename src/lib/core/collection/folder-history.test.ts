@@ -6,7 +6,8 @@ import {
   folderSeries,
   holdingsSeries,
   joinHistory,
-  prependHistory,
+  earlyUntil,
+  withEarlyLine,
 } from "./folder-history";
 import type { CardItem } from "./items";
 
@@ -419,19 +420,19 @@ describe("the line before the first stored point", () => {
   });
 });
 
-describe("prependHistory", () => {
-  const point = (date: string, value: number) => ({
+describe("withEarlyLine", () => {
+  const point = (date: string, value: number, cards = 1, priced = cards) => ({
     date,
     value,
-    cards: 1,
-    priced: 1,
-    unpriced: 0,
+    cards,
+    priced,
+    unpriced: cards - priced,
   });
 
   it("lets the stored points win every day they cover and ends the early line the day before", () => {
     const early = [point("2026-09-15", 1), point("2026-09-16", 2), point("2026-09-17", 3)];
     const stored = [point("2026-09-17", 281), point("2026-09-18", 282)];
-    const line = prependHistory(early, stored);
+    const line = withEarlyLine(early, stored);
     expect(line).toEqual([
       point("2026-09-15", 1),
       point("2026-09-16", 2),
@@ -441,13 +442,74 @@ describe("prependHistory", () => {
     expect(new Set(line.map((p) => p.date)).size).toBe(line.length);
   });
 
+  it("replaces an import's dip with the worked-out day", () => {
+    // jasperdenouden: one card stored 09-09 to 09-13, the import of 2,261 on 09-14.
+    const early = [
+      point("2026-09-08", 8040, 2265, 2264),
+      point("2026-09-09", 8050, 2265, 2264),
+      point("2026-09-10", 8060, 2265, 2264),
+    ];
+    const stored = [
+      point("2026-09-09", 122, 1),
+      point("2026-09-10", 122, 1),
+      point("2026-09-11", 7761, 2261),
+    ];
+    expect(withEarlyLine(early, stored).map((p) => [p.date, p.value])).toEqual([
+      ["2026-09-08", 8040],
+      ["2026-09-09", 8050],
+      ["2026-09-10", 8060],
+      ["2026-09-11", 7761],
+    ]);
+  });
+
+  it("keeps the stored point of a day a card was sold", () => {
+    const early = [point("2026-09-09", 8050, 2265, 2264), point("2026-09-10", 8060, 2265, 2264)];
+    const stored = [point("2026-09-09", 8040, 2264), point("2026-09-10", 8030, 2264)];
+    expect(withEarlyLine(early, stored)).toEqual(stored);
+  });
+
+  it("keeps a stored point at half of what is priced or more", () => {
+    const early = [point("2026-09-09", 100, 10, 10)];
+    expect(withEarlyLine(early, [point("2026-09-09", 50, 5)])[0]!.value).toBe(50);
+    expect(withEarlyLine(early, [point("2026-09-09", 40, 4)])[0]!.value).toBe(100);
+  });
+
   it("answers the stored points alone for an account with nothing to prepend", () => {
     const stored = [point("2026-09-17", 281)];
-    expect(prependHistory([], stored)).toBe(stored);
+    expect(withEarlyLine([], stored)).toBe(stored);
   });
 
   it("answers the early line alone where nothing is stored", () => {
     const early = [point("2026-09-16", 2)];
-    expect(prependHistory(early, [])).toEqual(early);
+    expect(withEarlyLine(early, [])).toEqual(early);
+  });
+});
+
+describe("earlyUntil", () => {
+  const point = (date: string, cards: number) => ({
+    date,
+    value: 1,
+    cards,
+    priced: cards,
+    unpriced: 0,
+  });
+
+  it("is the first stored point where no night held under half of today's copies", () => {
+    expect(earlyUntil([point("2026-09-17", 1), point("2026-09-18", 1)], 1)).toBe("2026-09-17");
+    expect(earlyUntil([point("2026-09-17", 2264)], 2265)).toBe("2026-09-17");
+  });
+
+  it("reaches to the day after the last night that held under half", () => {
+    const stored = [
+      point("2026-09-09", 1),
+      point("2026-09-13", 1),
+      point("2026-09-14", 2261),
+      point("2026-09-18", 2265),
+    ];
+    expect(earlyUntil(stored, 2265)).toBe("2026-09-14");
+  });
+
+  it("is null with nothing stored", () => {
+    expect(earlyUntil([], 5)).toBeNull();
   });
 });

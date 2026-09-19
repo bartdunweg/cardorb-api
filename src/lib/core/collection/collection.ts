@@ -2131,7 +2131,7 @@ export const getListValue = cache(
 );
 
 /** How many parts of the held cards the early line reads at once. */
-const EARLY_PARALLEL = 8;
+const EARLY_PARALLEL = 4;
 /** How many parts the held cards are split into, each kept on its own (getEarlyValue). */
 const EARLY_PARTS = 32;
 
@@ -2151,20 +2151,26 @@ const earlyPartOf = (card: PricedCard) =>
  * HISTORY_FROM asks nothing (the route does not call this, and `until` there is no later).
  *
  * The largest such account holds 1,975 cards: 601,182 days of readings between HISTORY_FROM and its
- * first point, read from 112,397 month rows: 7 s from a laptop against production, eight parts at a
- * time, with the heap some 475 MB above where it started (2026-09-19). A part alone is about a
- * second. Too much to do again for every card added, so the held cards
+ * first point, read from 112,397 month rows: 7.9 s from a laptop against production four parts at a
+ * time (9.9 s eight at a time, 11.1 s two), the process some 400 MB larger while it ran
+ * (2026-09-19). A part alone is about a second. Too much to do again for every card added, so the held cards
  * are split into EARLY_PARTS parts by a hash of the card (earlyPartOf), and each part's days are
  * summed (dayTotals) and kept on their own, keyed on what that part holds (listKey: card, printing,
  * count, owned). A card added or removed is another key for its own part alone, a thirty-second of
  * the work; the parts are added up on every ask, which is a thousand days times thirty-two. The
- * readings of a part are let go once it is summed, EARLY_PARALLEL parts at a time.
+ * readings of a part are let go once it is summed, EARLY_PARALLEL parts at a time: four was as fast
+ * as eight and grew the process less.
  *
  * Kept a day, and `until` in the key, so a new first stored point is another line. The readings
  * before `until` do not change by the night, so neither priceHistoryTag nor cardsTag drops it: the
  * one would recompute every account's early line every night for figures that stayed the same, the
  * other on every note edited. A deploy does not clear the Data Cache, so a change to how the line is
- * built bumps the version in the key, with getCardPrices' readings (v14).
+ * built bumps the version in the key.
+ *
+ * `until` is past the first stored point where the account's stored points hold an import's dip
+ * (earlyUntil), so the route can draw those nights from this line instead (replacesStored). A cold
+ * read is seconds for a large account, so the route does not wait for it: it is finished after the
+ * response and kept for the next request.
  */
 export const getEarlyValue = cache(
   async (
@@ -2201,7 +2207,8 @@ export const getEarlyValue = cache(
               ([date, t]) => [date, t.value, t.priced] as [string, number, number],
             );
           },
-          ["early-value", "v14", userId, until, listKey(held)],
+          // v15: `until` may reach past the first stored point, to the last night of an import's dip.
+          ["early-value", "v15", userId, until, listKey(held)],
           { revalidate: 86_400, tags: [cardPricesTag(userId)] },
         )();
         return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));

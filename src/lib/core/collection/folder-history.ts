@@ -266,12 +266,55 @@ export function earlyLine(parts: DayTotals[], cards: number): ValueSnapshot[] {
 }
 
 /**
- * `early` before the stored points, then the stored points: a stored point wins every day it covers,
- * and the early line ends the day before the first of them. With nothing stored, `early` alone.
+ * Whether a stored point is an import's dip, to be drawn from the worked-out line instead.
+ *
+ * A stored point counts what the account held that night; the early line counts every copy held
+ * now. An account that was made with one card and filled by an import a few days later has stored
+ * points of one card between them: jasperdenouden held 1 card from 2026-09-09 to 09-13 and 2,261
+ * from 09-14, so its line fell from some EUR 8,000 worked out to EUR 122 stored and climbed back,
+ * which the collection never did (Bart, 2026-09-19: replace those points).
+ *
+ * The rule: the stored point counts fewer than half the copies the worked-out line has a price for
+ * that day (`priced`, the day's own holdings with a reading, not today's total). Half, because the
+ * two counts differ in ordinary ways that must not replace anything: a card sold or added since is
+ * one or a few copies either way, and a copy with no reading that day is in neither. A night that
+ * held under half of what has a price that day is not a sale; it is the collection not yet being
+ * there. A large purchase reads the same way, and is drawn as if it had always been held, which is
+ * what the line before the first point does too.
  */
-export function prependHistory(early: ValueSnapshot[], stored: ValueSnapshot[]): ValueSnapshot[] {
+export const replacesStored = (stored: ValueSnapshot, worked: ValueSnapshot) =>
+  stored.cards * 2 < worked.priced;
+
+/**
+ * The day the early line has to reach to (exclusive): the first stored point, or the day after the
+ * last stored point holding under half of the copies held now, whichever is later. Only those can
+ * be an import's dip (replacesStored needs the worked-out day beside them), and an account that
+ * never had one is asked for nothing after its first point.
+ */
+export function earlyUntil(stored: ValueSnapshot[], copiesNow: number): string | null {
+  if (!stored.length) return null;
+  let until = stored[0]!.date;
+  for (const p of stored)
+    if (p.cards * 2 < copiesNow && nextDay(p.date) > until) until = nextDay(p.date);
+  return until;
+}
+
+/**
+ * `early` before the stored points, then the stored points, each replaced by the early line's day
+ * where it is an import's dip (replacesStored). Every other stored point wins the day it covers,
+ * and the early line otherwise ends the day before the first of them. With nothing stored, `early`
+ * alone.
+ */
+export function withEarlyLine(early: ValueSnapshot[], stored: ValueSnapshot[]): ValueSnapshot[] {
   if (!early.length) return stored;
   if (!stored.length) return early;
   const first = stored[0]!.date;
-  return [...early.filter((p) => p.date < first), ...stored];
+  const worked = new Map(early.map((p) => [p.date, p]));
+  return [
+    ...early.filter((p) => p.date < first),
+    ...stored.map((p) => {
+      const w = worked.get(p.date);
+      return w && replacesStored(p, w) ? w : p;
+    }),
+  ];
 }

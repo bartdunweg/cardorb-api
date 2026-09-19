@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { apiError, unavailable } from "@/lib/api/respond";
 import { authorise, readHeaders, refused, storeErrorResponse } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
@@ -11,7 +11,7 @@ import {
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { joinHistory, prependHistory } from "@/lib/core/collection/folder-history";
+import { earlyUntil, joinHistory, withEarlyLine } from "@/lib/core/collection/folder-history";
 import { type CardItem, filterItems, flattenItems } from "@/lib/core/collection/items";
 import { HISTORY_FROM, recentFrom } from "@/lib/core/collection/value-history";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
@@ -59,6 +59,12 @@ import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
  */
 export const dynamic = "force-dynamic";
 
+/**
+ * How long Home waits for the line before the first stored point. A kept line is 32 Data Cache
+ * reads and a sum; a cold one is seconds, and is finished after the response instead.
+ */
+const EARLY_WAIT_MS = 1500;
+
 export async function GET(req: Request) {
   const viewer = await authorise(req);
   if (refused(viewer))
@@ -83,10 +89,19 @@ export async function GET(req: Request) {
 
        And the days before the first point, where that is later than the readings begin
        (HISTORY_FROM): what the account holds now, at each day's prices (getEarlyValue), drawn before
-       the stored points, which win every day they cover (prependHistory). Only the owner's account
-       was backfilled to 2024-02-08; every other account's points start the day its first card was
-       added, which drew a flat or two-point line. An account with no stored point at all has its
-       early line cut where the worked-out recent days begin.
+       the stored points (withEarlyLine). Only the owner's account was backfilled to 2024-02-08;
+       every other account's points start the day its first card was added, which drew a flat or
+       two-point line. A stored point wins the day it covers unless it is an import's dip, a night
+       that held under half of what has a price that day (replacesStored), which the worked-out day
+       replaces; the early line then reaches past the first point to the last such night
+       (earlyUntil). An account with no stored point at all has its early line cut where the
+       worked-out recent days begin.
+
+       Home does not wait for an early line that is not kept yet. Read cold it is every held card's
+       readings since 2024: 7 s for two thousand cards (getEarlyValue). The route waits
+       EARLY_WAIT_MS for it, which a kept line answers well within, and otherwise answers the stored
+       and recent points at once and lets the read finish after the response (after()), so its parts
+       are kept for the next request.
 
        Where the collection or its readings cannot be read, each part falls back on its own: the
        stored points alone, as before, and the error logged. */
@@ -118,28 +133,45 @@ export async function GET(req: Request) {
             console.error("Recent value line unavailable, the stored points alone:", err);
           }
         };
-        const readEarly = async (until: string) => {
-          if (!early || until <= HISTORY_FROM) return;
+        const owned = filterItems(held, { owned: true });
+        /* With no stored point the early line is built to today, a key that holds for the day
+           (recent[0] need not: a copy with no date moves it with the window), and withEarlyLine
+           cuts it where the recent days begin. The cron stores the first point the next night. */
+        const until = early
+          ? (earlyUntil(
+              snapshots,
+              owned.reduce((n, it) => n + Math.max(0, it.quantity), 0),
+            ) ?? today)
+          : null;
+        const readEarly = async (): Promise<ValueSnapshot[]> => {
+          if (!until || until <= HISTORY_FROM) return [];
           try {
-            const line = await getEarlyValue(
-              viewer.userId,
-              filterItems(held, { owned: true }),
-              token,
-              until,
-            );
-            if (!line.failed) before = line.snapshots;
+            const line = await getEarlyValue(viewer.userId, owned, token, until);
+            return line.failed ? [] : line.snapshots;
           } catch (err) {
             console.error("Early value line unavailable, the stored points alone:", err);
+            return [];
           }
         };
-        /* With no stored point the early line is built to today, a key that holds for the day
-           (recent[0] need not: a copy with no date moves it with the window), and prependHistory
-           cuts it where the recent days begin. The cron stores the first point the next night. */
-        await Promise.all([readRecent(), readEarly(firstStored ?? today)]);
+        const earlyRead = readEarly();
+        await readRecent();
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const waited = await Promise.race([
+          earlyRead,
+          new Promise<null>((resolve) => {
+            timer = setTimeout(() => resolve(null), EARLY_WAIT_MS);
+          }),
+        ]);
+        clearTimeout(timer);
+        if (waited) before = waited;
+        else {
+          console.info("[timing] early-value not kept yet, finished after the response");
+          after(earlyRead);
+        }
       }
     }
     return NextResponse.json(
-      { snapshots: prependHistory(before, joinHistory(snapshots, recent)) },
+      { snapshots: withEarlyLine(before, joinHistory(snapshots, recent)) },
       { headers: readHeaders(req) },
     );
   }
