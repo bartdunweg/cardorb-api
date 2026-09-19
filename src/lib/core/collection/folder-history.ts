@@ -208,7 +208,8 @@ const nextDay = (date: string) =>
 
 /**
  * What these copies were worth on every day from `from` up to (not including) `until`, at that
- * day's prices: folderSeries' pricing, every copy on every day whenever it was added.
+ * day's prices: folderSeries' pricing, every copy on every day whenever it was added. `prices` may
+ * start before `from`, so the first days have the readings that stand for them.
  *
  * The part of the Home line before an account's first stored point (earlyLine). Worked out for one
  * chunk of the collection at a time, so a collection of two thousand cards over nineteen months is
@@ -228,12 +229,13 @@ export function dayTotals(
   for (let day = from; day < until; day = nextDay(day))
     days.push({ language: "en", tcgId: "", date: day, market: null, holo: null });
   const out: DayTotals = new Map();
+  // Readings before `from` are kept: a card's last one stands for the first days (CARRY_DAYS).
   for (const p of seriesDays(
     items.filter((it) => it.owned),
-    [...prices.filter((p) => p.date >= from && p.date < until), ...days],
+    [...prices.filter((p) => p.date < until), ...days],
     "owned",
   ))
-    out.set(p.date, { value: p.value, priced: p.priced });
+    if (p.date >= from) out.set(p.date, { value: p.value, priced: p.priced });
   return out;
 }
 
@@ -266,63 +268,69 @@ export function earlyLine(parts: DayTotals[], cards: number): ValueSnapshot[] {
 }
 
 /**
- * Whether a stored point is an import's dip, to be drawn from the worked-out line instead.
+ * The stored nights that are an import's dip, to be drawn from the worked-out line instead.
  *
- * A stored point counts what the account held that night; the early line counts every copy held
- * now. An account that was made with one card and filled by an import a few days later has stored
- * points of one card between them: jasperdenouden held 1 card from 2026-09-09 to 09-13 and 2,261
- * from 09-14, so its line fell from some EUR 8,000 worked out to EUR 122 stored and climbed back,
- * which the collection never did (Bart, 2026-09-19: replace those points).
+ * A stored point counts what the account held that night. An account made with one card and
+ * filled days later by an import whose cards carry their own, earlier added dates has stored
+ * points of one card on nights its collection, by those dates, already held hundreds (Bart,
+ * 2026-09-19: replace those points).
  *
- * The rule: the stored point counts fewer than half the copies the worked-out line has a price for
- * that day (`priced`, the day's own holdings with a reading, not today's total). Half, because the
- * two counts differ in ordinary ways that must not replace anything: a card sold or added since is
- * one or a few copies either way, and a copy with no reading that day is in neither. A night that
- * held under half of what has a price that day is not a sale; it is the collection not yet being
- * there. A large purchase reads the same way, and is drawn as if it had always been held, which is
- * what the line before the first point does too.
+ * The rule: a night whose stored count is under half of the copies held now that were added by
+ * that day (`acquiredAt`, a copy without one counting from the start). By the added dates and not
+ * every copy held now, because a collection that grew is not a dip: the owner's stored nights of
+ * 2024 count the few hundred cards added by then, which is what the collection held. Half, because
+ * the two counts differ in ordinary ways that must not replace anything: a card sold since, or one
+ * the night had not been written with yet, is one or a few copies. Only the leading run of stored
+ * nights, since a dip after a night that held the collection is a collection that shrank. Copies
+ * with a catalogue id only, the ones a reading can price.
  */
-export const replacesStored = (stored: ValueSnapshot, worked: ValueSnapshot) =>
-  stored.cards * 2 < worked.priced;
-
-/**
- * The day the early line has to reach to (exclusive): the first stored point, or the day after the
- * leading run of stored nights holding under half of the copies held now, whichever is later. Only
- * those can be an import's dip (replacesStored needs the worked-out day beside them, and
- * withEarlyLine replaces a leading run alone), and an account that never had one is asked for
- * nothing after its first point. `copiesNow` is the copies with a catalogue id, the ones a reading
- * can price. The run is fixed once a night holds the collection, so `until`, which is in every
- * part's cache key, moves only while the account is still growing past twice its first nights.
- */
-export function earlyUntil(stored: ValueSnapshot[], copiesNow: number): string | null {
-  if (!stored.length) return null;
-  let until = stored[0]!.date;
+export function importDips(stored: ValueSnapshot[], owned: CardItem[]): string[] {
+  const dated = owned
+    .filter((it) => it.owned && it.tcgId)
+    .map((it) => ({ from: it.acquiredAt?.slice(0, 10) ?? "", n: Math.max(0, it.quantity) }));
+  const heldBy = (day: string) => dated.reduce((n, c) => (c.from <= day ? n + c.n : n), 0);
+  const dips: string[] = [];
   for (const p of stored) {
-    if (p.cards * 2 >= copiesNow) break;
-    until = nextDay(p.date);
+    if (p.cards * 2 >= heldBy(p.date)) break;
+    dips.push(p.date);
   }
-  return until;
+  return dips;
 }
 
 /**
- * `early` before the stored points, then the stored points, the leading run of them replaced by
- * the early line's days where they are an import's dip (replacesStored). Only a leading run: a dip
- * after a night that held the collection is not a collection that was not there yet. Every other stored point wins the day it covers,
- * and the early line otherwise ends the day before the first of them. With nothing stored, `early`
- * alone.
+ * The day the early line has to reach to (exclusive): the first stored point, or the day after the
+ * last import dip (importDips), whichever is later; null with nothing stored.
  */
-export function withEarlyLine(early: ValueSnapshot[], stored: ValueSnapshot[]): ValueSnapshot[] {
+export function earlyUntil(stored: ValueSnapshot[], dips: string[]): string | null {
+  if (!stored.length) return null;
+  const first = stored[0]!.date;
+  const last = dips.length ? nextDay(dips[dips.length - 1]!) : first;
+  return last > first ? last : first;
+}
+
+/**
+ * `early` before the stored points, then the stored points, the import dips among them (importDips)
+ * replaced by the early line's day where it has one. Every other stored point wins the day it
+ * covers, and the early line otherwise ends the day before the first of them. With nothing stored,
+ * `early` alone.
+ */
+export function withEarlyLine(
+  early: ValueSnapshot[],
+  stored: ValueSnapshot[],
+  dips: string[] = [],
+): ValueSnapshot[] {
   if (!early.length) return stored;
   if (!stored.length) return early;
   const first = stored[0]!.date;
   const worked = new Map(early.map((p) => [p.date, p]));
+  const dip = new Set(dips);
   let replaced = false;
   let settled = false;
   return [
     ...early.filter((p) => p.date < first),
     ...stored.map((p) => {
       const w = worked.get(p.date);
-      if (!settled && w && replacesStored(p, w)) {
+      if (!settled && w && dip.has(p.date)) {
         replaced = true;
         return w;
       }
@@ -332,9 +340,37 @@ export function withEarlyLine(early: ValueSnapshot[], stored: ValueSnapshot[]): 
       }
       settled = true;
       /* The first stored point after a dip says the import added its cards that night. The
-         worked-out line already counts them on every day, so the chart would mark growth the line
-         does not show: jasperdenouden's 2,260 cards "added" on 2026-09-14 on a flat line. */
+         worked-out line already counts them on the days before, so the chart would mark growth the
+         line does not show. */
       return { ...p, added: 0, addedValue: 0 };
     }),
   ];
 }
+
+/**
+ * The day an account's first card was added: the earliest added date (`acquiredAt`) of the copies
+ * it holds now, or null where one of them has none (it counts as held all along) or it holds none.
+ *
+ * The Home line starts here (Bart, 2026-09-19): a line drawn before the account held anything is a
+ * collection it did not have. The added date and not the row's creation, because it is the date the
+ * collection says a card joined, the one the line already counts a copy from (holdingsSeries): the
+ * owner's rows were written by an import on 2026-08-14 with the dates the cards were bought, from
+ * 2023-07-15, and its history, stored back to 2024-02-08, is after all of them. The copies held now
+ * and not every row there was, because a stored night before this day counted a copy that is gone:
+ * jasperdenouden's one card of 2026-09-09 to 09-13 was deleted, and its first copy held now was
+ * added on 09-14.
+ */
+export function firstCardOf(items: CardItem[]): string | null {
+  let first: string | null = null;
+  for (const it of items) {
+    if (!it.owned) continue;
+    if (!it.acquiredAt) return null;
+    const day = it.acquiredAt.slice(0, 10);
+    if (!first || day < first) first = day;
+  }
+  return first;
+}
+
+/** The line from the first card on (firstCardOf): nothing before it, stored or worked out. */
+export const fromFirstCard = (line: ValueSnapshot[], first: string | null) =>
+  first ? line.filter((p) => p.date >= first) : line;

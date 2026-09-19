@@ -7,6 +7,9 @@ import {
   holdingsSeries,
   joinHistory,
   earlyUntil,
+  firstCardOf,
+  fromFirstCard,
+  importDips,
   withEarlyLine,
 } from "./folder-history";
 import type { CardItem } from "./items";
@@ -442,54 +445,28 @@ describe("withEarlyLine", () => {
     expect(new Set(line.map((p) => p.date)).size).toBe(line.length);
   });
 
-  it("replaces an import's dip with the worked-out day", () => {
-    // jasperdenouden: one card stored 09-09 to 09-13, the import of 2,261 on 09-14.
-    const early = [
-      point("2026-09-08", 8040, 2265, 2264),
-      point("2026-09-09", 8050, 2265, 2264),
-      point("2026-09-10", 8060, 2265, 2264),
-    ];
+  it("replaces the import dips with the worked-out days, and the night after says it added nothing", () => {
+    const early = [point("2026-09-08", 8040, 2265), point("2026-09-09", 8050, 2265)];
     const stored = [
       point("2026-09-09", 122, 1),
-      point("2026-09-10", 122, 1),
-      point("2026-09-11", 7761, 2261),
-    ];
-    expect(withEarlyLine(early, stored).map((p) => [p.date, p.value])).toEqual([
-      ["2026-09-08", 8040],
-      ["2026-09-09", 8050],
-      ["2026-09-10", 8060],
-      ["2026-09-11", 7761],
-    ]);
-  });
-
-  it("says the night after a replaced dip added nothing, since the line already holds its cards", () => {
-    const early = [point("2026-09-13", 8038, 2265, 2264)];
-    const stored = [
-      point("2026-09-13", 85, 1),
-      { ...point("2026-09-14", 7761, 2261), added: 2260, addedValue: 7700 },
+      { ...point("2026-09-10", 7761, 2261), added: 2260, addedValue: 7700 },
       { ...point("2026-09-16", 8067, 2265), added: 4, addedValue: 300 },
     ];
-    const line = withEarlyLine(early, stored);
-    expect(line[1]).toMatchObject({ date: "2026-09-14", added: 0, addedValue: 0 });
-    expect(line[2]).toMatchObject({ date: "2026-09-16", added: 4, addedValue: 300 });
+    const line = withEarlyLine(early, stored, ["2026-09-09"]);
+    expect(line.map((p) => [p.date, p.value])).toEqual([
+      ["2026-09-08", 8040],
+      ["2026-09-09", 8050],
+      ["2026-09-10", 7761],
+      ["2026-09-16", 8067],
+    ]);
+    expect(line[2]).toMatchObject({ added: 0, addedValue: 0 });
+    expect(line[3]).toMatchObject({ added: 4, addedValue: 300 });
   });
 
-  it("replaces a leading run alone, not a dip after a night that held the collection", () => {
-    const early = [point("2026-09-09", 800, 10, 10), point("2026-09-11", 810, 10, 10)];
-    const stored = [point("2026-09-10", 790, 10), point("2026-09-11", 20, 1)];
-    expect(withEarlyLine(early, stored).map((p) => p.value)).toEqual([800, 790, 20]);
-  });
-
-  it("keeps the stored point of a day a card was sold", () => {
-    const early = [point("2026-09-09", 8050, 2265, 2264), point("2026-09-10", 8060, 2265, 2264)];
-    const stored = [point("2026-09-09", 8040, 2264), point("2026-09-10", 8030, 2264)];
-    expect(withEarlyLine(early, stored)).toEqual(stored);
-  });
-
-  it("keeps a stored point at half of what is priced or more", () => {
-    const early = [point("2026-09-09", 100, 10, 10)];
-    expect(withEarlyLine(early, [point("2026-09-09", 50, 5)])[0]!.value).toBe(50);
-    expect(withEarlyLine(early, [point("2026-09-09", 40, 4)])[0]!.value).toBe(100);
+  it("keeps a stored point that is not a dip, whatever the worked-out day says", () => {
+    const early = [point("2026-09-09", 8050, 2265)];
+    const stored = [point("2026-09-09", 8040, 2264)];
+    expect(withEarlyLine(early, stored, [])).toEqual(stored);
   });
 
   it("answers the stored points alone for an account with nothing to prepend", () => {
@@ -503,7 +480,7 @@ describe("withEarlyLine", () => {
   });
 });
 
-describe("earlyUntil", () => {
+describe("importDips and earlyUntil", () => {
   const point = (date: string, cards: number) => ({
     date,
     value: 1,
@@ -512,26 +489,60 @@ describe("earlyUntil", () => {
     unpriced: 0,
   });
 
-  it("is the first stored point where no night held under half of today's copies", () => {
-    expect(earlyUntil([point("2026-09-17", 1), point("2026-09-18", 1)], 1)).toBe("2026-09-17");
-    expect(earlyUntil([point("2026-09-17", 2264)], 2265)).toBe("2026-09-17");
-  });
-
-  it("reaches to the day after the leading nights that held under half", () => {
-    const stored = [
-      point("2026-09-09", 1),
-      point("2026-09-13", 1),
-      point("2026-09-14", 2261),
-      point("2026-09-18", 2265),
+  it("finds the leading nights that held under half of the copies added by then", () => {
+    // One card the first nights, then an import dated before them.
+    const owned = [
+      copy({ acquiredAt: "2026-09-09T08:00:00Z" }),
+      copy({ tcgId: "base1-4", acquiredAt: "2026-09-01T00:00:00Z", quantity: 9 }),
     ];
-    expect(earlyUntil(stored, 2265)).toBe("2026-09-14");
+    const stored = [point("2026-09-09", 1), point("2026-09-10", 1), point("2026-09-11", 10)];
+    const dips = importDips(stored, owned);
+    expect(dips).toEqual(["2026-09-09", "2026-09-10"]);
+    expect(earlyUntil(stored, dips)).toBe("2026-09-11");
   });
 
-  it("stops at the first night that held the collection", () => {
-    expect(earlyUntil([point("2026-09-09", 10), point("2026-09-12", 1)], 10)).toBe("2026-09-09");
+  it("does not call a collection that grew a dip", () => {
+    // The owner: 2024's nights count the cards added by then, far fewer than it holds now.
+    const owned = [
+      copy({ acquiredAt: "2023-07-15T00:00:00Z", quantity: 400 }),
+      copy({ tcgId: "base1-4", acquiredAt: "2025-01-01T00:00:00Z", quantity: 1525 }),
+    ];
+    const stored = [point("2024-02-08", 400), point("2025-06-01", 1900)];
+    expect(importDips(stored, owned)).toEqual([]);
+    expect(earlyUntil(stored, [])).toBe("2024-02-08");
+  });
+
+  it("keeps a night a card was sold, and stops at the first night that held the collection", () => {
+    const owned = [copy({ acquiredAt: "2026-09-01T00:00:00Z", quantity: 10 })];
+    expect(importDips([point("2026-09-09", 9)], owned)).toEqual([]);
+    expect(importDips([point("2026-09-09", 10), point("2026-09-10", 1)], owned)).toEqual([]);
   });
 
   it("is null with nothing stored", () => {
-    expect(earlyUntil([], 5)).toBeNull();
+    expect(earlyUntil([], [])).toBeNull();
+  });
+});
+
+describe("firstCardOf", () => {
+  it("is the earliest added day of the copies held now", () => {
+    const items = [
+      copy({ acquiredAt: "2026-09-16T10:00:00Z" }),
+      copy({ acquiredAt: "2026-09-14T23:00:00Z" }),
+      copy({ acquiredAt: "2026-01-01T00:00:00Z", owned: false }),
+    ];
+    expect(firstCardOf(items)).toBe("2026-09-14");
+  });
+
+  it("is null where a copy has no added date, which counts as held all along", () => {
+    expect(firstCardOf([copy({ acquiredAt: "2026-09-14T00:00:00Z" }), copy({})])).toBeNull();
+  });
+
+  it("cuts a line to the first card, and nothing without one", () => {
+    const line = [
+      { date: "2026-09-13", value: 85, cards: 1, priced: 1, unpriced: 0 },
+      { date: "2026-09-14", value: 7761, cards: 2261, priced: 2261, unpriced: 0 },
+    ];
+    expect(fromFirstCard(line, "2026-09-14").map((p) => p.date)).toEqual(["2026-09-14"]);
+    expect(fromFirstCard(line, null)).toBe(line);
   });
 });

@@ -11,7 +11,14 @@ import {
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { earlyUntil, joinHistory, withEarlyLine } from "@/lib/core/collection/folder-history";
+import {
+  earlyUntil,
+  firstCardOf,
+  fromFirstCard,
+  importDips,
+  joinHistory,
+  withEarlyLine,
+} from "@/lib/core/collection/folder-history";
 import { type CardItem, filterItems, flattenItems } from "@/lib/core/collection/items";
 import { HISTORY_FROM, recentFrom } from "@/lib/core/collection/value-history";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
@@ -40,11 +47,11 @@ import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
  * earliest day the table has no point for, so what is worked out is today and any night the cron
  * missed, and nothing is drawn over a point that already says it.
  *
- * Before the first stored point the line is worked out too, where that point is later than the
- * readings begin (HISTORY_FROM, 2024-02-08): what the account holds now, every copy at each day's
- * price whenever it was added (getEarlyValue). The owner's account was backfilled to that day and
- * asks nothing; an account whose points start the day its first card was added gets a line back to
- * the day its cards have prices from, instead of two points (Bart, 2026-09-19).
+ * The line starts at the account's first card, the earliest added date of the copies it holds now
+ * (Bart, 2026-09-19): nothing before it is drawn, stored or worked out. Between the first card and
+ * the first stored point, where a card was added with a date before the account's first night, the
+ * line is worked out from what the account holds now (getEarlyValue). The owner's account, stored
+ * back to 2024-02-08 with cards added from 2023-07-15, is unchanged.
  *
  * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
  * the per-card daily readings (see folderSeries) and kept as the line (getListValue): the same
@@ -81,27 +88,34 @@ export async function GET(req: Request) {
         "The value history could not be read. Try again in a moment.",
         readHeaders(req),
       );
-    /* The days the table has no point for, as the cards' own lines add up (joinHistory): the same
+    /* The line starts at the account's first card (firstCardOf, Bart 2026-09-19): nothing before
+       it is drawn, stored or worked out. The first card is the earliest added date of the copies
+       held now, which is where holdingsSeries already counts a copy from. A stored point before it
+       counted a copy that is gone (jasperdenouden's one card of 09-09 to 09-13, deleted before the
+       import of 09-14), so it is cut too. The owner's stored history, backfilled to 2024-02-08, is
+       untouched: its cards were added from 2023-07-15, before all of it. Where the collection cannot
+       be read, or a copy has no added date, nothing is cut.
+
+       The days the table has no point for, as the cards' own lines add up (joinHistory): the same
        readings a card's chart draws, summed once and kept (getRecentValue). For an account the
        04:00 cron has kept up with that is today alone; recentFrom() takes the earliest missing day,
        so a gap or a history the cron stopped writing is worked out and drawn rather than left to a
        stored point that does not cover it.
 
-       And the days before the first point, where that is later than the readings begin
-       (HISTORY_FROM): what the account holds now, at each day's prices (getEarlyValue), drawn before
-       the stored points (withEarlyLine). Only the owner's account was backfilled to 2024-02-08;
-       every other account's points start the day its first card was added, which drew a flat or
-       two-point line. A stored point wins the day it covers unless it is an import's dip, a night
-       that held under half of what has a price that day (replacesStored), which the worked-out day
-       replaces; the early line then reaches past the first point to the last such night
-       (earlyUntil). An account with no stored point at all has its early line cut where the
-       worked-out recent days begin.
+       The days between the first card and the first stored point, where a card was added with a
+       date before the account's first night: what the account holds now, at each day's prices
+       (getEarlyValue), drawn before the stored points (withEarlyLine). A stored point wins the day
+       it covers unless it is an import's dip, a night that held under half of the copies added by
+       that day (importDips), which the worked-out day replaces; the early line then reaches past the
+       first point to the last such night (earlyUntil). An account whose first stored point is its
+       first card's day asks for nothing, and neither does one with no stored point: its recent days
+       start at its first card or ninety days back (HISTORY_WINDOW_DAYS), whichever is later, until
+       the cron stores its first night and the days before that are worked out here.
 
-       Home does not wait for an early line that is not kept yet. Read cold it is every held card's
-       readings since 2024: 7 s for two thousand cards (getEarlyValue). The route waits
-       EARLY_WAIT_MS for it, which a kept line answers well within, and otherwise answers the stored
-       and recent points at once and lets the read finish after the response (after()), so its parts
-       are kept for the next request.
+       Home does not wait for an early line that is not kept yet. The route waits EARLY_WAIT_MS for
+       it, which a kept line answers well within, and otherwise answers the stored and recent points
+       at once and lets the read finish after the response (after()), so its parts are kept for the
+       next request.
 
        Where the collection or its readings cannot be read, each part falls back on its own: the
        stored points alone, as before, and the error logged. */
@@ -110,68 +124,64 @@ export async function GET(req: Request) {
       snapshots.map((p) => p.date),
       today,
     );
-    const firstStored = snapshots[0]?.date;
-    const early = !firstStored || firstStored > HISTORY_FROM;
+    let items: CardItem[] | null = null;
+    try {
+      const collection = await getCollection(viewer.userId, token);
+      if (collection && !collection.failed) items = flattenItems(collection.sets);
+    } catch (err) {
+      console.error("Collection unavailable for the value line, the stored points alone:", err);
+    }
+    if (!items) return NextResponse.json({ snapshots }, { headers: readHeaders(req) });
+    const held = items;
+    const owned = filterItems(held, { owned: true });
+    const firstCard = firstCardOf(owned);
+    const stored = fromFirstCard(snapshots, firstCard);
     let recent: ValueSnapshot[] = [];
     let before: ValueSnapshot[] = [];
-    if (since || early) {
-      let items: CardItem[] | null = null;
+    const readRecent = async () => {
+      if (!since) return;
       try {
-        const collection = await getCollection(viewer.userId, token);
-        if (collection && !collection.failed) items = flattenItems(collection.sets);
+        const line = await getRecentValue(viewer.userId, held, token, since);
+        if (!line.failed) recent = line.snapshots;
       } catch (err) {
-        console.error("Collection unavailable for the value line, the stored points alone:", err);
+        console.error("Recent value line unavailable, the stored points alone:", err);
       }
-      if (items) {
-        const held = items;
-        const readRecent = async () => {
-          if (!since) return;
-          try {
-            const line = await getRecentValue(viewer.userId, held, token, since);
-            if (!line.failed) recent = line.snapshots;
-          } catch (err) {
-            console.error("Recent value line unavailable, the stored points alone:", err);
-          }
-        };
-        const owned = filterItems(held, { owned: true });
-        /* With no stored point the early line is built to today, a key that holds for the day
-           (recent[0] need not: a copy with no date moves it with the window), and withEarlyLine
-           cuts it where the recent days begin. The cron stores the first point the next night. */
-        const until = early
-          ? (earlyUntil(
-              snapshots,
-              owned.reduce((n, it) => n + (it.tcgId ? Math.max(0, it.quantity) : 0), 0),
-            ) ?? today)
-          : null;
-        const readEarly = async (): Promise<ValueSnapshot[]> => {
-          if (!until || until <= HISTORY_FROM) return [];
-          try {
-            const line = await getEarlyValue(viewer.userId, owned, token, until);
-            return line.failed ? [] : line.snapshots;
-          } catch (err) {
-            console.error("Early value line unavailable, the stored points alone:", err);
-            return [];
-          }
-        };
-        const earlyRead = readEarly();
-        await readRecent();
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        const waited = await Promise.race([
-          earlyRead,
-          new Promise<null>((resolve) => {
-            timer = setTimeout(() => resolve(null), EARLY_WAIT_MS);
-          }),
-        ]);
-        clearTimeout(timer);
-        if (waited) before = waited;
-        else {
-          console.info("[timing] early-value not kept yet, finished after the response");
-          after(earlyRead);
-        }
+    };
+    const from = firstCard && firstCard > HISTORY_FROM ? firstCard : HISTORY_FROM;
+    const dips = importDips(stored, owned);
+    const until = earlyUntil(stored, dips);
+    const readEarly = async (): Promise<ValueSnapshot[]> => {
+      if (!until || until <= from) return [];
+      try {
+        const line = await getEarlyValue(viewer.userId, owned, token, from, until);
+        return line.failed ? [] : line.snapshots;
+      } catch (err) {
+        console.error("Early value line unavailable, the stored points alone:", err);
+        return [];
       }
+    };
+    const earlyRead = readEarly();
+    await readRecent();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const waited = await Promise.race([
+      earlyRead,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), EARLY_WAIT_MS);
+      }),
+    ]);
+    clearTimeout(timer);
+    if (waited) before = waited;
+    else {
+      console.info("[timing] early-value not kept yet, finished after the response");
+      after(earlyRead);
     }
     return NextResponse.json(
-      { snapshots: withEarlyLine(before, joinHistory(snapshots, recent)) },
+      {
+        snapshots: fromFirstCard(
+          withEarlyLine(before, joinHistory(stored, recent), dips),
+          firstCard,
+        ),
+      },
       { headers: readHeaders(req) },
     );
   }
