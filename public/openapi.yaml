@@ -1992,7 +1992,7 @@ paths:
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "502": { $ref: "#/components/responses/BadGateway" }
         "503":
-          description: The collection, the folder or its readings could not be read. Never an empty list.
+          description: The collection or its readings could not be read. Never an empty list.
           content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
   # ── Profile ───────────────────────────────────────────────────────────────

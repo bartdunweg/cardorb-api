@@ -7,8 +7,9 @@ vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
+  // The real helper's contract (guard.ts): a store throw is `{ error: "<operation>." }` at 502.
   storeErrorResponse: (_e: unknown, _r: Request, op: string) =>
-    Response.json({ error: op }, { status: 503 }),
+    Response.json({ error: `${op}.` }, { status: 502 }),
 }));
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
@@ -312,8 +313,8 @@ describe("GET /v1/movers", () => {
     it("answers the store's error when the folder could not be read", async () => {
       findFolder.mockRejectedValue(new Error("down"));
       const res = await ask(`?folder=${FOLDER}`);
-      expect(res.status).toBe(503);
-      expect(await res.json()).toEqual({ error: "Reading the folder failed" });
+      expect(res.status).toBe(502);
+      expect(await res.json()).toEqual({ error: "Reading the folder failed." });
       expect(getCollection).not.toHaveBeenCalled();
     });
   });
