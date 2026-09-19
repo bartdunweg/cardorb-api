@@ -34,12 +34,14 @@ const findFolder = vi.fn();
 const getCollection = vi.fn();
 const getListValue = vi.fn();
 const getRecentValue = vi.fn();
+const getEarlyValue = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   getValueHistory: (...a: unknown[]) => getValueHistory(...a),
   findFolder: (...a: unknown[]) => findFolder(...a),
   getCollection: (...a: unknown[]) => getCollection(...a),
   getListValue: (...a: unknown[]) => getListValue(...a),
   getRecentValue: (...a: unknown[]) => getRecentValue(...a),
+  getEarlyValue: (...a: unknown[]) => getEarlyValue(...a),
 }));
 
 const flattenItems = vi.fn();
@@ -89,6 +91,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   authorise.mockResolvedValue(VIEWER);
   getValueHistory.mockResolvedValue({ snapshots: [SNAPSHOT], failed: false });
+  // Reset rather than left to whichever test ran last: clearAllMocks keeps an implementation.
+  getCollection.mockResolvedValue({ sets: [], failed: false });
+  getRecentValue.mockResolvedValue({ snapshots: [], failed: false });
+  getEarlyValue.mockResolvedValue({ snapshots: [], failed: false });
 });
 
 describe("GET /api/v1/value-history, the recent days", () => {
@@ -170,6 +176,108 @@ describe("GET /api/v1/value-history, the recent days", () => {
     const body = await (await get()).json();
     expect(body.snapshots).toEqual([SNAPSHOT]);
     expect(getListValue).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /api/v1/value-history, the days before the first stored point", () => {
+  const point = (date: string, value: number) => ({
+    date,
+    value,
+    cards: 1,
+    priced: 1,
+    unpriced: 0,
+  });
+  const solgaleo = {
+    id: "row",
+    tcgId: "sm12-216",
+    catalogue: "en",
+    owned: true,
+    finish: "normal",
+    quantity: 1,
+    acquiredAt: "2026-09-17T10:00:00Z",
+  };
+  const wish = { ...solgaleo, id: "wish", tcgId: "sm12-1", owned: false };
+
+  it("draws what the cards held now were worth before the first stored point, the stored points after", async () => {
+    // pikachu, 2026-09-19: one card added 2026-09-17, two stored points, a two-point line on Home.
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    getValueHistory.mockResolvedValue({
+      snapshots: [point("2026-09-17", 281), point("2026-09-18", 281)],
+      failed: false,
+    });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([solgaleo, wish]);
+    getRecentValue.mockResolvedValue({ snapshots: [point("2026-09-19", 283)], failed: false });
+    getEarlyValue.mockResolvedValue({
+      // The early line as the cache hands it; a day it covers that a stored point covers too
+      // loses to the stored point.
+      snapshots: [point("2024-02-08", 150), point("2026-09-16", 279), point("2026-09-17", 1)],
+      failed: false,
+    });
+    const body = await (await get()).json();
+    vi.useRealTimers();
+    // The owned copies alone, up to the first stored point.
+    expect(getEarlyValue).toHaveBeenCalledWith("me-uuid", [solgaleo], "t.o.k.e.n", "2026-09-17");
+    expect(body.snapshots.map((p: { date: string; value: number }) => [p.date, p.value])).toEqual([
+      ["2024-02-08", 150],
+      ["2026-09-16", 279],
+      ["2026-09-17", 281],
+      ["2026-09-18", 281],
+      ["2026-09-19", 283],
+    ]);
+  });
+
+  it("asks nothing for an account whose stored points already reach the first reading", async () => {
+    // The owner's account: backfilled to 2024-02-08, so there is no day before it to work out.
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    getValueHistory.mockResolvedValue({
+      snapshots: [point("2024-02-08", 20_000), ...storedThrough("2026-09-18")],
+      failed: false,
+    });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([solgaleo]);
+    getRecentValue.mockResolvedValue({ snapshots: [], failed: false });
+    await get();
+    vi.useRealTimers();
+    expect(getEarlyValue).not.toHaveBeenCalled();
+  });
+
+  it("ends the early line where the recent days begin for an account with no stored point", async () => {
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    getValueHistory.mockResolvedValue({ snapshots: [], failed: false });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([solgaleo]);
+    getRecentValue.mockResolvedValue({ snapshots: [point("2026-09-17", 281)], failed: false });
+    getEarlyValue.mockResolvedValue({ snapshots: [point("2026-09-16", 279)], failed: false });
+    const body = await (await get()).json();
+    vi.useRealTimers();
+    expect(getEarlyValue).toHaveBeenCalledWith("me-uuid", [solgaleo], "t.o.k.e.n", "2026-09-17");
+    expect(body.snapshots.map((p: { date: string }) => p.date)).toEqual([
+      "2026-09-16",
+      "2026-09-17",
+    ]);
+  });
+
+  it("answers the stored and recent points alone when only the early line fails", async () => {
+    vi.setSystemTime(new Date("2026-09-19T09:00:00Z"));
+    getValueHistory.mockResolvedValue({ snapshots: [point("2026-09-17", 281)], failed: false });
+    getCollection.mockResolvedValue({ sets: [], failed: false });
+    flattenItems.mockReturnValueOnce([solgaleo]);
+    getRecentValue.mockResolvedValue({ snapshots: [point("2026-09-18", 282)], failed: false });
+    getEarlyValue.mockRejectedValue(new Error("store down"));
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await get();
+    vi.useRealTimers();
+    expect(res.status).toBe(200);
+    expect((await res.json()).snapshots.map((p: { date: string }) => p.date)).toEqual([
+      "2026-09-17",
+      "2026-09-18",
+    ]);
+    expect(error).toHaveBeenCalledWith(
+      "Early value line unavailable, the stored points alone:",
+      expect.any(Error),
+    );
+    error.mockRestore();
   });
 });
 

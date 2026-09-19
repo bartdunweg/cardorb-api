@@ -5,14 +5,15 @@ import { bearer } from "@/lib/api/viewer";
 import {
   findFolder,
   getCollection,
+  getEarlyValue,
   getListValue,
   getRecentValue,
   getValueHistory,
 } from "@/lib/core/collection/collection";
 import { UUID } from "@/lib/core/collection/collection-row";
-import { joinHistory } from "@/lib/core/collection/folder-history";
-import { filterItems, flattenItems } from "@/lib/core/collection/items";
-import { recentFrom } from "@/lib/core/collection/value-history";
+import { joinHistory, prependHistory } from "@/lib/core/collection/folder-history";
+import { type CardItem, filterItems, flattenItems } from "@/lib/core/collection/items";
+import { HISTORY_FROM, recentFrom } from "@/lib/core/collection/value-history";
 import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
 
 /**
@@ -38,6 +39,12 @@ import type { ValueSnapshot } from "@/lib/core/collection/value-snapshot";
  * series rose EUR 30, and that notch walked a day forward every day. recentFrom() takes the
  * earliest day the table has no point for, so what is worked out is today and any night the cron
  * missed, and nothing is drawn over a point that already says it.
+ *
+ * Before the first stored point the line is worked out too, where that point is later than the
+ * readings begin (HISTORY_FROM, 2024-02-08): what the account holds now, every copy at each day's
+ * price whenever it was added (getEarlyValue). The owner's account was backfilled to that day and
+ * asks nothing; an account whose points start the day its first card was added gets a line back to
+ * the day its cards have prices from, instead of two points (Bart, 2026-09-19).
  *
  * `?folder=<id>`, `?folder=favorites` or `?folder=wishlist` answers for that list instead, built from
  * the per-card daily readings (see folderSeries) and kept as the line (getListValue): the same
@@ -72,30 +79,68 @@ export async function GET(req: Request) {
        readings a card's chart draws, summed once and kept (getRecentValue). For an account the
        04:00 cron has kept up with that is today alone; recentFrom() takes the earliest missing day,
        so a gap or a history the cron stopped writing is worked out and drawn rather than left to a
-       stored point that does not cover it. Where the collection or its readings cannot be read, the
-       stored points alone, as before. */
+       stored point that does not cover it.
+
+       And the days before the first point, where that is later than the readings begin
+       (HISTORY_FROM): what the account holds now, at each day's prices (getEarlyValue), drawn before
+       the stored points, which win every day they cover (prependHistory). Only the owner's account
+       was backfilled to 2024-02-08; every other account's points start the day its first card was
+       added, which drew a flat or two-point line. An account with no stored point at all has its
+       early line end where the worked-out recent days begin.
+
+       Where the collection or its readings cannot be read, each part falls back on its own: the
+       stored points alone, as before, and the error logged. */
     const since = recentFrom(
       snapshots.map((p) => p.date),
       new Date().toISOString().slice(0, 10),
     );
+    const firstStored = snapshots[0]?.date;
+    const early = !firstStored || firstStored > HISTORY_FROM;
     let recent: ValueSnapshot[] = [];
-    if (since)
+    let before: ValueSnapshot[] = [];
+    if (since || early) {
+      let items: CardItem[] | null = null;
       try {
         const collection = await getCollection(viewer.userId, token);
-        if (collection && !collection.failed) {
-          const line = await getRecentValue(
-            viewer.userId,
-            flattenItems(collection.sets),
-            token,
-            since,
-          );
-          if (!line.failed) recent = line.snapshots;
-        }
+        if (collection && !collection.failed) items = flattenItems(collection.sets);
       } catch (err) {
-        console.error("Recent value line unavailable, the stored points alone:", err);
+        console.error("Collection unavailable for the value line, the stored points alone:", err);
       }
+      if (items) {
+        const held = items;
+        const readRecent = async () => {
+          if (!since) return;
+          try {
+            const line = await getRecentValue(viewer.userId, held, token, since);
+            if (!line.failed) recent = line.snapshots;
+          } catch (err) {
+            console.error("Recent value line unavailable, the stored points alone:", err);
+          }
+        };
+        const readEarly = async (until: string | undefined) => {
+          if (!early || !until || until <= HISTORY_FROM) return;
+          try {
+            const line = await getEarlyValue(
+              viewer.userId,
+              filterItems(held, { owned: true }),
+              token,
+              until,
+            );
+            if (!line.failed) before = line.snapshots;
+          } catch (err) {
+            console.error("Early value line unavailable, the stored points alone:", err);
+          }
+        };
+        // Side by side where the first stored point is known; after the recent days where it is not.
+        if (firstStored) await Promise.all([readRecent(), readEarly(firstStored)]);
+        else {
+          await readRecent();
+          await readEarly(recent[0]?.date);
+        }
+      }
+    }
     return NextResponse.json(
-      { snapshots: joinHistory(snapshots, recent) },
+      { snapshots: prependHistory(before, joinHistory(snapshots, recent)) },
       { headers: readHeaders(req) },
     );
   }

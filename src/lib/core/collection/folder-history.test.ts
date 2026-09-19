@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { daysFromMonths } from "../price-months.mjs";
-import { folderSeries, holdingsSeries, joinHistory } from "./folder-history";
+import {
+  dayTotals,
+  earlyLine,
+  folderSeries,
+  holdingsSeries,
+  joinHistory,
+  prependHistory,
+} from "./folder-history";
 import type { CardItem } from "./items";
 
 const copy = (over: Partial<CardItem>): CardItem =>
@@ -318,5 +325,129 @@ describe("joinHistory", () => {
   it("answers the stored points where there is no recent series", () => {
     const stored = [point("2026-09-12", 932)];
     expect(joinHistory(stored, [])).toBe(stored);
+  });
+});
+
+describe("the line before the first stored point", () => {
+  const reading = (tcgId: string, date: string, market: number | null) => ({
+    language: "en" as const,
+    tcgId,
+    date,
+    market,
+    holo: null,
+  });
+  it("counts every copy held now on every day, also before it was added", () => {
+    // Bart, 2026-09-19: the price history of your cards, also before you added them.
+    const items = [copy({ acquiredAt: "2026-09-17T10:00:00Z" })];
+    const line = earlyLine(
+      [
+        dayTotals(
+          items,
+          [reading("base1-25", "2026-09-01", 10), reading("base1-25", "2026-09-02", 12)],
+          "2026-09-01",
+          "2026-09-03",
+        ),
+      ],
+      1,
+    );
+    expect(line).toEqual([
+      { date: "2026-09-01", value: 10, cards: 1, priced: 1, unpriced: 0 },
+      { date: "2026-09-02", value: 12, cards: 1, priced: 1, unpriced: 0 },
+    ]);
+  });
+
+  it("ends the day before `until` and starts no earlier than `from`", () => {
+    const line = earlyLine(
+      [
+        dayTotals(
+          [copy({})],
+          [
+            reading("base1-25", "2026-08-31", 9),
+            reading("base1-25", "2026-09-01", 10),
+            reading("base1-25", "2026-09-03", 30),
+          ],
+          "2026-09-01",
+          "2026-09-03",
+        ),
+      ],
+      1,
+    );
+    expect(line.map((p) => p.date)).toEqual(["2026-09-01", "2026-09-02"]);
+    // 09-02 has no reading of its own: the card stands at its last one, as the Home line does.
+    expect(line[1]!.value).toBe(10);
+  });
+
+  it("adds chunks up to what the whole collection sums to, and prices a day from any chunk", () => {
+    const pikachu = copy({ quantity: 2 });
+    const charizard = copy({ tcgId: "base1-4" });
+    const unknown = copy({ tcgId: null });
+    const prices = [
+      reading("base1-25", "2026-09-01", 10.4),
+      reading("base1-4", "2026-09-01", 100.3),
+      reading("base1-4", "2026-09-02", 110.3),
+    ];
+    const whole = folderSeries([pikachu, charizard, unknown], prices);
+    const line = earlyLine(
+      [
+        dayTotals([pikachu], prices.slice(0, 1), "2026-09-01", "2026-09-03"),
+        dayTotals([charizard], prices.slice(1), "2026-09-01", "2026-09-03"),
+      ],
+      4,
+    );
+    expect(line).toEqual(whole);
+    // Pikachu has no reading on 09-02, so its chunk alone has no day then; it still counts.
+    expect(line[1]).toEqual({ date: "2026-09-02", value: 131, cards: 4, priced: 3, unpriced: 1 });
+  });
+
+  it("leaves out a day on which no copy has a price, rather than drawing it as zero", () => {
+    const line = earlyLine(
+      [
+        dayTotals(
+          [copy({})],
+          [reading("base1-25", "2026-09-01", null), reading("base1-25", "2026-09-03", 10)],
+          "2026-09-01",
+          "2026-09-04",
+        ),
+      ],
+      1,
+    );
+    expect(line.map((p) => p.date)).toEqual(["2026-09-03"]);
+  });
+
+  it("answers nothing for a collection with no priced card", () => {
+    expect(earlyLine([], 3)).toEqual([]);
+  });
+});
+
+describe("prependHistory", () => {
+  const point = (date: string, value: number) => ({
+    date,
+    value,
+    cards: 1,
+    priced: 1,
+    unpriced: 0,
+  });
+
+  it("lets the stored points win every day they cover and ends the early line the day before", () => {
+    const early = [point("2026-09-15", 1), point("2026-09-16", 2), point("2026-09-17", 3)];
+    const stored = [point("2026-09-17", 281), point("2026-09-18", 282)];
+    const line = prependHistory(early, stored);
+    expect(line).toEqual([
+      point("2026-09-15", 1),
+      point("2026-09-16", 2),
+      point("2026-09-17", 281),
+      point("2026-09-18", 282),
+    ]);
+    expect(new Set(line.map((p) => p.date)).size).toBe(line.length);
+  });
+
+  it("answers the stored points alone for an account with nothing to prepend", () => {
+    const stored = [point("2026-09-17", 281)];
+    expect(prependHistory([], stored)).toBe(stored);
+  });
+
+  it("answers the early line alone where nothing is stored", () => {
+    const early = [point("2026-09-16", 2)];
+    expect(prependHistory(early, [])).toEqual(early);
   });
 });

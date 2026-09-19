@@ -103,8 +103,8 @@ import {
 import { rememberedScans } from "./remembered-scans";
 import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
-import { folderSeries, holdingsSeries } from "./folder-history";
-import { tailReadFrom } from "./value-history";
+import { dayTotals, earlyLine, folderSeries, holdingsSeries } from "./folder-history";
+import { HISTORY_FROM, tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
 import { adminClient, serverClient, userClient } from "../../storage/supabase";
@@ -2125,6 +2125,97 @@ export const getListValue = cache(
       return { snapshots, failed: false };
     } catch (err) {
       console.error("List value line unavailable, retrying on the next render:", err);
+      return { snapshots: [], failed: true };
+    }
+  },
+);
+
+/** How many parts of the held cards the early line reads at once. */
+const EARLY_PARALLEL = 8;
+/** How many parts the held cards are split into, each kept on its own (getEarlyValue). */
+const EARLY_PARTS = 32;
+
+/** Which part of the early line a card is summed in: fixed by the card, so adding one moves no other. */
+const earlyPartOf = (card: PricedCard) =>
+  createHash("sha1").update(historyKey(card.language, card.tcgId)).digest()[0]! % EARLY_PARTS;
+
+/**
+ * The Home line before an account's first stored point, `until`: what the copies held today were
+ * worth on each day from HISTORY_FROM, at that day's prices (earlyLine).
+ *
+ * Every account but the one backfilled to 2024-02-08 has stored points from the day its first card
+ * was added, so its Home chart was a flat or two-point line: `pikachu` two points, an account of
+ * two thousand cards ten (2026-09-19). The owner chose to draw the days before from the daily
+ * prices of what the account holds now, the way a list's line is drawn (getListValue), and every
+ * copy counts on every day, also before it was added. An account whose stored points already reach
+ * HISTORY_FROM asks nothing (the route does not call this, and `until` there is no later).
+ *
+ * The largest such account holds 1,975 cards: 601,182 days of readings between HISTORY_FROM and its
+ * first point, read from 112,397 month rows: 7 s from a laptop against production, eight parts at a
+ * time, with the heap some 475 MB above where it started (2026-09-19). A part alone is about a
+ * second. Too much to do again for every card added, so the held cards
+ * are split into EARLY_PARTS parts by a hash of the card (earlyPartOf), and each part's days are
+ * summed (dayTotals) and kept on their own, keyed on what that part holds (listKey: card, printing,
+ * count, owned). A card added or removed is another key for its own part alone, a thirty-second of
+ * the work; the parts are added up on every ask, which is a thousand days times thirty-two. The
+ * readings of a part are let go once it is summed, EARLY_PARALLEL parts at a time.
+ *
+ * Kept a day, and `until` in the key, so a new first stored point is another line. The readings
+ * before `until` do not change by the night, so neither priceHistoryTag nor cardsTag drops it: the
+ * one would recompute every account's early line every night for figures that stayed the same, the
+ * other on every note edited. A deploy does not clear the Data Cache, so a change to how the line is
+ * built bumps the version in the key, with getCardPrices' readings (v14).
+ */
+export const getEarlyValue = cache(
+  async (
+    userId: string,
+    items: CardItem[],
+    token: string | undefined,
+    /** The first stored point's date, yyyy-mm-dd: the line ends the day before it. */
+    until: string,
+  ): Promise<RecentValue> => {
+    const owned = items.filter((it) => it.owned);
+    const cards = pricedCardsOf(owned);
+    if (!cards.length || until <= HISTORY_FROM) return { snapshots: [], failed: false };
+    try {
+      const db = token ? userClient(token) : await serverClient();
+      if (!db) return { snapshots: [], failed: false };
+      const start = performance.now();
+      const byPart = new Map<number, PricedCard[]>();
+      for (const card of cards) {
+        const part = earlyPartOf(card);
+        const list = byPart.get(part);
+        if (list) list.push(card);
+        else byPart.set(part, [card]);
+      }
+      let missed = 0;
+      const parts = await mapLimit([...byPart.values()], EARLY_PARALLEL, async (chunk) => {
+        const keys = new Set(chunk.map((c) => historyKey(c.language, c.tcgId)));
+        const held = owned.filter((it) => it.tcgId && keys.has(historyKey(it.catalogue, it.tcgId)));
+        // Kept as rows, not a Map: the Data Cache stores what JSON can say.
+        const days = await unstable_cache(
+          async () => {
+            missed++;
+            const points = await listCardPrices(db, chunk, HISTORY_FROM, until);
+            return [...dayTotals(held, points, HISTORY_FROM, until)].map(
+              ([date, t]) => [date, t.value, t.priced] as [string, number, number],
+            );
+          },
+          ["early-value", "v14", userId, until, listKey(held)],
+          { revalidate: 86_400, tags: [cardPricesTag(userId)] },
+        )();
+        return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));
+      });
+      const copies = owned.reduce((n, it) => n + Math.max(0, it.quantity), 0);
+      const snapshots = earlyLine(parts, copies);
+      logTiming(
+        "early-value",
+        elapsed(start),
+        `${cards.length} cards, ${missed} of ${parts.length} parts read, ${snapshots.length} days`,
+      );
+      return { snapshots, failed: false };
+    } catch (err) {
+      console.error("Early value line unavailable, the stored points alone:", err);
       return { snapshots: [], failed: true };
     }
   },

@@ -1,0 +1,1 @@
+- Home's value line reaches back before an account's first stored point: the days from 2024-02-08, where its cards have prices, are what the cards held now were worth on each day (`GET /v1/value-history`). An account whose stored points start the day its first card was added no longer draws a flat or two-point line; the owner's account, stored back to 2024-02-08, is unchanged.
