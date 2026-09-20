@@ -1,0 +1,1 @@
+- A set with no cards in it no longer shows up on Browse as a tile whose page is empty.

@@ -4,6 +4,22 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-20
+
+- A set with no cards in it no longer shows up on Browse as a tile whose page is empty.
+
+- A card in your collection now reads exactly as it does on Browse: the card's name, its set's name and its printed number come from the catalogue, on every card you add or import, and the cards already there have been put right.
+
+## 2026-09-19
+
+- A new English set TCGdex publishes no logo for takes Scrydex's, found by its exact name in pokemontcg.io's set list (one set carrying the name, never a near one), in the nightly catalogue copy only. 30th Celebration (me55) and its Classic Collection (me55c, the same file) are written down as well. A lookup that fails leaves the logo a set holds. Data health reports an English set with cards and no logo.
+
+- The risers and fallers can be asked for one list (`GET /v1/movers?folder=`): a folder id, `favorites` or `wishlist`, read as the value history reads them. Only that list's cards are priced; on the wishlist a card counts as one copy, at the printing wished.
+
+- Home's value line reaches back before an account's first stored point: the days from 2024-02-08, where its cards have prices, are what the cards held now were worth on each day (`GET /v1/value-history`). An account whose stored points start the day its first card was added no longer draws a flat or two-point line, and a stored night that held under half of what has a price that day (an import still to come) is drawn from the worked-out line instead. The first time an account's early line is read it is finished after the response and shown from the next request; the owner's account, stored back to 2024-02-08, is unchanged.
+
+- Home's value line starts at the account's first card: the earliest added date of the cards held now (`GET /v1/value-history`). Nothing before it is drawn, a stored point for a card since deleted neither; the owner's history, stored back to 2024-02-08 with cards added from 2023, is unchanged. The worked-out days are only those between the first card and the first stored point, which for most accounts is none.
+
 ## 2026-09-18
 
 - A binder's, the favourites' and the wishlist's value line is kept once it is worked out: the Pokédex binder's second visit is under 0.1 s where every visit took 3 s, with the same figures on every day. Every read of the collection also stops waiting for the store's write count before it looks in its cache.

@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { cardsTag, validateCardDraft } from "@/lib/core/collection/collection-row";
 import { defaultFinishFor } from "@/lib/core/catalogue/default-finish";
 import { withCatalogueIds } from "@/lib/core/collection/catalogue-ids";
+import { withCatalogueSpelling } from "@/lib/core/collection/catalogue-spelling";
 import { createRow } from "@/lib/storage/collection";
 import {
   authorise,
@@ -273,6 +274,16 @@ export async function POST(req: Request) {
 
   // The copy's card id, whatever spelling the client sent (catalogue-ids.ts).
   result.draft = (await withCatalogueIds([result.draft], (d) => d.set))[0] ?? result.draft;
+
+  // And its card's name, set name and printed number, so the row reads as Browse does from the
+  // moment it is written (catalogue-spelling.ts).
+  result.draft =
+    (
+      await withCatalogueSpelling([result.draft], {
+        of: (d) => d.set,
+        on: (d, set) => ({ ...d, set }),
+      })
+    )[0] ?? result.draft;
 
   // A copy you own always has a finish: the catalogue's only printing, or normal. See defaultFinish().
   if (result.draft.collection && !result.draft.finish) {

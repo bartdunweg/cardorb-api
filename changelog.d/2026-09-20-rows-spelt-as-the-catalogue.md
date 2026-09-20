@@ -1,0 +1,1 @@
+- A card in your collection now reads exactly as it does on Browse: the card's name, its set's name and its printed number come from the catalogue, on every card you add or import, and the cards already there have been put right.
