@@ -79,12 +79,14 @@ grant select on public.card_price_months to authenticated;
 --
 -- `anon` needs exactly the public profile: `publicProfile()` and `publicUsernames()` run on
 -- `serverClient()`, which is `anon` for a signed-out stranger on `/v1/public/<username>/*`, and
--- they select id, username, display_name, avatar_url, wishlist_public and favorites_public. It
+-- they select id, username, display_name, avatar_url, wishlist_public, favorites_public and
+-- prices_public. It
 -- also needs `id` for `GET /v1/health` (one row, to prove Postgres answers) and `username` for
 -- the name-collision probe in `POST /v1/signup`. A filter counts: `.eq("is_public", true)` reads
 -- that column, so it is granted; the identical test inside `profiles_read` does not need a grant,
 -- because a policy's own expression is not privilege-checked against the caller.
-grant select (id, username, display_name, avatar_url, is_public, wishlist_public, favorites_public)
+grant select (id, username, display_name, avatar_url, is_public, wishlist_public,
+              favorites_public, prices_public)
   on public.profiles to anon;
 --
 -- `authenticated` needs those same columns (a signed-in person can open somebody's public page
@@ -95,17 +97,16 @@ grant select (id, username, display_name, avatar_url, is_public, wishlist_public
 -- reading the column as the service role on every request, which this API does not do for a
 -- per-person read.
 grant select (id, username, display_name, avatar_url, is_public, wishlist_public,
-              favorites_public, onboarded_at, cards_version)
+              favorites_public, prices_public, onboarded_at, cards_version)
   on public.profiles to authenticated;
 --
 -- The only write a person makes to their own profile is the settings patch, `updateProfile()`,
--- which touches these six columns and stamps `updated_at`; `profiles_write` scopes it to
+-- which touches these seven columns and stamps `updated_at`; `profiles_write` scopes it to
 -- `id = auth.uid()`. `username` is deliberately absent: it is claimed through
 -- `claim_username()`, which is `security definer` and does the update itself, so no column
 -- grant is needed for a rename and one would only widen what a client could do by hand.
--- `prices_public` is absent because nothing reads or writes it.
 grant update (display_name, avatar_url, is_public, wishlist_public, favorites_public,
-              onboarded_at, updated_at)
+              prices_public, onboarded_at, updated_at)
   on public.profiles to authenticated;
 
 -- ── reserved_usernames ─────────────────────────────────────────────────────────────────────

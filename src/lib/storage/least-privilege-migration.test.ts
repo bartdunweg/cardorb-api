@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PGlite } from "@electric-sql/pglite";
@@ -46,8 +47,16 @@ const SCHEMA = `
   create table public.usd_eur_rates (day date primary key, rate numeric);
 `;
 
-/** Where the live database was before the migration: Supabase's default, everything to both. */
-const AS_IT_WAS = `grant all on all tables in schema public to anon, authenticated;`;
+/**
+ * Where the live database was before the migration: Supabase's default, everything to both, and
+ * the default privileges that hand the next table to them as well. PGlite starts with neither, so
+ * without this line the migration's revokes would have nothing to take back and every assertion
+ * below would pass on an empty database rather than on the change.
+ */
+const AS_IT_WAS = `
+  grant all on all tables in schema public to anon, authenticated;
+  alter default privileges in schema public grant all on tables to anon, authenticated;
+`;
 
 let db: PGlite;
 
@@ -90,7 +99,7 @@ describe("what anon may still do", () => {
   it("reads the columns a public profile page is made of", async () => {
     await allowed(
       "anon",
-      "select id, username, display_name, avatar_url, is_public, wishlist_public, favorites_public from public.profiles",
+      "select id, username, display_name, avatar_url, is_public, wishlist_public, favorites_public, prices_public from public.profiles",
     );
   });
 
@@ -154,7 +163,7 @@ describe("what authenticated may still do", () => {
   it("reads its own profile's settings and the cards version the rows cache keys on", async () => {
     await allowed(
       "authenticated",
-      "select id, username, display_name, avatar_url, is_public, wishlist_public, favorites_public, onboarded_at, cards_version from public.profiles",
+      "select id, username, display_name, avatar_url, is_public, wishlist_public, favorites_public, prices_public, onboarded_at, cards_version from public.profiles",
     );
     await refused("authenticated", "select created_at from public.profiles");
     await refused("authenticated", "select * from public.profiles");
@@ -163,7 +172,7 @@ describe("what authenticated may still do", () => {
   it("writes the settings patch and nothing else on a profile", async () => {
     await allowed(
       "authenticated",
-      "update public.profiles set display_name = 'x', avatar_url = null, is_public = true, wishlist_public = true, favorites_public = true, onboarded_at = now(), updated_at = now()",
+      "update public.profiles set display_name = 'x', avatar_url = null, is_public = true, wishlist_public = true, favorites_public = true, prices_public = true, onboarded_at = now(), updated_at = now()",
     );
     // The name is claimed through claim_username(), which is security definer and does its own update.
     await refused("authenticated", "update public.profiles set username = 'taken'");
@@ -211,8 +220,71 @@ describe("the tables only the service role touches", () => {
 describe("the next table this project creates", () => {
   it("is not granted to anon or authenticated by default", async () => {
     await db.exec("reset role");
+    // The default privileges were really there to take back: without this the test below would
+    // pass on a database that never granted anything in the first place.
+    const { rows } = await db.query<{ defaclacl: string }>(
+      "select defaclacl::text from pg_default_acl where defaclnamespace = 'public'::regnamespace",
+    );
+    expect(rows.map((r) => r.defaclacl).join(" ")).not.toMatch(/\banon=/);
     await db.exec("create table public.something_new (id int)");
     await refused("anon", "select * from public.something_new");
     await refused("authenticated", "select * from public.something_new");
+  });
+});
+
+/**
+ * The guard that would have caught `prices_public`.
+ *
+ * The column lists above are hand-written, and a column added to a `.select()` in the API is a
+ * column the grant does not know about: the read then fails with "permission denied for table
+ * profiles" at runtime and nothing here would have said so. So the selects are read back out of
+ * the source, and every column they name has to be one `authenticated` was granted. It is a
+ * superset test on purpose: which of the two roles makes a given call is a question about which
+ * client the route builds, which no regular expression can answer.
+ */
+describe("every column the API selects from profiles", () => {
+  /** What the migration grants `authenticated`, which is the wider of the two column lists. */
+  const GRANTED = new Set([
+    "id",
+    "username",
+    "display_name",
+    "avatar_url",
+    "is_public",
+    "wishlist_public",
+    "favorites_public",
+    "prices_public",
+    "onboarded_at",
+    "cards_version",
+  ]);
+
+  /** Every `.from("profiles").select("…")` and `.eq("…", …)` in the API, as columns. */
+  function selected(): string[] {
+    const root = join(__dirname, "../..");
+    const files = execFileSync("git", ["ls-files", "src"], { cwd: join(root, "..") })
+      .toString()
+      .split("\n")
+      .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"));
+    const columns = new Set<string>();
+    for (const file of files) {
+      const text = readFileSync(join(root, "..", file), "utf8");
+      // The chain that follows `.from("profiles")`, up to the statement's end or the next
+      // `.from(`, whichever comes first: two of them sit side by side in one `Promise.all` in
+      // the signup route, and reading past the first would collect the other table's columns.
+      for (const chain of text.matchAll(/\.from\("profiles"\)((?:(?!\.from\(|;)[\s\S]){0,400})/g)) {
+        const after = chain[1] ?? "";
+        for (const sel of after.matchAll(/\.select\(\s*"([^"]*)"/g)) {
+          for (const c of (sel[1] ?? "").split(",")) if (c.trim()) columns.add(c.trim());
+        }
+        for (const eq of after.matchAll(/\.eq\("(\w+)"/g)) if (eq[1]) columns.add(eq[1]);
+      }
+    }
+    return [...columns].sort();
+  }
+
+  it("is a column the migration grants", () => {
+    const columns = selected();
+    // The regular expression finding nothing would be a silent pass.
+    expect(columns.length).toBeGreaterThan(5);
+    expect(columns.filter((c) => !GRANTED.has(c))).toEqual([]);
   });
 });
