@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
-import { apiError, refuse } from "@/lib/api/respond";
+import { refuseCron } from "@/lib/api/cron";
+import { refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings, type ShelfPrinting } from "@/lib/core/catalogue/tcgcsv";
 import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
@@ -109,14 +110,8 @@ async function publishedDay(): Promise<string> {
  * Same bearer as the other crons: `CRON_SECRET`.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    console.error("[cron] CRON_SECRET is not set: refusing to copy TCGplayer's prices");
-    return apiError(503, "Not configured.");
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return apiError(401, "No.");
-  }
+  const denied = refuseCron(req, "copy TCGplayer's prices");
+  if (denied) return denied;
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 

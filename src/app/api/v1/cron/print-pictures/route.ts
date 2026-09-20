@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiError, refuse } from "@/lib/api/respond";
+import { refuseCron } from "@/lib/api/cron";
+import { refuse } from "@/lib/api/respond";
 import { TCGDEX_SCAN_PRINT } from "@/lib/core/catalogue/artwork";
 import {
   IMAGES_ORIGIN,
@@ -47,14 +48,8 @@ const BUDGET_MS = 240_000;
  * Same bearer as the other crons: `CRON_SECRET`.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    console.error("[cron] CRON_SECRET is not set: refusing to copy the printings' pictures");
-    return apiError(503, "Not configured.");
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return apiError(401, "No.");
-  }
+  const denied = refuseCron(req, "copy the printings' pictures");
+  if (denied) return denied;
   const db = adminClient();
   if (!db) return refuse("noDatabase");
   if (!(await canStoreImages())) return refuse("catalogue");
