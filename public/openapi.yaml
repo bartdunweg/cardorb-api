@@ -659,7 +659,7 @@ components:
             - { $ref: "#/components/schemas/PriceChange" }
             - { type: "null" }
         name: { type: string }
-        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card; what was typed on a row that names none. Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
+        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card. A row that names none keeps what was typed, trimmed, less a promo set's letters (\"XY123\" is answered as \"123\"). Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
         set: { type: string, description: "The set's name as the catalogue spells it." }
         setTitle: { type: string }
         setAbbr: { type: [string, "null"], description: "The code printed on the card — MEW, SFA, DEX — for a label that has to be short. Null where the catalogue names but does not code the set." }
@@ -704,7 +704,7 @@ components:
       properties:
         key: { type: string }
         name: { type: string }
-        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card; what was typed on a row that names none. Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
+        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card. A row that names none keeps what was typed, trimmed, less a promo set's letters (\"XY123\" is answered as \"123\"). Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
         printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\"), from the catalogue's card id." }
         setAbbr: { type: [string, "null"], description: "The set's code: the official abbreviation, or Pokémon TCG Online's where there is none." }
         set: { type: string }

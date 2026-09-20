@@ -342,6 +342,38 @@ await mapLimit([...bySet.entries()], 3, async ([setName, setRows]) => {
   }
 });
 
+/*
+ * The number to write is the copy's, not TCGdex's as fetched. A row on a catalogue card stores
+ * catalogue_cards.local_id verbatim since 2026-09-20 (collection/catalogue-spelling.ts, migration
+ * 20260920160000), and the copy keeps the corrected printed form where TCGdex's differs (mirror.ts
+ * writes correctedNumber): swsh1-1 is 001 where TCGdex says 1, ecard3-H01 is H1, bwp-BW04 is BW004.
+ * Writing TCGdex's would make this script the one write path that does not follow the rule, and
+ * every row it touched would come back as drift in data-health's "Every row spells its card as the
+ * catalogue does".
+ *
+ * Asked of the copy rather than derived from the fetch, so there is one answer and not two that
+ * have to agree. A card the copy does not hold keeps TCGdex's spelling, the best anybody has for it.
+ */
+const spellings = new Map();
+if (misnumbered.length) {
+  const ids = [...new Set(misnumbered.map(({ to }) => to.id))];
+  const BITE = 200;
+  for (let at = 0; at < ids.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id, local_id")
+      .eq("language", "en")
+      .in("id", ids.slice(at, at + BITE));
+    if (error) {
+      console.error(`  could not read the copy's numbers: ${error.message}`);
+      break;
+    }
+    for (const c of data ?? []) spellings.set(c.id, c.local_id);
+  }
+}
+/** The number a row should carry for the card it resolved to. */
+const numberFor = (to) => spellings.get(to.id) ?? to.localId;
+
 const n = (list) => String(list.length).padStart(4);
 console.log(`
   ${n([...Array(fine)])} rows already agree with TCGdex
@@ -358,7 +390,7 @@ for (const { row, to } of misspelled) {
 }
 for (const { row, to, at } of misnumbered) {
   console.log(
-    `  B  ${row.set_name} ${row.name}: #${row.number} -> #${to.localId}` +
+    `  B  ${row.set_name} ${row.name}: #${row.number} -> #${numberFor(to)}` +
       (at ? `  (#${row.number} is really ${at})` : ""),
   );
 }
@@ -452,7 +484,7 @@ writeFileSync(
         name: row.name,
         field: "number",
         from: row.number,
-        to: to.localId,
+        to: numberFor(to),
       })),
     ],
     null,
@@ -468,11 +500,14 @@ for (const { row, to } of misspelled) {
   else written++;
 }
 for (const { row, to } of misnumbered) {
-  // The number the card prints, which is what a row on a catalogue card stores since
+  // The copy's spelling (numberFor above), which is what a row on a catalogue card stores since
   // 2026-09-20 (collection/catalogue-spelling.ts). This line once wrote XY123 into a set whose
   // every other row said 123 and the card sank to the bottom of its binder; the sort has folded
   // the prefix itself since #356, and now every row of that set says XY123 too.
-  const { error } = await db.from("cards").update({ number: to.localId }).eq("id", row.id);
+  const { error } = await db
+    .from("cards")
+    .update({ number: numberFor(to) })
+    .eq("id", row.id);
   if (error) console.error(`  failed to write ${row.id}: ${error.message}`);
   else written++;
 }

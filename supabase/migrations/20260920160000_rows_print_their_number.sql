@@ -51,8 +51,11 @@
 --   a case fold the old form applied         "77A" becomes xy6-77a's "77a", "150A" becomes XY150a
 --   the padding an import dropped            "36" becomes sv03.5-036's "036" (the other account)
 --
--- English rows only, as the rule is: a Japanese row's number is its own catalogue's, and no row
--- resolves that way today. A row whose id the copy has no card for is left exactly as it is, and
+-- Every row but a Japanese one, as the rule is: the guard is `coalesce(c.language, 'en') <> 'ja'`,
+-- so a German or French copy of an English card takes that card's number too, which is right,
+-- because those catalogues share the English ids and set names and only Japanese has one of its own
+-- (cataloguesFor). A Japanese row's number is its own catalogue's, and no row resolves that way
+-- today. A row whose id the copy has no card for is left exactly as it is, and
 -- keeps being written through storedCardNumber(). Only `number` moves. Running this twice changes
 -- nothing; on a database without the copy it changes nothing either.
 alter table public.cards drop constraint if exists cards_number_no_promo_prefix;
