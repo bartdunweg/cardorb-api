@@ -1,0 +1,1 @@
+- A card's number in your collection is now the number printed on the card, the same one Browse shows: SM168 rather than 168, 036 rather than 36.

@@ -1,9 +1,9 @@
 /**
- * How a row spells its card: the catalogue copy's name for the card and for its set, on every row
- * being written that names a card the copy holds.
+ * How a row spells its card: the catalogue copy's name for the card, for its set and for its
+ * printed number, on every row being written that names a card the copy holds.
  *
- * A row keeps those two beside the id, and they are read by the collection list, the CSV export and
- * the public profile straight out of the row (storage/postgres.ts). They were written once, from
+ * A row keeps those three beside the id, and they are read by the collection list, the CSV export
+ * and the public profile straight out of the row (storage/postgres.ts). They were written once, from
  * whatever the client or the imported file said, and the catalogue then went on without them:
  * TCGdex folded a gallery's filing name into its title ("Astral Radiance" became "Astral Radiance
  * Trainer Gallery", #306), and a name typed by hand kept its curly apostrophe and its missing
@@ -14,45 +14,54 @@
  * (R-DATA-004). Migration 20260920130000 did the rows that were already there, and the data-health
  * check "Every row spells its card as the catalogue does" counts what drifted since.
  *
- * Not the printed number. The copy writes a promo as the card prints it (smp-SM168 is "SM168") and
- * the collection stores the number it wraps ("168"), which storedCardNumber() writes and the check
- * constraint `cards_number_no_promo_prefix` (migration 20260912180000) holds the column to. The two
- * spellings are one number everywhere they meet (canonNumber), so nothing is lost by leaving the
- * column alone, and changing it is a rule of the owner's to change, not this one's.
+ * The number came last, on 2026-09-20. It used to be stored in a form of its own: a promo without
+ * its set's letters ("168" for smp-SM168, which prints SM168) and whatever padding was typed ("36"
+ * for a card that prints 036), written by storedCardNumber() and held there by the check constraint
+ * `cards_number_no_promo_prefix`. That form existed so a promo sorted among its siblings (#356,
+ * where parseInt("XY123") was NaN and Venusaur EX sank to the bottom of its binder), and the
+ * comparator has folded the prefix itself since the same change, so the stored form was no longer
+ * carrying it. The owner chose the printed number, migration 20260920160000 dropped the constraint
+ * and moved 1,075 rows, and storedCardNumber() is now only the fallback for a row the copy has no
+ * card for.
  *
  * English rows only, like catalogueIdOf() beside it: a Japanese row's card is named in its own
  * script, where `local_name` and not `name` is what the card says, and no row resolves that way
  * today.
  */
+import { storedCardNumber } from "../util";
 import { cataloguesFor } from "../catalogue/tcgdex-language";
 import type { Language } from "./collection-row";
 
 /** What a row says about its card, whatever else it carries. */
 export type Spellable = {
   name: string;
+  number: string;
   tcgId: string | null;
   language: Language | null;
 };
 
 /** One card's spelling as the copy holds it. */
-export type CatalogueSpelling = { name: string; setName: string };
+export type CatalogueSpelling = { name: string; setName: string; number: string };
 
 /** Reading and writing the set's name, which a draft calls `set` and an imported row `setName`. */
 export type SetField<T> = { of: (row: T) => string; on: (row: T, name: string) => T };
 
 /**
- * The two facts a row should carry, given its card's spelling or none. Pure, for the tests.
+ * The three facts a row should carry, given its card's spelling or none. Pure, for the tests.
  *
  * With a card, the copy's spelling wins outright: the row names that card by id, and the id is held
  * to the copy by catalogueIdOf() on the way in and by data-health afterwards, so there is nothing
- * for a second guard to protect.
+ * for a second guard to protect. Without one there is no card to copy, and the number falls back to
+ * the form the collection used to store for every row (storedCardNumber): a number typed by hand
+ * for a set nobody catalogues still reads better as 123 than as XY123.
  */
 export function spellingOf(
   row: Spellable,
   setName: string,
   card: CatalogueSpelling | undefined,
 ): CatalogueSpelling {
-  if (!card || cataloguesFor(row.language).length) return { name: row.name, setName };
+  if (!card || cataloguesFor(row.language).length)
+    return { name: row.name, setName, number: storedCardNumber(row.number) };
   return card;
 }
 
@@ -91,6 +100,6 @@ export async function withCatalogueSpelling<T extends Spellable>(
   const spelt = held ?? (await spellings(ids));
   return rows.map((row) => {
     const out = spellingOf(row, set.of(row), row.tcgId ? spelt.get(row.tcgId) : undefined);
-    return set.on({ ...row, name: out.name }, out.setName);
+    return set.on({ ...row, name: out.name, number: out.number }, out.setName);
   });
 }

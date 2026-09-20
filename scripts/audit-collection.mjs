@@ -68,7 +68,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { resolveSetIds } from "../src/lib/core/catalogue/catalogue.ts";
 import { fetchSet, json } from "../src/lib/core/catalogue/tcgdex-client.ts";
-import { numberForms, mapLimit, norm, storedCardNumber } from "../src/lib/core/util.ts";
+import { numberForms, mapLimit, norm } from "../src/lib/core/util.ts";
 import { sameCard } from "../src/lib/core/catalogue/matching.ts";
 
 /* The card-type suffix, the same list matching.ts strips before comparing two
@@ -452,7 +452,7 @@ writeFileSync(
         name: row.name,
         field: "number",
         from: row.number,
-        to: storedCardNumber(to.localId),
+        to: to.localId,
       })),
     ],
     null,
@@ -468,12 +468,11 @@ for (const { row, to } of misspelled) {
   else written++;
 }
 for (const { row, to } of misnumbered) {
-  // The stored form, never TCGdex's localId as it comes: this line once wrote XY123 into a set
-  // whose every other row says 123, and the card sank to the bottom of its binder.
-  const { error } = await db
-    .from("cards")
-    .update({ number: storedCardNumber(to.localId) })
-    .eq("id", row.id);
+  // The number the card prints, which is what a row on a catalogue card stores since
+  // 2026-09-20 (collection/catalogue-spelling.ts). This line once wrote XY123 into a set whose
+  // every other row said 123 and the card sank to the bottom of its binder; the sort has folded
+  // the prefix itself since #356, and now every row of that set says XY123 too.
+  const { error } = await db.from("cards").update({ number: to.localId }).eq("id", row.id);
   if (error) console.error(`  failed to write ${row.id}: ${error.message}`);
   else written++;
 }

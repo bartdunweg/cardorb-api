@@ -652,14 +652,14 @@ components:
       required: [id, name, number, set, setTitle, rarity, gen, type, image, imageHigh, speciesId, tcgId, owned, finish, quantity, condition, grade, purchasePrice, purchaseDate, notes, isFavorite, excluded, acquiredAt, collectionId, price]
       properties:
         id: { type: string, description: "The collection row, for `PATCH /v1/collection/items/{id}`." }
-        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\", \"001\" for Sword & Shield, \"4/102\" for a Classic Collection card, which prints its original card's number), from the catalogue's card id; null where nothing matched. `number` is the row's, which may be spelt without the zeros." }
+        printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\", \"085\", \"001\" for Sword & Shield, \"4/102\" for a Classic Collection card, which prints its original card's number), from the catalogue's card id; null where nothing matched. `number` is the row's, which is the same spelling since 2026-09-20 for every row on a catalogue card, and whatever was typed for a row on none." }
         priceChange:
           description: "Only with `sort=change`: the copy's price move over the window, or null without two readings in it."
           oneOf:
             - { $ref: "#/components/schemas/PriceChange" }
             - { type: "null" }
         name: { type: string }
-        number: { type: string }
+        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card; what was typed on a row that names none. Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
         set: { type: string, description: "The set's name as the catalogue spells it." }
         setTitle: { type: string }
         setAbbr: { type: [string, "null"], description: "The code printed on the card — MEW, SFA, DEX — for a label that has to be short. Null where the catalogue names but does not code the set." }
@@ -704,7 +704,7 @@ components:
       properties:
         key: { type: string }
         name: { type: string }
-        number: { type: string }
+        number: { type: string, description: "The number the card prints, as the catalogue spells it (\"SM168\", \"036\", \"77a\"), on every row that names a catalogue card; what was typed on a row that names none. Since 2026-09-20: rows written before that were re-spelt by migration 20260920160000." }
         printedNumber: { type: [string, "null"], description: "The number as the card prints it (\"XY124\"), from the catalogue's card id." }
         setAbbr: { type: [string, "null"], description: "The set's code: the official abbreviation, or Pokémon TCG Online's where there is none." }
         set: { type: string }
@@ -1099,7 +1099,7 @@ paths:
         - { name: collection, in: query, schema: { type: string, format: uuid }, description: "A folder id. A rule folder answers with the owned copies its rule matches, whatever `owned` says. An id that is no folder of the caller's is a 404." }
         - { name: set, in: query, schema: { type: string, maxLength: 100 }, description: "A set, whole, by its name or its title; case does not matter. Repeat it for several (`set=Jungle&set=Fossil`): a card in any of them counts. At most 50." }
         - { name: rarity, in: query, schema: { type: string, maxLength: 100 }, description: "A rarity, whole, in the catalogue's words; case does not matter. Repeat it for several (`rarity=Rare&rarity=Holo%20Rare`): any of them counts. At most 50." }
-        - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole; with `set` it names one card's every row. Either spelling finds a row: `001` the row stored as `1`, `SWSH020` the promo stored as `020`; a gallery's letters stay (`TG01` is not `1`)." }
+        - { name: number, in: query, schema: { type: string, maxLength: 100 }, description: "One card number, whole; with `set` it names one card's every row. Every spelling finds a row, whichever way the row stores it: `1`, `01` and `001` are one card, `SWSH020` and `020` are one card, case does not matter; a gallery's letters stay (`TG01` is not `1`)." }
         - { name: gen, in: query, schema: { type: string, maxLength: 100 }, description: "A generation, whole, as the catalogue names its series; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: type, in: query, schema: { type: string, maxLength: 100 }, description: "An energy type, whole, as the catalogue names it; case does not matter. Repeat it for several: any of them counts. At most 50." }
         - { name: condition, in: query, schema: { type: string, maxLength: 100 }, description: "A copy's condition, whole, as written on it; case does not matter. Repeat it for several: any of them counts. A copy with no condition matches none. At most 50." }
