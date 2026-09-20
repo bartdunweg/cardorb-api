@@ -678,7 +678,9 @@ export function priceJumps(lines, opts = {}) {
       if (date < since) continue;
       const high = Math.max(from, to);
       const low = Math.min(from, to);
-      if (high >= floorCents && low >= 0 && high >= ratio * low) out.push({ key, date, from, to });
+      /* A reading of zero counts: nothing is a tenth of a euro, and a printing that read €40 and
+         then nothing at all is exactly the kind of night this reports. */
+      if (high >= floorCents && high >= ratio * low) out.push({ key, date, from, to });
     }
   }
   return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.key < b.key ? -1 : 1));
