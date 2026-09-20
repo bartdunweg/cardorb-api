@@ -377,6 +377,24 @@ describe("syncMirror", () => {
     }));
   });
 
+  /* jumbo, rc, sp and wp carried cards_recorded on no cards at all: TCGdex publishes `cards: []`
+     for them and this payload never wrote the column, so they took its default, true. The shelf
+     and the set page both go by it (migration 20260920140000). */
+  it("writes cards_recorded from the cards it wrote", async () => {
+    englishSets.mockResolvedValue([set("rc", 25, "2013/11/08"), set("full", 1, "2024/01/01")]);
+    englishSet.mockImplementation(async (id: string) => ({
+      set: set(id, 1, "2024/01/01"),
+      cards: id === "rc" ? [] : [hit(`${id}-001`, "001")],
+    }));
+    const { db, calls } = fakeStore();
+    await syncMirror(db, { parallel: 1 });
+    const written = calls
+      .filter((c) => c.table === "catalogue_sets" && c.op === "upsert")
+      .map((c) => c.args[0] as { id: string; cards_recorded: boolean });
+    expect(written.find((w) => w.id === "rc")?.cards_recorded).toBe(false);
+    expect(written.find((w) => w.id === "full")?.cards_recorded).toBe(true);
+  });
+
   it("copies a set the copy has never seen first, then one whose count moved, then the oldest", async () => {
     englishSets.mockResolvedValue([
       set("new", 10, "2026/01/01"),

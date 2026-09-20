@@ -8,7 +8,7 @@ if the two have drifted apart.
 
 - A set with no cards in it no longer shows up on Browse as a tile whose page is empty.
 
-- A card in your collection now reads exactly as it does on Browse: the card's name, its set's name and its printed number come from the catalogue, on every card you add or import, and the cards already there have been put right.
+- A card in your collection now carries the card's name and its set's name exactly as Browse writes them, on every card you add or import, and the cards already there have been put right.
 
 ## 2026-09-19
 

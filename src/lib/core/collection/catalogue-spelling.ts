@@ -1,58 +1,58 @@
 /**
- * How a row spells its card: the catalogue copy's name, set name and printed number, on every row
+ * How a row spells its card: the catalogue copy's name for the card and for its set, on every row
  * being written that names a card the copy holds.
  *
- * A row keeps three facts about its card beside the id: `name`, `set_name` and `number`. They are
- * read by the collection list, the CSV export and the public profile straight out of the row
- * (storage/postgres.ts), and they were written once, from whatever the client or the file said.
- * The catalogue then went on without them: TCGdex folded a gallery's filing name into its title
- * ("Astral Radiance" became "Astral Radiance Trainer Gallery", #306), and a name typed by hand kept
- * its curly apostrophe and its missing accent ("Pokemon Breeder", "Farfetch’d", "Nidoran" for both
- * of them). The same card then read one way on the collection and another on Browse.
+ * A row keeps those two beside the id, and they are read by the collection list, the CSV export and
+ * the public profile straight out of the row (storage/postgres.ts). They were written once, from
+ * whatever the client or the imported file said, and the catalogue then went on without them:
+ * TCGdex folded a gallery's filing name into its title ("Astral Radiance" became "Astral Radiance
+ * Trainer Gallery", #306), and a name typed by hand kept its curly apostrophe and its missing
+ * accent ("Pokemon Breeder", "Farfetch’d", "Nidoran" for both of them). The same card then read one
+ * way on the collection and another on Browse.
  *
  * So the row takes the copy's spelling wherever the copy has the card, at the moment it is written
- * (R-DATA-004). Migration 20260920100000 did the rows that were already there, and the data-health
+ * (R-DATA-004). Migration 20260920130000 did the rows that were already there, and the data-health
  * check "Every row spells its card as the catalogue does" counts what drifted since.
+ *
+ * Not the printed number. The copy writes a promo as the card prints it (smp-SM168 is "SM168") and
+ * the collection stores the number it wraps ("168"), which storedCardNumber() writes and the check
+ * constraint `cards_number_no_promo_prefix` (migration 20260912180000) holds the column to. The two
+ * spellings are one number everywhere they meet (canonNumber), so nothing is lost by leaving the
+ * column alone, and changing it is a rule of the owner's to change, not this one's.
  *
  * English rows only, like catalogueIdOf() beside it: a Japanese row's card is named in its own
  * script, where `local_name` and not `name` is what the card says, and no row resolves that way
- * today. A row the copy has no card for keeps what it came with, with one thing put right — the
- * stored form of a promo number, which used to live in storage/postgres.ts and is here now so that
- * one function decides what a row's number is.
+ * today.
  */
-import { storedCardNumber } from "../util";
 import { cataloguesFor } from "../catalogue/tcgdex-language";
 import type { Language } from "./collection-row";
 
 /** What a row says about its card, whatever else it carries. */
 export type Spellable = {
   name: string;
-  number: string;
   tcgId: string | null;
   language: Language | null;
 };
 
 /** One card's spelling as the copy holds it. */
-export type CatalogueSpelling = { name: string; setName: string; number: string };
+export type CatalogueSpelling = { name: string; setName: string };
 
 /** Reading and writing the set's name, which a draft calls `set` and an imported row `setName`. */
 export type SetField<T> = { of: (row: T) => string; on: (row: T, name: string) => T };
 
 /**
- * The three facts a row should carry, given its card's spelling or none. Pure, for the tests.
+ * The two facts a row should carry, given its card's spelling or none. Pure, for the tests.
  *
  * With a card, the copy's spelling wins outright: the row names that card by id, and the id is held
  * to the copy by catalogueIdOf() on the way in and by data-health afterwards, so there is nothing
- * for a second guard to protect. Without one, the name and the set stand and only the number is
- * settled.
+ * for a second guard to protect.
  */
 export function spellingOf(
   row: Spellable,
   setName: string,
   card: CatalogueSpelling | undefined,
 ): CatalogueSpelling {
-  if (!card || cataloguesFor(row.language).length)
-    return { name: row.name, setName, number: storedCardNumber(row.number) };
+  if (!card || cataloguesFor(row.language).length) return { name: row.name, setName };
   return card;
 }
 
@@ -76,20 +76,21 @@ async function spellings(ids: string[]): Promise<Map<string, CatalogueSpelling>>
  *
  * Called on the two paths that write a new row (POST /v1/cards and the import), after
  * withCatalogueIds() has put the copy's id on each of them, so the id this asks by is the right one.
+ * `held` is the copy's answer, which the tests pass in and nobody else does.
  */
 export async function withCatalogueSpelling<T extends Spellable>(
   rows: T[],
   set: SetField<T>,
+  held?: Map<string, CatalogueSpelling>,
 ): Promise<T[]> {
   const ids = [
     ...new Set(
       rows.filter((r) => r.tcgId && !cataloguesFor(r.language).length).map((r) => r.tcgId!),
     ),
   ];
-  const held = await spellings(ids);
+  const spelt = held ?? (await spellings(ids));
   return rows.map((row) => {
-    const spelt = spellingOf(row, set.of(row), row.tcgId ? held.get(row.tcgId) : undefined);
-    const next = set.on({ ...row, name: spelt.name, number: spelt.number }, spelt.setName);
-    return next;
+    const out = spellingOf(row, set.of(row), row.tcgId ? spelt.get(row.tcgId) : undefined);
+    return set.on({ ...row, name: out.name }, out.setName);
   });
 }

@@ -356,15 +356,12 @@ describe("createRow", () => {
     expect(written[0]).toMatchObject({ acquired_at: "2026-01-02T00:00:00.000Z" });
   });
 
-  /* The number is settled before the write, by withCatalogueSpelling(): the card's printed number
-     where the copy holds the card, the stored form of a promo's where it does not. What arrives
-     here is written as it arrives, prefix and all. */
-  it("writes the number the draft arrives with", async () => {
+  it("stores a promo as the number it wraps, like its siblings, and keeps a gallery's letters", async () => {
     const { db, written } = fakeInsertDb();
     await createRow(db, draft({ number: "XY123", set: "XY Black Star Promos" }));
-    await createRow(db, draft({ number: "SWSH050", set: "SWSH Black Star Promos" }));
+    await createRow(db, draft({ number: " SWSH050 ", set: "SWSH Black Star Promos" }));
     await createRow(db, draft({ number: "TG01", set: "Silver Tempest" }));
-    expect(written.map((w) => w.number)).toEqual(["XY123", "SWSH050", "TG01"]);
+    expect(written.map((w) => w.number)).toEqual(["123", "050", "TG01"]);
   });
 
   it("writes a card of a promo set as a Promo, whatever rarity the draft names", async () => {
@@ -377,7 +374,7 @@ describe("createRow", () => {
 });
 
 describe("createRows", () => {
-  it("writes the number each imported row arrives with (catalogue-spelling.ts settled it)", async () => {
+  it("stores an imported promo number without its prefix", async () => {
     const batches: Record<string, unknown>[][] = [];
     const chain: Record<string, unknown> = {
       select: () => chain,
@@ -393,7 +390,7 @@ describe("createRows", () => {
     } as unknown as SupabaseClient;
     const row = (number: string) => ({ ...draft(), number, setName: "XY Black Star Promos" });
     await createRows(db, ME, [row("XY67a"), row("122")] as never, "csv");
-    expect(batches.flat().map((b) => b.number)).toEqual(["XY67a", "122"]);
+    expect(batches.flat().map((b) => b.number)).toEqual(["67A", "122"]);
   });
 
   it("imports a card of a promo set as a Promo, whatever rarity the file names", async () => {

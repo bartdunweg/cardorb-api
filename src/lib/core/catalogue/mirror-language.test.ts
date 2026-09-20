@@ -444,7 +444,7 @@ describe("syncLanguageMirror", () => {
 
   /* jumbo, rc, sp and wp carried cards_recorded on nothing at all: TCGdex publishes `cards: []`
      for them and the run wrote the catalogue's claim rather than what it had written down. The
-     shelf and the set page both go by the flag (migration 20260920110000). */
+     shelf and the set page both go by the flag (migration 20260920140000). */
   it("marks a set with no cards written as not recorded", async () => {
     listSetsIn.mockResolvedValue([{ ...shelfSet("rc"), name: "Radiant Collection" }]);
     setIn.mockResolvedValue({

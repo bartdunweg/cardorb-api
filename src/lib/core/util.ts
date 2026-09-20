@@ -136,8 +136,11 @@ const PROMO_PREFIX = new RegExp(`^(?:${PROMO_PREFIXES.join("|")})(?=\\d)`, "i");
  * every other row of its set. Padding is left as written: the collection has both 74 and 013,
  * and numberForms() already makes those the same card. A gallery number keeps its letters.
  *
- * Every write of `cards.number` goes through this. The 2026-08-16 audit wrote TCGdex's XY123
- * straight to Postgres, and Venusaur EX sat under Pikachu EX 124 for a month.
+ * Every write of `cards.number` goes through this, and the check constraint
+ * cards_number_no_promo_prefix (migration 20260912180000) holds the column to it besides. The
+ * 2026-08-16 audit wrote TCGdex's XY123 straight to Postgres, and Venusaur EX sat under Pikachu EX
+ * 124 for a month. This is the one fact of a card a row does not take from the catalogue copy: see
+ * collection/catalogue-spelling.ts, which takes the name and the set's name and leaves this alone.
  */
 export const storedCardNumber = (n: string): string => {
   const trimmed = n.trim();
