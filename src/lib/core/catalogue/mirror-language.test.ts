@@ -442,6 +442,22 @@ describe("syncLanguageMirror", () => {
     });
   });
 
+  /* jumbo, rc, sp and wp carried cards_recorded on nothing at all: TCGdex publishes `cards: []`
+     for them and the run wrote the catalogue's claim rather than what it had written down. The
+     shelf and the set page both go by the flag (migration 20260920110000). */
+  it("marks a set with no cards written as not recorded", async () => {
+    listSetsIn.mockResolvedValue([{ ...shelfSet("rc"), name: "Radiant Collection" }]);
+    setIn.mockResolvedValue({
+      set: { ...shelfSet("rc"), name: "Radiant Collection", cardsRecorded: false, serieId: "SV" },
+      cards: [],
+    });
+    const { db, calls } = fakeStore();
+    await syncLanguageMirror(db, "ja", { parallel: 1 });
+    expect(
+      calls.find((c) => c.table === "catalogue_sets" && c.op === "upsert")?.args[0],
+    ).toMatchObject({ id: "rc", cards_recorded: false });
+  });
+
   it("builds no set from a TCGplayer group another set with TCGdex cards already reads", async () => {
     listSetsIn.mockResolvedValue([
       { ...shelfSet("SM3p"), name: "Shining Legends", cardsRecorded: true },

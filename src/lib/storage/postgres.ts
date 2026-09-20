@@ -30,7 +30,6 @@ import {
 } from "../core/price-months.mjs";
 import type { FolderKind, FolderRule, PokedexSetting } from "@/lib/core/collection/folders";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { storedCardNumber } from "@/lib/core/util";
 import { correctedSet } from "@/lib/core/catalogue/set-corrections";
 import { isPromoSet, promoRarity } from "@/lib/core/catalogue/promo-sets";
 import {
@@ -758,8 +757,8 @@ export async function createRow(db: SupabaseClient, draft: CardDraft): Promise<s
     .from("cards")
     .insert({
       name: draft.name,
-      // One stored form: XY123 is written 123, like its siblings (storedCardNumber).
-      number: storedCardNumber(draft.number),
+      // Spelt as the copy spells the card, settled before this call (catalogue-spelling.ts).
+      number: draft.number,
       set_name: draft.set,
       // "Promo" for a card of a promo set, whatever the draft says (promo-sets.ts).
       rarity: promoRarity(draft.tcgId, draft.rarity || null),
@@ -1041,7 +1040,8 @@ export async function createRows(
   for (let i = 0; i < rows.length; i += chunk) {
     const batch = rows.slice(i, i + chunk).map((r, j) => ({
       name: r.name,
-      number: storedCardNumber(r.number),
+      // The copy's spelling, settled by withCatalogueSpelling() before the import got here.
+      number: r.number,
       set_name: r.setName,
       // An import names a promo's kind as its own file had it; the card is a "Promo" (promo-sets.ts).
       rarity: promoRarity(r.tcgId, r.rarity),
@@ -1583,7 +1583,8 @@ export async function copyRow(
     .insert({
       user_id: userId,
       name: src.name,
-      number: storedCardNumber(src.number),
+      // A copy of a row is spelt as that row is; the row itself was settled when it was written.
+      number: src.number,
       set_name: src.setName,
       rarity: src.rarity,
       gen: src.gen,
@@ -2168,6 +2169,38 @@ export async function catalogueCardSheets(
       sets.set(set.id, set);
   }
   return new Map(cards.map((card) => [card.id, { card, set: sets.get(card.set_id) ?? null }]));
+}
+
+/**
+ * How the copy spells each of these cards: its name, its set's name and its printed number, by id.
+ * A card the copy does not hold is left out, so the row keeps what it came with
+ * (catalogue-spelling.ts). Throws where the store would not answer.
+ */
+export async function catalogueCardSpellings(
+  db: SupabaseClient,
+  ids: string[],
+  language: CatalogueLanguage = "en",
+): Promise<Map<string, { name: string; setName: string; number: string }>> {
+  const out = new Map<string, { name: string; setName: string; number: string }>();
+  /* A bite of ids a request line holds, as catalogueCardSheets() takes: `.in()` goes out in the
+     query string. */
+  const BITE = 200;
+  for (let at = 0; at < ids.length; at += BITE) {
+    const { data, error } = await db
+      .from("catalogue_cards")
+      .select("id, name, set_name, local_id")
+      .eq("language", language)
+      .in("id", ids.slice(at, at + BITE));
+    if (error) throw new Error(`Reading the copy's spelling failed: ${error.message}`);
+    for (const c of (data ?? []) as {
+      id: string;
+      name: string;
+      set_name: string;
+      local_id: string;
+    }[])
+      out.set(c.id, { name: c.name, setName: c.set_name, number: c.local_id });
+  }
+  return out;
 }
 
 /** Every card of one catalogue the copy matched to a TCGplayer product: id to product. */

@@ -7,6 +7,7 @@ import { setCatalogue } from "../core/catalogue/catalogue";
 import { mapLimit } from "../core/util";
 import { withDefaultFinishes } from "../core/catalogue/default-finish";
 import { withCatalogueIds } from "../core/collection/catalogue-ids";
+import { withCatalogueSpelling } from "../core/collection/catalogue-spelling";
 import { createRows, pageRange, readAllPages } from "./postgres";
 
 /**
@@ -281,7 +282,13 @@ export async function commit(
     // Each row on the copy's card id first (catalogue-ids.ts), so the finish is asked of that card.
     // A file that names no finish still writes copies that have one. See defaultFinish().
     const onCopy = await withCatalogueIds(rows, (r) => r.setName);
-    const { added } = await createRows(db, userId, await withDefaultFinishes(onCopy), kind);
+    /* And spelt as the copy spells those cards: a file writes a set's filing name and a name with
+       whatever apostrophe its author's keyboard had (catalogue-spelling.ts). */
+    const spelt = await withCatalogueSpelling(onCopy, {
+      of: (r) => r.setName,
+      on: (r, setName) => ({ ...r, setName }),
+    });
+    const { added } = await createRows(db, userId, await withDefaultFinishes(spelt), kind);
     const skipped = rows.length - added + skippedCount;
     const total = await countCards(db, userId);
 
