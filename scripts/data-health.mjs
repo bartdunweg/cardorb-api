@@ -2049,12 +2049,16 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
 }
 
 /**
- * Every row spells its card as the catalogue copy does. The row carries the card's name, its set's
- * name and its printed number beside the id, and the collection list, the CSV export and the public
- * profile read them off the row: a spelling that drifted is the same card reading one way there and
- * another on Browse. 193 set names, 90 names and 1,075 numbers were put right by migration
- * 20260920130000, and withCatalogueSpelling() spells a new row this way on both write paths, so a
- * count above zero here is a path that forgot it or a catalogue that renamed something since.
+ * Every row spells its card as the catalogue copy does. The row carries the card's name and its
+ * set's name beside the id, and the collection list, the CSV export and the public profile read
+ * them off the row: a spelling that drifted is the same card reading one way there and another on
+ * Browse. 193 set names and 90 names were put right by migration 20260920130000, and
+ * withCatalogueSpelling() spells a new row this way on both write paths, so a count above zero here
+ * is a path that forgot it or a catalogue that renamed something since.
+ *
+ * Not the printed number: the collection stores a promo as the number it wraps ("168" for
+ * smp-SM168's "SM168") and the check constraint cards_number_no_promo_prefix holds it to that. The
+ * check above, "Every copy's number finds its card", is what holds a number to its card's.
  *
  * English rows only, as the rule is: a Japanese row's card prints its own script, where the copy's
  * `local_name` and not `name` is the card's name.
@@ -2064,21 +2068,19 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
     `select ${ownerIs} as owner,
             count(*) filter (where c.name is distinct from k.name)::int as names,
             count(*) filter (where c.set_name is distinct from k.set_name)::int as sets,
-            count(*) filter (where c.number is distinct from k.local_id)::int as numbers,
             (array_agg(distinct c.tcg_id) filter (where c.name is distinct from k.name
-               or c.set_name is distinct from k.set_name
-               or c.number is distinct from k.local_id))[1:8] as examples
+               or c.set_name is distinct from k.set_name))[1:8] as examples
        from cards c join catalogue_cards k on k.language = 'en' and k.id = c.tcg_id
       where coalesce(c.language, 'en') <> 'ja'
       group by 1`,
   );
-  const owner = rows.find((r) => r.owner) ?? { names: 0, sets: 0, numbers: 0, examples: [] };
-  const drifted = (r) => r.names + r.sets + r.numbers;
+  const owner = rows.find((r) => r.owner) ?? { names: 0, sets: 0, examples: [] };
+  const drifted = (r) => r.names + r.sets;
   const others = rows.filter((r) => !r.owner).reduce((n, r) => n + drifted(r), 0);
   check(
     "Every row spells its card as the catalogue does",
     drifted(owner) === 0 && others === 0,
-    `${owner.names} of the owner's rows carry another name than their card, ${owner.sets} another set name, ${owner.numbers} another number${
+    `${owner.names} of the owner's rows carry another name than their card and ${owner.sets} another set name${
       drifted(owner) ? `: ${(owner.examples ?? []).join(", ")}` : ""
     }; other accounts ${others}`,
   );
@@ -2087,9 +2089,9 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
 /**
  * A set marked recorded holds at least one card. `cards_recorded` is what the shelf and the set
  * page go by, and a recorded set with nothing in it is a tile whose page answers null: jumbo, rc,
- * sp and wp carried it on nothing at all, because the run wrote the catalogue's claim rather than
- * what it had written down (migration 20260920140000). It now writes the flag from the cards it
- * wrote, so this counts only a set whose cards went missing since.
+ * sp and wp carried it on nothing at all (migration 20260920140000), because the English run never wrote the column at
+ * all. Both runs now write it from the cards they wrote, so this counts only a set whose cards went
+ * missing since.
  */
 {
   const empty = await query(

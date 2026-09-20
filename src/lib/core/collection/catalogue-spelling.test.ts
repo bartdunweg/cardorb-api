@@ -1,96 +1,83 @@
 import { describe, expect, it } from "vitest";
-import { spellingOf, withCatalogueSpelling } from "./catalogue-spelling";
+import { spellingOf, withCatalogueSpelling, type CatalogueSpelling } from "./catalogue-spelling";
 import type { Language } from "./collection-row";
 
-const row = (
-  tcgId: string | null,
-  name: string,
-  number: string,
-  language: Language | null = null,
-) => ({ tcgId, name, number, language });
+const row = (tcgId: string | null, name: string, language: Language | null = null) => ({
+  tcgId,
+  name,
+  language,
+});
 
 /** The copy's spelling of the cards these tests name. */
-const held = {
-  "swsh10tg-TG16": {
-    name: "Aerodactyl V",
-    setName: "Astral Radiance Trainer Gallery",
-    number: "TG16",
-  },
-  "sv03.5-032": { name: "Nidoran♂", setName: "151", number: "032" },
-  "smp-SM168": { name: "Pikachu & Zekrom-GX", setName: "SM Black Star Promos", number: "SM168" },
-};
+const held = new Map<string, CatalogueSpelling>([
+  ["swsh10tg-TG16", { name: "Aerodactyl V", setName: "Astral Radiance Trainer Gallery" }],
+  ["sv03.5-032", { name: "Nidoran♂", setName: "151" }],
+  ["smp-SM168", { name: "Pikachu & Zekrom-GX", setName: "SM Black Star Promos" }],
+]);
 
 describe("spellingOf", () => {
-  it("takes the card's name, set name and printed number from the copy", () => {
+  it("takes the card's name and its set's name from the copy", () => {
     expect(
       spellingOf(
-        row("swsh10tg-TG16", "Aerodactyl V", "TG16"),
+        row("swsh10tg-TG16", "Aerodactyl V"),
         "Astral Radiance",
-        held["swsh10tg-TG16"],
+        held.get("swsh10tg-TG16"),
       ),
-    ).toEqual({ name: "Aerodactyl V", setName: "Astral Radiance Trainer Gallery", number: "TG16" });
+    ).toEqual({ name: "Aerodactyl V", setName: "Astral Radiance Trainer Gallery" });
   });
 
   it("puts right an accent, an apostrophe and a missing symbol", () => {
-    expect(spellingOf(row("sv03.5-032", "Nidoran", "032"), "151", held["sv03.5-032"]).name).toBe(
+    expect(spellingOf(row("sv03.5-032", "Nidoran"), "151", held.get("sv03.5-032")).name).toBe(
       "Nidoran♂",
     );
   });
 
-  it("keeps a promo's printed prefix where the copy prints one", () => {
-    expect(
-      spellingOf(
-        row("smp-SM168", "Pikachu & Zekrom GX", "168"),
-        "Sun & Moon Promos",
-        held["smp-SM168"],
-      ),
-    ).toEqual({
-      name: "Pikachu & Zekrom-GX",
-      setName: "SM Black Star Promos",
-      number: "SM168",
-    });
-  });
-
-  it("leaves a row the copy has no card for alone, its number in the stored form", () => {
-    expect(spellingOf(row(null, "Pikachu", "XY123"), "XY Promos", undefined)).toEqual({
+  it("leaves a row the copy has no card for alone", () => {
+    expect(spellingOf(row(null, "Pikachu"), "XY Black Star Promos", undefined)).toEqual({
       name: "Pikachu",
-      setName: "XY Promos",
-      number: "123",
+      setName: "XY Black Star Promos",
     });
-  });
-
-  it("trims and folds a promo number the copy cannot settle", () => {
-    expect(
-      spellingOf(row(null, "Pikachu", " SWSH050 "), "SWSH Black Star Promos", undefined).number,
-    ).toBe("050");
-    expect(spellingOf(row(null, "Aerodactyl V", "TG01"), "Silver Tempest", undefined).number).toBe(
-      "TG01",
-    );
   });
 
   it("leaves a Japanese row to its own catalogue", () => {
     expect(
-      spellingOf(
-        row("SV1a-007", "ピカチュウ", "007", "ja"),
-        "トリプレットビート",
-        held["sv03.5-032"],
-      ),
-    ).toEqual({ name: "ピカチュウ", setName: "トリプレットビート", number: "007" });
+      spellingOf(row("SV1a-007", "ピカチュウ", "ja"), "トリプレットビート", held.get("sv03.5-032")),
+    ).toEqual({ name: "ピカチュウ", setName: "トリプレットビート" });
   });
 });
 
 describe("withCatalogueSpelling", () => {
-  it("writes the set's name back through the field the caller names", async () => {
-    const rows = [{ ...row("sv03.5-032", "Nidoran", "032"), set: "151 " }];
-    const out = await withCatalogueSpelling(rows, {
-      of: (r) => r.set,
-      on: (r, set) => ({ ...r, set }),
+  /** A draft names its set `set`, an imported row `setName`; both go through the same accessor. */
+  const field = <T extends { set: string }>() => ({
+    of: (r: T) => r.set,
+    on: (r: T, set: string) => ({ ...r, set }),
+  });
+
+  it("renames the row and its set out of the copy, through the caller's field", async () => {
+    const rows = [{ ...row("swsh10tg-TG16", "Aerodactyl V"), set: "Astral Radiance", quantity: 2 }];
+    const out = await withCatalogueSpelling(rows, field(), held);
+    expect(out[0]).toEqual({
+      tcgId: "swsh10tg-TG16",
+      name: "Aerodactyl V",
+      language: null,
+      set: "Astral Radiance Trainer Gallery",
+      // Everything else of the row survives the trip.
+      quantity: 2,
     });
-    // The copy cannot be read from a test, so nothing but the stored form moves: the point here is
-    // that the accessor is used and the rest of the row survives the trip.
-    expect(out[0]?.set).toBe("151 ");
-    expect(out[0]?.name).toBe("Nidoran");
-    expect(out[0]?.tcgId).toBe("sv03.5-032");
+  });
+
+  it("spells each row of a batch by its own card, and leaves an unknown one", async () => {
+    const rows = [
+      { ...row("sv03.5-032", "Nidoran"), set: "151" },
+      { ...row("smp-SM168", "Pikachu & Zekrom GX"), set: "Sun & Moon Promos" },
+      { ...row("no-such-1", "Typed by hand"), set: "A set of my own" },
+    ];
+    const out = await withCatalogueSpelling(rows, field(), held);
+    expect(out.map((r) => [r.name, r.set])).toEqual([
+      ["Nidoran♂", "151"],
+      ["Pikachu & Zekrom-GX", "SM Black Star Promos"],
+      ["Typed by hand", "A set of my own"],
+    ]);
   });
 
   it("answers an empty list without asking the copy", async () => {
