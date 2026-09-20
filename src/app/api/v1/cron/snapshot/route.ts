@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { refuse, apiError } from "@/lib/api/respond";
+import { refuseCron } from "@/lib/api/cron";
+import { refuse } from "@/lib/api/respond";
 import { assembleFor } from "@/lib/core/collection/collection";
 import {
   cardPricesFromSets,
@@ -100,16 +101,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  // Fails closed. A deployment that has not set the secret does not get an
-  // unauthenticated write endpoint as a consolation prize.
-  if (!secret) {
-    console.error("[cron] CRON_SECRET is not set: refusing to run the snapshot");
-    return apiError(503, "Not configured.");
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return apiError(401, "No.");
-  }
+  const denied = refuseCron(req, "run the snapshot");
+  if (denied) return denied;
 
   const db = adminClient();
   if (!db) return refuse("noDatabase");

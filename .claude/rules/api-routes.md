@@ -13,7 +13,7 @@ paths:
 
   ```
   find src/app/api/v1 -name route.ts | while read f; do
-    grep -qE 'authorise|requestViewer|CRON_SECRET' "$f" || echo "${f#src/app/api/v1}"
+    grep -qE 'authorise|requestViewer|refuseCron' "$f" || echo "${f#src/app/api/v1}"
   done | sort
   ```
 

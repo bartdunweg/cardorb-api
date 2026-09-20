@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { apiError, refuse } from "@/lib/api/respond";
+import { refuseCron } from "@/lib/api/cron";
+import { refuse } from "@/lib/api/respond";
 import { getPublicCollection, rememberCollectionScans } from "@/lib/core/collection/collection";
 import { listAccountIds } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
@@ -23,14 +24,8 @@ export const maxDuration = 60;
  * changed is written, so after the first pass this is usually no write at all.
  */
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    console.error("[cron] CRON_SECRET is not set: refusing to warm");
-    return apiError(503, "Not configured.");
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return apiError(401, "No.");
-  }
+  const denied = refuseCron(req, "warm");
+  if (denied) return denied;
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 

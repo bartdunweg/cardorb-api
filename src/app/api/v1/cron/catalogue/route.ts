@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
-import { apiError, refuse } from "@/lib/api/respond";
+import { refuseCron } from "@/lib/api/cron";
+import { refuse } from "@/lib/api/respond";
 import { catalogueIndex, syncMirror } from "@/lib/core/catalogue/mirror";
 import { syncLanguageMirror } from "@/lib/core/catalogue/mirror-language";
 import { adminClient } from "@/lib/storage/supabase";
@@ -24,14 +25,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function GET(req: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
-  if (!secret) {
-    console.error("[cron] CRON_SECRET is not set: refusing to copy the catalogue");
-    return apiError(503, "Not configured.");
-  }
-  if (req.headers.get("authorization") !== `Bearer ${secret}`) {
-    return apiError(401, "No.");
-  }
+  const denied = refuseCron(req, "copy the catalogue");
+  if (denied) return denied;
   const db = adminClient();
   if (!db) return refuse("noDatabase");
 
