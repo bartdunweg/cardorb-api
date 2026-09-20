@@ -121,9 +121,10 @@ export const cardNumber = (n: string) =>
  * after a set's main run, so they are kept: TG01 is not card 1. SV is Shiny Vault and SVP is
  * the promos, which is why SVP is matched whole and SV is not on this list.
  *
- * Context-free on purpose: the same rule has to hold in a sort, on a write and in a CHECK
- * constraint (supabase/migrations/20260912180000_promo_numbers_without_prefix.sql), and only a
- * rule about the number alone can be the same in all three.
+ * Context-free on purpose: the same rule has to hold in a sort and in the fallback below, and only
+ * a rule about the number alone can be the same in both. It used to hold in a CHECK constraint too
+ * (migration 20260912180000); that went with 20260920160000, when a row on a catalogue card started
+ * storing the number its card prints, prefix and all.
  */
 export const PROMO_PREFIXES = ["HGSS", "SWSH", "SVP", "XY", "SM", "BW", "DP"] as const;
 
@@ -136,11 +137,12 @@ const PROMO_PREFIX = new RegExp(`^(?:${PROMO_PREFIXES.join("|")})(?=\\d)`, "i");
  * every other row of its set. Padding is left as written: the collection has both 74 and 013,
  * and numberForms() already makes those the same card. A gallery number keeps its letters.
  *
- * Every write of `cards.number` goes through this, and the check constraint
- * cards_number_no_promo_prefix (migration 20260912180000) holds the column to it besides. The
- * 2026-08-16 audit wrote TCGdex's XY123 straight to Postgres, and Venusaur EX sat under Pikachu EX
- * 124 for a month. This is the one fact of a card a row does not take from the catalogue copy: see
- * collection/catalogue-spelling.ts, which takes the name and the set's name and leaves this alone.
+ * This is the fallback, not the rule. A row that names a card the copy holds stores the number that
+ * card prints, whatever it looks like (collection/catalogue-spelling.ts, migration 20260920160000):
+ * smp-SM168 is "SM168" and sv03.5-036 is "036". Only a row the copy has no card for is written
+ * through this, so a number typed by hand still reads like its neighbours. The sort no longer needs
+ * it either: compareCardNumbers() folds the prefix itself (numberKey below), which is what the
+ * 2026-08-16 audit's XY123 actually broke, back when the sort was a parseInt.
  */
 export const storedCardNumber = (n: string): string => {
   const trimmed = n.trim();

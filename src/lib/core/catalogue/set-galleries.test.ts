@@ -60,6 +60,34 @@ describe("Shiny Vault and Classic Collection", () => {
     expect(["SV49", "SV001", "CC004", "TG05", "GG70"].every(isSubsetNumber)).toBe(true);
     expect(["49", "4", "SVP1"].some(isSubsetNumber)).toBe(false);
   });
+
+  /* A row on a catalogue card stores the number its card prints since 2026-09-20 (migration
+     20260920160000), so a promo row now arrives here as "SM168" where it used to arrive as "168".
+     ownership.ts asks this which shelf a row files under, and a promo that read as a subset would
+     be marked on the gallery and not on its own set. None of the promo prefixes is a subset one:
+     SVP fails /^SV\d/ because P is not a digit, and the rest share no opening with TG, GG, SV or
+     CC. This is the guard on that, for the next prefix somebody adds to either list. */
+  it("reads a promo's printed number as its set's, never a subset's", () => {
+    const promos = [
+      "SM168",
+      "SWSH020",
+      "XY123",
+      "XY67a",
+      "BW004",
+      "DP12",
+      "HGSS01",
+      "SVP085",
+      "SVP1",
+    ];
+    expect(promos.filter(isSubsetNumber)).toEqual([]);
+    // And the subsets still read as subsets beside them, whatever their case.
+    expect(["TG16", "gg01", "sv49", "cc004", "H1"].filter(isSubsetNumber)).toEqual([
+      "TG16",
+      "gg01",
+      "sv49",
+      "cc004",
+    ]);
+  });
 });
 
 describe("the Unown Collection", () => {

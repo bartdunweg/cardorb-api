@@ -273,9 +273,10 @@ export type ItemFilter = {
   /** One rarity or several, each whole, in the catalogue's words; any of them counts, in any case. */
   rarity?: Several;
   /**
-   * A card number, whole; with `set` it names one card's every row. Spelt either way: "001" finds the
-   * row stored as 1 and "SWSH020" the promo stored as 020 (canonNumber), because the catalogue writes a
-   * number as the card prints it and a row keeps what was typed.
+   * A card number, whole; with `set` it names one card's every row. Every spelling finds a row,
+   * whichever way the row stores it (canonNumber): "1", "01" and "001" are one card, "SWSH020" and
+   * "020" are one card, case does not matter; a gallery's letters stay ("TG01" is not "1"). The same
+   * sentence is the parameter's in public/openapi.yaml.
    */
   number?: string;
   /** One generation or several, each whole, as the catalogue names its series; any counts, in any case. */

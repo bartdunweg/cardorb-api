@@ -10,7 +10,8 @@
 /**
  * The letters a Black Star Promo set writes in front of every one of its numbers, as util.ts's
  * PROMO_PREFIXES lists them (card-number.test.ts fails when the two differ). XY123 is card 123 of the
- * XY promos, and the collection stores it as 123 (storedCardNumber).
+ * XY promos, which is what the fold below reads it as. What a row stores is the printed number,
+ * XY123 (collection/catalogue-spelling.ts), and storedCardNumber() is only the fallback.
  */
 export const PROMO_PREFIXES = ["HGSS", "SWSH", "SVP", "XY", "SM", "BW", "DP"];
 

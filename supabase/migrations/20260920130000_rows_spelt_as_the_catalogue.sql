@@ -30,9 +30,12 @@
 -- copy's spelling is taken outright. Only the two columns move; nothing else of anybody's row is
 -- written, and a row whose id the copy has no card for is left exactly as it is.
 --
--- English only, as the rule is (catalogue-spelling.ts): a Japanese row is named in its own script,
--- where the copy's `local_name` and not `name` is what the card prints. No row resolves that way
--- today (0 of them join the Japanese catalogue).
+-- Every row but a Japanese one, as the rule is (catalogue-spelling.ts). The guard is
+-- `coalesce(c.language, 'en') <> 'ja'`, so a German or French copy of an English card takes that
+-- card's spelling too, which is right: those catalogues share the English ids and set names, and
+-- only Japanese has a catalogue of its own (cataloguesFor). A Japanese row is named in its own
+-- script, where the copy's `local_name` and not `name` is what the card prints, and no row resolves
+-- that way today (0 of them join the Japanese catalogue).
 --
 -- From now on the write paths spell a new row this way (withCatalogueSpelling, on POST /v1/cards
 -- and on the import) and data-health's "Every row spells its card as the catalogue does" counts

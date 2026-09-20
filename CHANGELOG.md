@@ -8,6 +8,8 @@ if the two have drifted apart.
 
 - A set with no cards in it no longer shows up on Browse as a tile whose page is empty.
 
+- A card's number in your collection is now the number printed on the card, the same one Browse shows: SM168 rather than 168, 036 rather than 36.
+
 - A card in your collection now carries the card's name and its set's name exactly as Browse writes them, on every card you add or import, and the cards already there have been put right.
 
 ## 2026-09-19

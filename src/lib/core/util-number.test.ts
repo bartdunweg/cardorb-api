@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { indexByNumber } from "./catalogue/set-index";
@@ -145,16 +145,36 @@ describe("storedCardNumber", () => {
     expect(hit?.id).toBe("xyp-XY123");
   });
 
-  it("uses the same prefixes as the database's CHECK constraint", () => {
-    const sql = readFileSync(
-      join(
-        __dirname,
-        "../../../supabase/migrations/20260912180000_promo_numbers_without_prefix.sql",
-      ),
-      "utf8",
-    );
-    const lists = [...sql.matchAll(/\^\(([A-Z|]+)\)/g)].map((m) => m[1]);
-    expect(lists.length).toBeGreaterThanOrEqual(3);
-    for (const list of lists) expect(list).toBe(PROMO_PREFIXES.join("|"));
+  /* The prefixes used to be a rule in three places at once: the sort, the write, and a CHECK
+     constraint that a test held to this list. The constraint is gone (migration 20260920160000):
+     a row on a catalogue card stores the number that card prints, prefix and all, so a rule that
+     refuses one would refuse the truth. What is left is the sort and the fallback, which share
+     this list in code. This holds the constraint dead: no migration may bring it back without
+     saying so here. */
+  it("has no CHECK constraint on the stored form any more", () => {
+    const dir = join(__dirname, "../../../supabase/migrations");
+    const adds = readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .filter((f) => {
+        const sql = readFileSync(join(dir, f), "utf8");
+        return /add\s+constraint\s+cards_number_no_promo_prefix/i.test(sql);
+      });
+    const drops = readdirSync(dir)
+      .filter((f) => f.endsWith(".sql"))
+      .filter((f) =>
+        /drop\s+constraint\s+if\s+exists\s+cards_number_no_promo_prefix/i.test(
+          readFileSync(join(dir, f), "utf8"),
+        ),
+      );
+    // The one that added it, and a later one that drops it and never adds it back.
+    expect(adds).toEqual(["20260912180000_promo_numbers_without_prefix.sql"]);
+    /* That migration's regexes still spell this list, because the rows it moved were moved by it.
+       The list itself lives on in the sort and the fallback (storedCardNumber). */
+    const added = readFileSync(join(dir, adds[0]!), "utf8");
+    for (const list of [...added.matchAll(/\^\(([A-Z|]+)\)/g)].map((m) => m[1]))
+      expect(list).toBe(PROMO_PREFIXES.join("|"));
+    expect(drops.filter((f) => f > (adds[0] ?? ""))).toEqual([
+      "20260920160000_rows_print_their_number.sql",
+    ]);
   });
 });
