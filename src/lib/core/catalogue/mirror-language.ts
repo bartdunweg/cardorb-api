@@ -697,7 +697,7 @@ export async function syncLanguageMirror(
           /* Recorded means the copy holds the set's cards, so a run that wrote none says so,
              whatever the catalogue claims. TCGdex publishes `cards: []` for Radiant Collection,
              Jumbo cards, Sample and W Promotional and they carried the flag anyway (migration
-             20260920110000): the English shelf left them off a tile only because a second rule,
+             20260920140000): the English shelf left them off a tile only because a second rule,
              the sync record's count, happened to agree, and the set page answered null. */
           cards_recorded: (set.cardsRecorded || fromTcgplayer) && resolved.length > 0,
           sort_order: order.get(id) ?? null,

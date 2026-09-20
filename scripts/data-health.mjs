@@ -2053,7 +2053,7 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
  * name and its printed number beside the id, and the collection list, the CSV export and the public
  * profile read them off the row: a spelling that drifted is the same card reading one way there and
  * another on Browse. 193 set names, 90 names and 1,075 numbers were put right by migration
- * 20260920100000, and withCatalogueSpelling() spells a new row this way on both write paths, so a
+ * 20260920130000, and withCatalogueSpelling() spells a new row this way on both write paths, so a
  * count above zero here is a path that forgot it or a catalogue that renamed something since.
  *
  * English rows only, as the rule is: a Japanese row's card prints its own script, where the copy's
@@ -2088,7 +2088,7 @@ const rowCatalogue = "(case when c.language = 'ja' then 'ja' else 'en' end)";
  * A set marked recorded holds at least one card. `cards_recorded` is what the shelf and the set
  * page go by, and a recorded set with nothing in it is a tile whose page answers null: jumbo, rc,
  * sp and wp carried it on nothing at all, because the run wrote the catalogue's claim rather than
- * what it had written down (migration 20260920110000). It now writes the flag from the cards it
+ * what it had written down (migration 20260920140000). It now writes the flag from the cards it
  * wrote, so this counts only a set whose cards went missing since.
  */
 {

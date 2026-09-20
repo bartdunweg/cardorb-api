@@ -11,7 +11,7 @@
  * of them). The same card then read one way on the collection and another on Browse.
  *
  * So the row takes the copy's spelling wherever the copy has the card, at the moment it is written
- * (R-DATA-004). Migration 20260920100000 did the rows that were already there, and the data-health
+ * (R-DATA-004). Migration 20260920130000 did the rows that were already there, and the data-health
  * check "Every row spells its card as the catalogue does" counts what drifted since.
  *
  * English rows only, like catalogueIdOf() beside it: a Japanese row's card is named in its own
