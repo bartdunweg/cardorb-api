@@ -24,7 +24,16 @@ import {
   printingKeysOf,
   shelfFigureOf,
 } from "../src/lib/core/price-basis.mjs";
-import { printingKey as printingName, runKey, runLinksOf } from "../src/lib/core/price-months.mjs";
+import {
+  JUMP_FLOOR_CENTS,
+  JUMP_RATIO,
+  daysFromMonths,
+  daysOfMonthRow,
+  priceJumps,
+  printingKey as printingName,
+  runKey,
+  runLinksOf,
+} from "../src/lib/core/price-months.mjs";
 import { THREE_DIGIT_SETS, canonNumber, correctedNumber } from "../src/lib/core/card-number.mjs";
 import {
   numberDisagrees,
@@ -1748,29 +1757,125 @@ check(
 }
 
 /**
- * A reading more than three times off both neighbours, and back, on a card worth at least €10: most
- * are TCGplayer's own thin markets (Charizard 1st Edition, e-Card Umbreon), some a wrong product for
- * a day (ecard2-95a after its relink). Reported, not failed: the market is what it is.
+ * A reading JUMP_RATIO times the reading before it, or a tenth of it, at JUMP_FLOOR_CENTS or over:
+ * what tcgcsv sent that is not a price moving, on every card, held or not.
+ *
+ * It asked for a reading three times off *both* neighbours on a card worth at least €10, within one
+ * calendar month. Each of those three left the cheap flips out. The level: ecard2-40's normal went
+ * €95.08 to 28 cents and back, me02.5-153's cosmos holo 13 cents to €150.57, and a floor on both
+ * sides skips a pair the moment one side is cheap, which is every one of them. The shape: the 28
+ * cents stood on 31 August and 1 September 2026, so no day had two sane neighbours and the run
+ * crossed a month row. Sixty-six such pairs in the three months to 2026-09-20 were invisible here.
+ *
+ * Two numbers, because they answer different questions. `jumps` is what arrived; `standing` is what
+ * is still in the line after price-months.mjs has judged it, which is what a chart, a tile and a
+ * collection's value are drawn from. A morning where `standing` climbs is a night to look at, and
+ * `jumps` alone climbing is TCGplayer being TCGplayer.
+ *
+ * Reported, not failed: the market is what it is, and a line that steps to a new level for good
+ * (ex10-113's holofoil, 86 cents to €697 on 2026-08-02 and never back) is a relink that stands.
+ *
+ * Two queries, and the first is a net rather than the rule. It asks which cards have a month row
+ * whose own lowest and highest readings are JUMP_RATIO apart, or whose first reading is that far
+ * from the month before's last, which is every card a jump can be on and some that have none: a
+ * month that climbed tenfold in steps is caught here and thrown out by priceJumps. Deliberately, on
+ * cost. Pairing the days themselves in SQL needs a window over every reading in the window months,
+ * which measured 2.5 million rows, a 97 MB sort to disk and 11 to 18 seconds on the live database
+ * (explain analyze, 2026-09-20); the net reads one row per printing-month, 104,000 of them, and
+ * measured 3.5 seconds for 45 cards where the exact pairing found 27.
+ *
+ * The second reads those cards' whole rows, four months of them, because the stray rule weighs a
+ * figure against a month either side and holds it with the figure before it. SPIKE_MAX_CARDS caps
+ * what it will ask for: a night where a whole catalogue arrives wrong would otherwise name thousands
+ * of cards in one `in` list, and the report says when the cap was reached.
  */
-if (day) {
-  const month = `${day.slice(0, 7)}-01`;
-  const rows = await query(
-    `select language, tcg_id, printing, cents from card_price_months where month = '${month}'`,
+const SPIKE_DAYS = 45;
+/** The most cards the second query reads rows for; past it the report says so and takes the first. */
+const SPIKE_MAX_CARDS = 400;
+{
+  const since = new Date(Date.parse(today) - SPIKE_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const candidates = await query(
+    `with r as (
+         select language, tcg_id, printing, month,
+                (select min(c) from unnest(cents) c) as lo,
+                (select max(c) from unnest(cents) c) as hi,
+                (select c from unnest(cents) with ordinality t(c, i)
+                 where c is not null order by i limit 1) as first_c,
+                (select c from unnest(cents) with ordinality t(c, i)
+                 where c is not null order by i desc limit 1) as last_c
+         from card_price_months
+         where month >= date_trunc('month', current_date - ${SPIKE_DAYS + 5})::date
+       ),
+       b as (
+         select *, lag(last_c) over w as prev_last
+         from r window w as (partition by language, tcg_id, printing order by month)
+       )
+     select distinct language, tcg_id from b
+     where (hi >= ${JUMP_FLOOR_CENTS} and hi >= ${JUMP_RATIO} * lo)
+        or (prev_last is not null
+            and greatest(prev_last, first_c) >= ${JUMP_FLOOR_CENTS}
+            and greatest(prev_last, first_c) >= ${JUMP_RATIO} * least(prev_last, first_c))`,
   );
-  const spikes = [];
-  for (const r of rows) {
-    const c = r.cents ?? [];
-    for (let i = 1; i < c.length - 1; i++) {
-      const [a, b, n] = [c[i - 1], c[i], c[i + 1]];
-      if (a == null || b == null || n == null || Math.min(a, n) < 1000) continue;
-      if (b > 3 * Math.max(a, n) || b * 3 < Math.min(a, n))
-        spikes.push(`${r.language} ${r.tcg_id} ${r.printing} day ${i + 1}`);
-    }
-  }
+  /* Both halves of the key quoted, not just the id: they come from our own tables, and a value
+     that carries a quote would otherwise be a query written by whatever wrote the row. */
+  const sqlText = (s) => `'${String(s).replaceAll("'", "''")}'`;
+  const asked = candidates.slice(0, SPIKE_MAX_CARDS);
+  const rows = asked.length
+    ? await query(
+        `select r.language, r.tcg_id, r.printing, r.month::text as month, r.cents
+         from card_price_months r
+         where r.month >= date_trunc('month', current_date - 140)::date
+           and (r.language, r.tcg_id) in (${asked
+             .map((c) => `(${sqlText(c.language)}, ${sqlText(c.tcg_id)})`)
+             .join(", ")})`,
+      )
+    : [];
+  /**
+   * The days of every item in `list`, gathered under the line each belongs to.
+   *
+   * @param {object[]} list
+   * @param {(item: object) => string} keyOf the line an item is on
+   * @param {(item: object) => [string, number][]} daysOf its readings, date and cents
+   */
+  const linesOf = (list, keyOf, daysOf) => {
+    const lines = new Map();
+    for (const item of list)
+      lines.set(keyOf(item), [...(lines.get(keyOf(item)) ?? []), ...daysOf(item)]);
+    return [...lines].map(([key, days]) => ({ key, days }));
+  };
+  const jumps = priceJumps(
+    linesOf(rows, (r) => `${r.language} ${r.tcg_id} ${r.printing}`, daysOfMonthRow),
+    { since },
+  );
+  /* The same lines as the app reads them: `since` left at the beginning, because daysFromMonths
+     weighs the days before the window and holds a figure with the last one before it.
+
+     The printing lines only. A day with none carries the old `market` and `holo` series instead
+     (dayPrices), and no such day has been written since 2026-09-13; only
+     scripts/backfill-card-prices.mjs still can. Those days count in `jumps` and cannot count here,
+     which is worth knowing should the backfill ever fill a month inside this window. */
+  const read = daysFromMonths(rows);
+  const standing = priceJumps(
+    linesOf(
+      read.flatMap((d) =>
+        Object.entries(d.printings ?? {}).map(([printing, price]) => ({ d, printing, price })),
+      ),
+      (p) => `${p.d.language} ${p.d.tcgId} ${p.printing}`,
+      (p) => [[p.d.date, Math.round(p.price * 100)]],
+    ),
+    { since },
+  );
+  const tonight = standing.filter((j) => j.date === day).length;
+  const cards = new Set(jumps.map((j) => j.key.split(" ").slice(0, 2).join(" "))).size;
+  const shown = (list) =>
+    list
+      .slice(-10)
+      .map((j) => `${j.key} ${j.date} ${j.from}c to ${j.to}c`)
+      .join("; ");
   check(
-    "Price spikes this month (reported)",
+    `Price jumps in ${SPIKE_DAYS} days (reported)`,
     true,
-    `${spikes.length} one-day spikes over €10${spikes.length ? `: ${spikes.slice(0, 10).join("; ")}` : ""}`,
+    `${jumps.length} readings ${JUMP_RATIO}× the one before, at €${JUMP_FLOOR_CENTS / 100} or over, on ${cards} cards of the ${candidates.length} the net caught${candidates.length > asked.length ? ` (capped at ${SPIKE_MAX_CARDS}, so this is a floor)` : ""}; ${standing.length} still in the line after the stray rule, ${tonight} of them on ${day ?? "the last day"}${standing.length ? `: ${shown(standing)}` : ""}`,
   );
 }
 

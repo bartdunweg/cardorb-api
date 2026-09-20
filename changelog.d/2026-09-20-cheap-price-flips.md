@@ -1,0 +1,1 @@
+- A cheap card's price line no longer wobbles on a stray reading: a day far off the rest of the line is held at the figure before it whatever the card is worth, and a line worth a few cents is left exactly as TCGplayer sent it instead of being corrected by a cent.

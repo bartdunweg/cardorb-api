@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  JUMP_FLOOR_CENTS,
+  JUMP_RATIO,
   LEGACY,
   daysFromMonths,
+  daysOfMonthRow,
+  priceJumps,
   legacyDays,
   monthOf,
   monthsFromDays,
@@ -266,6 +270,64 @@ describe("daysFromMonths", () => {
     expect(daysFromMonths([sparse]).map((d) => d.market)).toEqual([1, 9]);
   });
 
+  // ecard2-40's normal: €95 all August, 28 cents on the 31st and on 1 September, €95 again after.
+  // A card nobody owns, and the hold is the same one a held card's line gets.
+  it("holds a cheap stray day on a line nobody owns", () => {
+    const line = (month: string, cents: (day: number) => number | null) => ({
+      language: "en" as const,
+      tcg_id: "ecard2-40",
+      printing: "normal",
+      month,
+      cents: Array.from({ length: 31 }, (_, i) => cents(i + 1)),
+    });
+    const days = daysFromMonths([
+      line("2026-08-01", (day) => (day === 31 ? 28 : 9508)),
+      line("2026-09-01", (day) => (day <= 1 ? 28 : day <= 19 ? 9561 : null)),
+    ]);
+    const on = (date: string) => days.find((d) => d.date === date);
+    expect(on("2026-08-31")?.printings).toEqual({ normal: 95.08 });
+    expect(on("2026-08-31")?.held).toEqual({ normal: 0.28 });
+    expect(on("2026-09-01")?.printings).toEqual({ normal: 95.08 });
+  });
+
+  // SVLN-004's normal read 4 cents where its neighbours read 5: five times, at that level, is one
+  // cent of TCGplayer's own conversion.
+  it("judges nothing on a line under a quarter", () => {
+    const cents = Array.from({ length: 31 }, (_, i) => (i === 10 ? 1 : 20));
+    const days = daysFromMonths([
+      { language: "en", tcg_id: "svlen-004", printing: "normal", month: "2026-07-01", cents },
+    ]);
+    expect(days.find((d) => d.date === "2026-07-11")?.printings).toEqual({ normal: 0.01 });
+    expect(days.some((d) => d.held)).toBe(false);
+  });
+
+  // SM7a-072's holofoil held €0.12 with €0.12: its window's median had moved to the other level,
+  // and the sheet was told a day was corrected that read exactly the same afterwards.
+  it("puts a figure back unmarked where the figure before it says the same thing", () => {
+    const low = Array.from({ length: 30 }, () => 100);
+    const days = daysFromMonths([
+      {
+        language: "en",
+        tcg_id: "sm7a-072",
+        printing: "holofoil",
+        month: "2026-07-01",
+        cents: [...low, 5000],
+      },
+      {
+        language: "en",
+        tcg_id: "sm7a-072",
+        printing: "holofoil",
+        month: "2026-08-01",
+        cents: Array.from({ length: 31 }, (_, i) => (i === 0 ? 100 : 5000)),
+      },
+    ]);
+    // 1 August reads €1 against a window whose median is €50, so it is judged stray; the last
+    // figure before it is €1 too, so the day keeps what TCGplayer sent and says nothing was held.
+    const first = days.find((d) => d.date === "2026-08-01");
+    expect(first?.printings).toEqual({ holofoil: 1 });
+    expect(first).not.toHaveProperty("held");
+  });
+
   it("leaves out days before `since` and past the month's end", () => {
     expect(
       daysFromMonths([month("normal", 1, 100), month("normal", 31, 999)], "2026-02-01"),
@@ -280,6 +342,80 @@ describe("daysFromMonths", () => {
       },
     ]);
     expect(daysFromMonths([month("normal", 1, 100)], "2026-02-02")).toEqual([]);
+  });
+});
+
+describe("priceJumps", () => {
+  const line = (key: string, days: [string, number][]) => ({ key, days });
+
+  it("counts a jump on the higher reading's level, so a cheap flip on a dear line is seen", () => {
+    // ecard2-40: €95.08 to 28 cents and back. The check asked for €10 on both sides and saw
+    // neither day; a euro on the higher reading sees both.
+    const jumps = priceJumps([
+      line("en|ecard2-40|normal", [
+        ["2026-08-30", 9508],
+        ["2026-08-31", 28],
+        ["2026-09-01", 28],
+        ["2026-09-02", 9561],
+      ]),
+    ]);
+    expect(jumps.map((j) => [j.date, j.from, j.to])).toEqual([
+      ["2026-08-31", 9508, 28],
+      ["2026-09-02", 28, 9561],
+    ]);
+  });
+
+  it("says nothing about a line under the floor, or a move under the ratio", () => {
+    expect(JUMP_RATIO).toBe(10);
+    expect(JUMP_FLOOR_CENTS).toBe(100);
+    // A ten-times move whose higher reading is 90 cents: a cent against ten.
+    expect(
+      priceJumps([
+        line("ja|SVLN-004|normal", [
+          ["2026-08-20", 9],
+          ["2026-08-21", 90],
+        ]),
+      ]),
+    ).toEqual([]);
+    // A real move of nine times, at a real level: not a jump.
+    expect(
+      priceJumps([
+        line("en|sv3pt5-199|holofoil", [
+          ["2026-08-20", 1000],
+          ["2026-08-21", 8999],
+        ]),
+      ]),
+    ).toEqual([]);
+  });
+
+  it("reports from `since` on, and reads the reading before it", () => {
+    const days: [string, number][] = [
+      ["2026-08-01", 100],
+      ["2026-08-02", 9000],
+      ["2026-08-03", 9000],
+    ];
+    expect(priceJumps([line("a", days)], { since: "2026-08-02" })).toHaveLength(1);
+    expect(priceJumps([line("a", days)], { since: "2026-08-03" })).toEqual([]);
+  });
+
+  it("takes the thresholds it is given", () => {
+    const days: [string, number][] = [
+      ["2026-08-01", 100],
+      ["2026-08-02", 500],
+    ];
+    expect(priceJumps([line("a", days)], { ratio: 4 })).toHaveLength(1);
+    expect(priceJumps([line("a", days)], { ratio: 4, floorCents: 1000 })).toEqual([]);
+  });
+
+  it("reads a month row's days and leaves its empty ones out", () => {
+    expect(
+      daysOfMonthRow({ month: "2026-02-01", cents: [100, null, 300, ...Array(28).fill(9)] }),
+    ).toEqual([
+      ["2026-02-01", 100],
+      ["2026-02-03", 300],
+      ...Array.from({ length: 25 }, (_, i) => [`2026-02-${String(i + 4).padStart(2, "0")}`, 9]),
+    ]);
+    expect(daysOfMonthRow({ month: "2026-02-01", cents: null })).toEqual([]);
   });
 });
 

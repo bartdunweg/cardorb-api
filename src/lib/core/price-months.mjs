@@ -249,6 +249,20 @@ const STRAY_MIN_FIGURES = 3;
  * a week of one level with nothing after it to say otherwise.
  */
 const STRAY_SETTLED_FIGURES = 7;
+/**
+ * A printing whose neighbours sit under this many cents is not judged at all: at four cents against
+ * twenty, five times is a rounding step of TCGplayer's own conversion and not a stray sale. Measured
+ * on the live lines, 2026-09-20: the holds under a quarter were SVLN-004 at €0.04 held with €0.05
+ * and SM8b-043 at €0.21 held with €0.22, neither of them a correction anyone could see.
+ */
+const STRAY_FLOOR_CENTS = 25;
+/**
+ * A figure is only held with an earlier one that says something different: half again either way.
+ * A line whose median crosses a level leaves an earlier figure at the stray one's own level
+ * (SM7a-072 held €0.12 with €0.12, PCG4-011 €0.86 with €0.86), and a hold that changes nothing
+ * still told the sheet the day was corrected.
+ */
+const HOLD_MIN_RATIO = 1.5;
 
 const dayNumber = (/** @type {string} */ date) => Date.parse(`${date}T00:00:00Z`) / 86_400_000;
 
@@ -372,7 +386,13 @@ function dropStrayFigures(days, taken) {
         .sort((a, b) => a - b);
       const mid = values.length >> 1;
       const median = values.length % 2 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
-      if (median > 0 && (point.value > median * STRAY_RATIO || point.value * STRAY_RATIO < median))
+      /* The floor is on the median, not on the figure: a line that sits at €95 has a stray day of
+         28 cents judged (ecard2-40's normal on 31 August and 1 September 2026), while a line that
+         sits at four cents has nothing judged at all. */
+      if (
+        median * 100 >= STRAY_FLOOR_CENTS &&
+        (point.value > median * STRAY_RATIO || point.value * STRAY_RATIO < median)
+      )
         stray.push(point);
     }
     /* The line's last figures, all stray and all one level, are a new price that has not yet
@@ -434,6 +454,13 @@ function holdLastFigure(days, taken) {
       before = k.value;
     }
     if (before == null) continue;
+    /* Nothing to hold with: an earlier figure at the stray one's own level says the median moved,
+       not that the day was wrong. The figure taken out goes back as TCGplayer sent it, unmarked,
+       rather than being replaced by a figure a reader could not tell from it. */
+    if (before < t.value * HOLD_MIN_RATIO && t.value < before * HOLD_MIN_RATIO) {
+      t.figures[t.printing] = t.value;
+      continue;
+    }
     t.figures[t.printing] = before;
     t.held[t.printing] = t.value;
   }
@@ -593,6 +620,89 @@ export function daysFromMonths(rows, since = "0000-00-00") {
     dayPrices(d, lines.get(d.card) ?? { plain: null, foil: null }),
   );
   return out.sort(byDateCardLanguage);
+}
+
+/**
+ * How many times its neighbour a reading is before the day counts as a jump, either way.
+ *
+ * Ten, not the five dropStrayFigures judges a figure by: this counts what went wrong, and a rule
+ * that reports every figure the rule already weighs would be red every morning. Measured on the
+ * live lines over the 45 days to 2026-09-20: 34 jumps at ten times, of which 18 stand after the
+ * stray rule, against 111 at four times.
+ */
+export const JUMP_RATIO = 10;
+/**
+ * The level a jump has to reach, in cents, before it counts: the higher of the two readings.
+ *
+ * A euro rather than the ten the check used to ask for. The cheap flips are exactly the ones that
+ * fell outside it: ecard2-40's normal went 28 cents to €95.61, me02.5-153's cosmos holo 13 cents to
+ * €150.57, and a floor on both sides let every one of them through unseen. On the higher reading,
+ * so a line that sits at €95 counts its 28-cent day; a line that sits at a cent counts nothing,
+ * which is where a ten-times ratio is one cent against ten.
+ */
+export const JUMP_FLOOR_CENTS = 100;
+
+/**
+ * @typedef {object} PriceJump
+ * @property {string} key the line it is on, as the caller named it
+ * @property {string} date the day of the later reading, yyyy-mm-dd
+ * @property {number} from the reading before, cents
+ * @property {number} to the reading on that day, cents
+ */
+
+/**
+ * The days a line's reading is JUMP_RATIO times the reading before it, or a tenth of it, at
+ * JUMP_FLOOR_CENTS or over: what scripts/data-health.mjs reports every morning.
+ *
+ * Between two readings rather than a day and both its neighbours. A flip that lasts two days, or
+ * one that starts on the first of a month, is the same fault as a flip that lasts one, and the
+ * shape the check asked for saw neither (ecard2-40's normal read 28 cents on 31 August and
+ * 1 September 2026 and was invisible on both counts).
+ *
+ * Pure, so the thresholds are a rule with a test rather than a number inside a query.
+ *
+ * @param {{ key: string, days: [string, number][] }[]} lines each line's readings, cents
+ * @param {{ since?: string, ratio?: number, floorCents?: number }} [opts] `since` is the first day
+ *   a jump is reported for; the readings before it are still read, as the jump needs one.
+ * @returns {PriceJump[]} oldest first
+ */
+export function priceJumps(lines, opts = {}) {
+  const { since = "0000-00-00", ratio = JUMP_RATIO, floorCents = JUMP_FLOOR_CENTS } = opts;
+  /** @type {PriceJump[]} */
+  const out = [];
+  for (const { key, days } of lines) {
+    const sorted = [...days].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    for (let i = 1; i < sorted.length; i++) {
+      const [, from] = sorted[i - 1];
+      const [date, to] = sorted[i];
+      if (date < since) continue;
+      const high = Math.max(from, to);
+      const low = Math.min(from, to);
+      /* A reading of zero counts: nothing is a tenth of a euro, and a printing that read €40 and
+         then nothing at all is exactly the kind of night this reports. */
+      if (high >= floorCents && high >= ratio * low) out.push({ key, date, from, to });
+    }
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.key < b.key ? -1 : 1));
+}
+
+/**
+ * A month row's readings as the days they are: `[date, cents]`, the empty days left out.
+ *
+ * @param {{ month: string, cents: (number | null)[] | null }} row
+ * @returns {[string, number][]}
+ */
+export function daysOfMonthRow(row) {
+  const prefix = row.month.slice(0, 8);
+  const year = Number(row.month.slice(0, 4));
+  const length = new Date(Date.UTC(year, Number(row.month.slice(5, 7)), 0)).getUTCDate();
+  /** @type {[string, number][]} */
+  const out = [];
+  for (let i = 0; i < length; i++) {
+    const c = row.cents?.[i];
+    if (c != null) out.push([`${prefix}${String(i + 1).padStart(2, "0")}`, c]);
+  }
+  return out;
 }
 
 /** The first of the month a date falls in, for a query on `month`. */

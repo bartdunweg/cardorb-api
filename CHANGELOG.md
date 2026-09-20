@@ -6,6 +6,8 @@ if the two have drifted apart.
 
 ## 2026-09-20
 
+- A cheap card's price line no longer wobbles on a stray reading: a day far off the rest of the line is held at the figure before it whatever the card is worth, and a line worth a few cents is left exactly as TCGplayer sent it instead of being corrected by a cent.
+
 - A set with no cards in it no longer shows up on Browse as a tile whose page is empty.
 
 - A card's number in your collection is now the number printed on the card, the same one Browse shows: SM168 rather than 168, 036 rather than 36.
