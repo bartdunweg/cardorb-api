@@ -10,11 +10,14 @@ const authoriseWrite = vi.fn();
 const updateRows = vi.fn();
 const findFolder = vi.fn();
 const forgetOnTheWeb = vi.fn(
-  async (_who: { userId: string; token?: string }, _write: string) => undefined,
+  async (_who: { userId: string; token?: string }, _write: string, _set?: string | null) =>
+    undefined,
 );
-vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; token?: string }, write: string) =>
-    forgetOnTheWeb(who, write),
+// Every argument, the set among them: dropping it here would let the route forget every set page
+// and the test still pass.
+vi.mock("@/lib/api/web-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/web-cache")>()),
+  forgetOnTheWeb: (...a: unknown[]) => forgetOnTheWeb(...(a as [{ userId: string }, string])),
 }));
 vi.mock("@/lib/api/guard", () => ({
   authoriseWrite: (...a: unknown[]) => authoriseWrite(...a),
@@ -60,7 +63,9 @@ beforeEach(() => {
         ? { id: KANTO, name: "Kanto", kind: "rule", rule: { dex: { from: 1, to: 151 } } }
         : null,
   );
-  updateRows.mockResolvedValue([{ id: A, condition: "Near Mint" }]);
+  updateRows.mockResolvedValue([
+    { id: A, tcgId: "sv03pt5-25", number: "25", condition: "Near Mint" },
+  ]);
 });
 afterEach(() => updateRows.mockClear());
 
@@ -80,11 +85,33 @@ describe("PATCH /api/v1/collection/items", () => {
       { condition: "Near Mint" },
       "t.o.k.e.n",
     );
-    expect(await res.json()).toEqual({ ok: true, cards: [{ id: A, condition: "Near Mint" }] });
+    expect(await res.json()).toEqual({
+      ok: true,
+      cards: [{ id: A, tcgId: "sv03pt5-25", number: "25", condition: "Near Mint" }],
+    });
     expect(forgetOnTheWeb).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "cards",
+      "sv03pt5",
     );
+  });
+
+  it("names the one set the patched rows share", async () => {
+    updateRows.mockResolvedValueOnce([
+      { id: A, tcgId: "base1-58", number: "58" },
+      { id: B, tcgId: "base1-4", number: "4" },
+    ]);
+    await patch({ ids: [A, B], condition: "Near Mint" });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", "base1");
+  });
+
+  it("names no set where the patched rows are spread over several, so no other set's page is left stale", async () => {
+    updateRows.mockResolvedValueOnce([
+      { id: A, tcgId: "base1-58", number: "58" },
+      { id: B, tcgId: "sv03pt5-25", number: "25" },
+    ]);
+    await patch({ ids: [A, B], condition: "Near Mint" });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
   });
 
   it("refuses ids that are missing, empty, not row ids, repeated or too many", async () => {

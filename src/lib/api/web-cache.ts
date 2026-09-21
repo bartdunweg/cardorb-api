@@ -1,3 +1,5 @@
+import { isSubsetNumber } from "@/lib/core/catalogue/set-galleries";
+import { setIdOf } from "@/lib/core/catalogue/tcgdex-language";
 import { usernameOf } from "./viewer";
 
 /**
@@ -27,14 +29,59 @@ import { usernameOf } from "./viewer";
  * `favorite` is a star and nothing else: the web keeps the binders and the set
  * pages, which no star changes. `dexFace` is a Pokédex face chosen and nothing else: the web
  * forgets only the lists that keep which card fronts a slot.
+ *
+ * `set` names the set the written card is in, where the route knows it (`webSetOf`). The web keeps
+ * one set's page per set, so a card write that names its set drops that page and leaves every other
+ * set's standing; one that cannot name it (an import, a bulk patch across sets, a row with no
+ * catalogue id) drops them all, which is what every write did before. A name the web cannot read is
+ * the same as none there, so a wrong one costs a wider forget and never a stale page.
  */
 export const WEB_WRITES = ["all", "cards", "favorite", "binders", "profile", "dexFace"] as const;
 export type WebWrite = (typeof WEB_WRITES)[number];
+
+/**
+ * The set a written row belongs to, as the web files its set pages: the catalogue card id up to its
+ * last dash (`setIdOf`). Null for a row with no catalogue id, a card typed in by hand, and then the
+ * web forgets every set page rather than the wrong one.
+ *
+ * Null for a subset's card too, a Trainer Gallery, a Galarian Gallery, a Shiny Vault, a Classic
+ * Collection or an Unown Collection. Those are sets of their own in the catalogue, so TG12 of
+ * Brilliant Stars carries `swsh12tg`, but the shelf folds them into the parent and the page a
+ * reader has is the parent's, `swsh12` (set-galleries.ts, GET /v1/catalog/sets/{setId}). Naming
+ * `swsh12tg` would drop a page only a kept address reads and leave the one showing the card
+ * standing: that forgets less than before, the one thing this must never do. The parent's id is
+ * not to be had here, it takes the shelf, so the row names no set and every set page goes, as it
+ * did before any set was named.
+ */
+export const webSetOf = (
+  tcgId: string | null | undefined,
+  number?: string | null,
+): string | null => {
+  // A row that cannot say which number it wrote cannot say which page shows it: a subset's card
+  // reads as its parent's page, and without the number there is no telling the two apart.
+  if (!tcgId || !number || isSubsetNumber(number)) return null;
+  // Lower case, as the API resolves a set id: the web files its page under the address's own
+  // spelling and folds the same way, so `BASE1` and `base1` are one piece (web#769).
+  return setIdOf(tcgId)?.toLowerCase() ?? null;
+};
+
+/**
+ * The one set a group of written rows shares, where they share one: a bulk patch is usually a
+ * handful of copies of the same card or one shelf's worth. Rows spread over several sets are null,
+ * and the web forgets every set page, because naming one of them would leave the others stale.
+ */
+export const webSetOfAll = (
+  rows: readonly { tcgId?: string | null; number?: string | null }[],
+): string | null => {
+  const sets = new Set(rows.map((row) => webSetOf(row.tcgId, row.number)));
+  return sets.size === 1 ? ([...sets][0] ?? null) : null;
+};
 
 const WEB_TIMEOUT_MS = 2_000;
 export async function forgetOnTheWeb(
   who: { userId: string; token?: string },
   write: WebWrite,
+  set?: string | null,
 ): Promise<void> {
   const url = process.env.WEB_REVALIDATE_URL?.trim();
   const secret = process.env.WEB_REVALIDATE_SECRET?.trim();
@@ -48,7 +95,7 @@ export async function forgetOnTheWeb(
     const res = await fetch(url, {
       method: "POST",
       headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
-      body: JSON.stringify({ userId: who.userId, username, write }),
+      body: JSON.stringify({ userId: who.userId, username, write, ...(set ? { set } : {}) }),
       cache: "no-store",
       signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
     });

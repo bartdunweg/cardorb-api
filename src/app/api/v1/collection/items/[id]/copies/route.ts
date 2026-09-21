@@ -8,7 +8,7 @@ import { findFolder } from "@/lib/core/collection/collection";
 import { cardsTag, UUID, validateCopyBody } from "@/lib/core/collection/collection-row";
 import { copyRow } from "@/lib/storage/collection";
 
-import { forgetOnTheWeb } from "@/lib/api/web-cache";
+import { forgetOnTheWeb, webSetOf } from "@/lib/api/web-cache";
 /**
  * One more copy of a row, as a row of its own: the same card and inventory, with
  * the differences given, `count` held, pulled now unless `acquiredAt` says when.
@@ -70,7 +70,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!row) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined }, "cards");
+  await forgetOnTheWeb(
+    { userId: who.userId, token: bearer(req) ?? undefined },
+    "cards",
+    webSetOf(row.tcgId, row.number),
+  );
   return NextResponse.json({ ok: true, card: row }, { status: 201, headers: readHeaders(req) });
 }
 

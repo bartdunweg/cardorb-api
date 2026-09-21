@@ -31,7 +31,7 @@ import {
 import { BODY_LIMIT, readJsonBody } from "@/lib/api/body";
 import { bearer } from "@/lib/api/viewer";
 
-import { forgetOnTheWeb } from "@/lib/api/web-cache";
+import { forgetOnTheWeb, webSetOf } from "@/lib/api/web-cache";
 import { copyPictureOf } from "@/lib/core/catalogue/print-pictures";
 import { fullArtIdsAmong, printPicturesOfCards } from "@/lib/storage/postgres";
 import { adminClient } from "@/lib/storage/supabase";
@@ -319,7 +319,11 @@ export async function POST(req: Request) {
   // zero is what makes the card the writer's own write rather than the one
   // after it.
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined }, "cards");
+  await forgetOnTheWeb(
+    { userId: who.userId, token: bearer(req) ?? undefined },
+    "cards",
+    webSetOf(result.draft.tcgId, result.draft.number),
+  );
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });
 }

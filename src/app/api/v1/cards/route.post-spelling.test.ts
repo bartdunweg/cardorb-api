@@ -73,6 +73,16 @@ vi.mock("@/lib/storage/collection", () => ({
   createRow: (draft: Record<string, unknown>) => createRow(draft),
 }));
 
+/* The word to the web, with every argument the route hands it: the set is one of them, and a route
+   that stopped naming it would have the web forget every set page instead of the one that changed. */
+const forgetOnTheWeb = vi.fn(
+  async (_who: { userId: string }, _write: string, _set?: string | null) => undefined,
+);
+vi.mock("@/lib/api/web-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/web-cache")>()),
+  forgetOnTheWeb: (...a: unknown[]) => forgetOnTheWeb(...(a as [{ userId: string }, string])),
+}));
+
 const { POST } = await import("./route");
 
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
@@ -103,6 +113,22 @@ beforeEach(() => {
   asked.length = 0;
   written.length = 0;
   authorise.mockResolvedValue(VIEWER);
+});
+
+describe("POST /v1/cards tells the web which set it wrote in", () => {
+  it("names the added card's own set, from the id the draft carries", async () => {
+    await post(draft({ tcgId: "smp-SM168" }));
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+      "smp",
+    );
+  });
+
+  it("names no set for a card with no catalogue id, and the web then forgets every set page", async () => {
+    await post(draft({}));
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
+  });
 });
 
 describe("POST /v1/cards spells the row as the catalogue does", () => {
