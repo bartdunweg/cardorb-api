@@ -89,10 +89,29 @@ describe("forgetOnTheWeb", () => {
     // A Japanese promo id holds a dash of its own: the set is `S-P`, not `S`.
     expect(webSetOf("S-P-051")).toBe("S-P");
     expect(webSetOf(null)).toBeNull();
-    expect(webSetOfAll(["base1-58", "base1-4"])).toBe("base1");
-    expect(webSetOfAll(["base1-58", "sv03pt5-25"])).toBeNull();
-    expect(webSetOfAll(["base1-58", null])).toBeNull();
+    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: "base1-4" }])).toBe("base1");
+    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: "sv03pt5-25" }])).toBeNull();
+    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: null }])).toBeNull();
     expect(webSetOfAll([])).toBeNull();
+  });
+
+  it("names no set for a subset's card, whose page on the web is its parent's", () => {
+    // A gallery, a Shiny Vault, a Classic Collection and an Unown Collection are sets of their own
+    // in the catalogue and folded into the parent on the shelf, so the page holding TG12 is
+    // swsh12's, not swsh12tg's. Naming the card's own set would leave that page standing, which is
+    // forgetting less than before; naming none forgets every set page, as it did before.
+    expect(webSetOf("swsh12tg-TG12", "TG12")).toBeNull();
+    expect(webSetOf("swsh45sv-SV001", "SV001")).toBeNull();
+    expect(webSetOf("cel25c-CC001", "CC001")).toBeNull();
+    expect(webSetOf("ex11-A", "A")).toBeNull();
+    // The set's own cards are named as before: a number is not a subset's for being short.
+    expect(webSetOf("swsh12-1", "1")).toBe("swsh12");
+    expect(
+      webSetOfAll([
+        { tcgId: "swsh12-1", number: "1" },
+        { tcgId: "swsh12tg-TG12", number: "TG12" },
+      ]),
+    ).toBeNull();
   });
 
   it("swallows a web that does not answer, and one that refuses", async () => {

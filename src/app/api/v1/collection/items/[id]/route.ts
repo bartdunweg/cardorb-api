@@ -116,7 +116,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     only === "isFavorite" ? "favorite" : only === "dexFace" ? "dexFace" : "cards",
-    webSetOf(row.tcgId),
+    webSetOf(row.tcgId, row.number),
   );
 
   return NextResponse.json({ ok: true, card: row }, { headers: readHeaders(req) });
@@ -144,7 +144,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     "cards",
-    webSetOf(gone.tcgId),
+    webSetOf(gone.tcgId, gone.number),
   );
 
   // The row as it was, in the same `card` the PATCH above answers with, so a

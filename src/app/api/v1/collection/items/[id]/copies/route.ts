@@ -73,7 +73,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     "cards",
-    webSetOf(row.tcgId),
+    webSetOf(row.tcgId, row.number),
   );
   return NextResponse.json({ ok: true, card: row }, { status: 201, headers: readHeaders(req) });
 }

@@ -322,7 +322,7 @@ export async function POST(req: Request) {
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     "cards",
-    webSetOf(result.draft.tcgId),
+    webSetOf(result.draft.tcgId, result.draft.number),
   );
 
   return NextResponse.json({ ok: true, id }, { headers: readHeaders(req) });

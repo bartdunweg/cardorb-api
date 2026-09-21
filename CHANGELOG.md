@@ -4,6 +4,10 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-21
+
+- A card written through the API names the set it is in when it tells cardorb.com, so the web forgets that set's page alone and every other set page it holds keeps standing. A write that cannot name one set, a CSV import, a bulk patch across several sets, a card with no catalogue id, and a subset's card whose page on the web is its parent's, forgets every set page as before.
+
 ## 2026-09-20
 
 - A cheap card's price line no longer wobbles on a stray reading: a day far off the rest of the line is held at the figure before it whatever the card is worth, and a line worth a few cents is left exactly as TCGplayer sent it instead of being corrected by a cent.

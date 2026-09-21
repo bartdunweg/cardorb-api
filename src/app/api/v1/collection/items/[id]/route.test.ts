@@ -154,6 +154,19 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
   });
 
+  it("names no set for a gallery card, whose page on the web is the parent set's", async () => {
+    // swsh12tg is a set of its own in the catalogue and folded into Brilliant Stars on the shelf,
+    // so the page holding this card is swsh12's. Naming swsh12tg would leave it standing.
+    updateRow.mockResolvedValueOnce({
+      id: ID,
+      tcgId: "swsh12tg-TG12",
+      number: "TG12",
+      quantity: 2,
+    });
+    await patch({ quantity: 2 });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
+  });
+
   it("names a star alone a favorite write, so the web keeps the binders and the sets", async () => {
     await patch({ isFavorite: false });
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(

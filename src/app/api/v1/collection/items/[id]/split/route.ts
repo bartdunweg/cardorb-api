@@ -79,7 +79,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     "cards",
-    webSetOf(split.copy.tcgId),
+    webSetOf(split.copy.tcgId, split.copy.number),
   );
   return NextResponse.json(
     { ok: true, card: split.copy, source: split.source },

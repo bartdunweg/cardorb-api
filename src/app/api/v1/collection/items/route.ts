@@ -76,7 +76,7 @@ export async function PATCH(req: Request) {
   await forgetOnTheWeb(
     { userId: who.userId, token: bearer(req) ?? undefined },
     "cards",
-    webSetOfAll(cards.map((card) => card.tcgId)),
+    webSetOfAll(cards),
   );
 
   return NextResponse.json({ ok: true, cards }, { headers: readHeaders(req) });

@@ -1,3 +1,4 @@
+import { isSubsetNumber } from "@/lib/core/catalogue/set-galleries";
 import { setIdOf } from "@/lib/core/catalogue/tcgdex-language";
 import { usernameOf } from "./viewer";
 
@@ -42,17 +43,30 @@ export type WebWrite = (typeof WEB_WRITES)[number];
  * The set a written row belongs to, as the web files its set pages: the catalogue card id up to its
  * last dash (`setIdOf`). Null for a row with no catalogue id, a card typed in by hand, and then the
  * web forgets every set page rather than the wrong one.
+ *
+ * Null for a subset's card too, a Trainer Gallery, a Galarian Gallery, a Shiny Vault, a Classic
+ * Collection or an Unown Collection. Those are sets of their own in the catalogue, so TG12 of
+ * Brilliant Stars carries `swsh12tg`, but the shelf folds them into the parent and the page a
+ * reader has is the parent's, `swsh12` (set-galleries.ts, GET /v1/catalog/sets/{setId}). Naming
+ * `swsh12tg` would drop a page only a kept address reads and leave the one showing the card
+ * standing: that forgets less than before, the one thing this must never do. The parent's id is
+ * not to be had here, it takes the shelf, so the row names no set and every set page goes, as it
+ * did before any set was named.
  */
-export const webSetOf = (tcgId: string | null | undefined): string | null =>
-  tcgId ? setIdOf(tcgId) : null;
+export const webSetOf = (
+  tcgId: string | null | undefined,
+  number?: string | null,
+): string | null => (tcgId && !(number && isSubsetNumber(number)) ? setIdOf(tcgId) : null);
 
 /**
  * The one set a group of written rows shares, where they share one: a bulk patch is usually a
  * handful of copies of the same card or one shelf's worth. Rows spread over several sets are null,
  * and the web forgets every set page, because naming one of them would leave the others stale.
  */
-export const webSetOfAll = (tcgIds: readonly (string | null | undefined)[]): string | null => {
-  const sets = new Set(tcgIds.map(webSetOf));
+export const webSetOfAll = (
+  rows: readonly { tcgId?: string | null; number?: string | null }[],
+): string | null => {
+  const sets = new Set(rows.map((row) => webSetOf(row.tcgId, row.number)));
   return sets.size === 1 ? ([...sets][0] ?? null) : null;
 };
 
