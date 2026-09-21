@@ -12,11 +12,14 @@ const updateRow = vi.fn();
 const deleteRow = vi.fn();
 const findFolder = vi.fn();
 const forgetOnTheWeb = vi.fn(
-  async (_who: { userId: string; token?: string }, _write: string) => undefined,
+  async (_who: { userId: string; token?: string }, _write: string, _set?: string | null) =>
+    undefined,
 );
-vi.mock("@/lib/api/web-cache", () => ({
-  forgetOnTheWeb: (who: { userId: string; token?: string }, write: string) =>
-    forgetOnTheWeb(who, write),
+// Every argument, the set among them: the web files a set page per set, so a route that drops the
+// set from the word it sends forgets every set page instead of the one that changed.
+vi.mock("@/lib/api/web-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/web-cache")>()),
+  forgetOnTheWeb: (...a: unknown[]) => forgetOnTheWeb(...(a as [{ userId: string }, string])),
 }));
 
 // The real guard.ts pulls in lib/api/viewer.ts, which is `import "server-only"`
@@ -51,6 +54,7 @@ const ID = "11111111-1111-1111-1111-111111111111";
 /** The row a delete hands back, as the store would: everything a restore needs. */
 const REMOVED = {
   id: ID,
+  tcgId: "base1-58",
   name: "Pikachu",
   number: "25",
   setName: "Base Set",
@@ -110,7 +114,7 @@ beforeEach(() => {
   findFolder.mockImplementation(
     async (_u: string, id: string) => folders.find((f) => f.id === id) ?? null,
   );
-  updateRow.mockResolvedValue({ id: ID, isFavorite: true });
+  updateRow.mockResolvedValue({ id: ID, tcgId: "sv03pt5-25", isFavorite: true });
   deleteRow.mockResolvedValue(REMOVED);
 });
 afterEach(() => {
@@ -139,7 +143,15 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "cards",
+      // The patched row's own set, so the web drops that set's page and keeps every other one.
+      "sv03pt5",
     );
+  });
+
+  it("names no set for a row with no catalogue id, and the web then forgets every set page", async () => {
+    updateRow.mockResolvedValueOnce({ id: ID, tcgId: null, quantity: 2 });
+    await patch({ quantity: 2 });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
   });
 
   it("names a star alone a favorite write, so the web keeps the binders and the sets", async () => {
@@ -147,6 +159,7 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "favorite",
+      "sv03pt5",
     );
   });
 
@@ -155,6 +168,7 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "cards",
+      "sv03pt5",
     );
   });
 
@@ -163,6 +177,7 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "dexFace",
+      "sv03pt5",
     );
   });
 
@@ -171,6 +186,7 @@ describe("PATCH /api/v1/cards/[id]", () => {
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
       "cards",
+      "sv03pt5",
     );
   });
 
@@ -259,6 +275,15 @@ describe("DELETE /api/v1/cards/[id]", () => {
     const res = await del();
     expect(res.status).toBe(200);
     expect(deleteRow).toHaveBeenCalledWith("me-uuid", ID, "t.o.k.e.n");
+  });
+
+  it("tells the web the set of the row it removed, from the row it hands back", async () => {
+    await del();
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+      "base1",
+    );
   });
 
   it("hands back the row it removed, in the `card` the PATCH above answers with", async () => {

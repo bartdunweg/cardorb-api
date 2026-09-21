@@ -7,7 +7,7 @@ import { bearer } from "@/lib/api/viewer";
 import { findFolder } from "@/lib/core/collection/collection";
 import { cardsTag, validateCardPatch, validateItemIds } from "@/lib/core/collection/collection-row";
 import { updateRows } from "@/lib/storage/collection";
-import { forgetOnTheWeb } from "@/lib/api/web-cache";
+import { forgetOnTheWeb, webSetOfAll } from "@/lib/api/web-cache";
 
 /**
  * The same change to many copies at once.
@@ -73,7 +73,11 @@ export async function PATCH(req: Request) {
   if (cards.length === 0) return apiError(404, NOT_FOUND, undefined, { headers: readHeaders(req) });
 
   revalidateTag(cardsTag(who.userId), { expire: 0 });
-  await forgetOnTheWeb({ userId: who.userId, token: bearer(req) ?? undefined }, "cards");
+  await forgetOnTheWeb(
+    { userId: who.userId, token: bearer(req) ?? undefined },
+    "cards",
+    webSetOfAll(cards.map((card) => card.tcgId)),
+  );
 
   return NextResponse.json({ ok: true, cards }, { headers: readHeaders(req) });
 }

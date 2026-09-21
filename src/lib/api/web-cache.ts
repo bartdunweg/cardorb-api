@@ -1,3 +1,4 @@
+import { setIdOf } from "@/lib/core/catalogue/tcgdex-language";
 import { usernameOf } from "./viewer";
 
 /**
@@ -27,14 +28,39 @@ import { usernameOf } from "./viewer";
  * `favorite` is a star and nothing else: the web keeps the binders and the set
  * pages, which no star changes. `dexFace` is a Pokédex face chosen and nothing else: the web
  * forgets only the lists that keep which card fronts a slot.
+ *
+ * `set` names the set the written card is in, where the route knows it (`webSetOf`). The web keeps
+ * one set's page per set, so a card write that names its set drops that page and leaves every other
+ * set's standing; one that cannot name it (an import, a bulk patch across sets, a row with no
+ * catalogue id) drops them all, which is what every write did before. A name the web cannot read is
+ * the same as none there, so a wrong one costs a wider forget and never a stale page.
  */
 export const WEB_WRITES = ["all", "cards", "favorite", "binders", "profile", "dexFace"] as const;
 export type WebWrite = (typeof WEB_WRITES)[number];
+
+/**
+ * The set a written row belongs to, as the web files its set pages: the catalogue card id up to its
+ * last dash (`setIdOf`). Null for a row with no catalogue id, a card typed in by hand, and then the
+ * web forgets every set page rather than the wrong one.
+ */
+export const webSetOf = (tcgId: string | null | undefined): string | null =>
+  tcgId ? setIdOf(tcgId) : null;
+
+/**
+ * The one set a group of written rows shares, where they share one: a bulk patch is usually a
+ * handful of copies of the same card or one shelf's worth. Rows spread over several sets are null,
+ * and the web forgets every set page, because naming one of them would leave the others stale.
+ */
+export const webSetOfAll = (tcgIds: readonly (string | null | undefined)[]): string | null => {
+  const sets = new Set(tcgIds.map(webSetOf));
+  return sets.size === 1 ? ([...sets][0] ?? null) : null;
+};
 
 const WEB_TIMEOUT_MS = 2_000;
 export async function forgetOnTheWeb(
   who: { userId: string; token?: string },
   write: WebWrite,
+  set?: string | null,
 ): Promise<void> {
   const url = process.env.WEB_REVALIDATE_URL?.trim();
   const secret = process.env.WEB_REVALIDATE_SECRET?.trim();
@@ -48,7 +74,7 @@ export async function forgetOnTheWeb(
     const res = await fetch(url, {
       method: "POST",
       headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
-      body: JSON.stringify({ userId: who.userId, username, write }),
+      body: JSON.stringify({ userId: who.userId, username, write, ...(set ? { set } : {}) }),
       cache: "no-store",
       signal: AbortSignal.timeout(WEB_TIMEOUT_MS),
     });

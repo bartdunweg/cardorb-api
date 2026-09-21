@@ -20,6 +20,16 @@ vi.mock("@/lib/storage/collection", () => ({
 vi.mock("@/lib/core/collection/collection", () => ({
   findFolder: (...a: unknown[]) => findFolder(...a),
 }));
+const forgetOnTheWeb = vi.fn(
+  async (_who: { userId: string; token?: string }, _write: string, _set?: string | null) =>
+    undefined,
+);
+// Every argument, the set among them: without it the route would forget every set page on the web
+// and this test would not notice.
+vi.mock("@/lib/api/web-cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api/web-cache")>()),
+  forgetOnTheWeb: (...a: unknown[]) => forgetOnTheWeb(...(a as [{ userId: string }, string])),
+}));
 vi.mock("next/cache", () => ({ revalidateTag: () => {} }));
 
 const { POST } = await import("./route");
@@ -27,7 +37,7 @@ const { POST } = await import("./route");
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
 const ID = "11111111-1111-1111-1111-111111111111";
 const FOLDER = "22222222-2222-4222-8222-222222222222";
-const ROW = { id: "row-2", name: "Pikachu", quantity: 1 };
+const ROW = { id: "row-2", tcgId: "base1-58", name: "Pikachu", quantity: 1 };
 
 const post = (body: unknown, id = ID) =>
   POST(
@@ -47,6 +57,15 @@ beforeEach(() => {
 });
 
 describe("POST /api/v1/collection/items/{id}/split", () => {
+  it("tells the web a card write in the set the split copy is in", async () => {
+    await post({ count: 1, condition: "Played" });
+    expect(forgetOnTheWeb).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "me-uuid" }),
+      "cards",
+      "base1",
+    );
+  });
+
   it("refuses a caller the guard refuses, before the store", async () => {
     authoriseWrite.mockResolvedValue({ status: 401, error: "No.", headers: {} });
     expect((await post({ language: "ja" })).status).toBe(401);
