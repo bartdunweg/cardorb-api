@@ -84,14 +84,29 @@ describe("forgetOnTheWeb", () => {
   });
 
   it("reads a set off a card id at its last dash, and off a group only where they share one", () => {
-    expect(webSetOf("base1-58")).toBe("base1");
-    expect(webSetOf("sv03.5-100")).toBe("sv03.5");
-    // A Japanese promo id holds a dash of its own: the set is `S-P`, not `S`.
-    expect(webSetOf("S-P-051")).toBe("S-P");
+    expect(webSetOf("base1-58", "58")).toBe("base1");
+    expect(webSetOf("sv03.5-100", "100")).toBe("sv03.5");
+    // A Japanese promo id holds a dash of its own: the set is `S-P`, not `S`, and it is folded
+    // to lower case, as the web folds the piece its page is filed under (web#769).
+    expect(webSetOf("S-P-051", "051")).toBe("s-p");
+    expect(webSetOf("BASE1-58", "58")).toBe("base1");
     expect(webSetOf(null)).toBeNull();
-    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: "base1-4" }])).toBe("base1");
-    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: "sv03pt5-25" }])).toBeNull();
-    expect(webSetOfAll([{ tcgId: "base1-58" }, { tcgId: null }])).toBeNull();
+    // A row whose number the write cannot say names no set: a subset's card is told apart by it.
+    expect(webSetOf("base1-58")).toBeNull();
+    expect(webSetOf("base1-58", "")).toBeNull();
+    expect(
+      webSetOfAll([
+        { tcgId: "base1-58", number: "58" },
+        { tcgId: "base1-4", number: "4" },
+      ]),
+    ).toBe("base1");
+    expect(
+      webSetOfAll([
+        { tcgId: "base1-58", number: "58" },
+        { tcgId: "sv03pt5-25", number: "25" },
+      ]),
+    ).toBeNull();
+    expect(webSetOfAll([{ tcgId: "base1-58", number: "58" }, { tcgId: null }])).toBeNull();
     expect(webSetOfAll([])).toBeNull();
   });
 
@@ -106,6 +121,8 @@ describe("forgetOnTheWeb", () => {
     expect(webSetOf("ex11-A", "A")).toBeNull();
     // The set's own cards are named as before: a number is not a subset's for being short.
     expect(webSetOf("swsh12-1", "1")).toBe("swsh12");
+    // A subset's card with no number in hand is not told apart, so it names no set either.
+    expect(webSetOf("swsh12tg-TG12")).toBeNull();
     expect(
       webSetOfAll([
         { tcgId: "swsh12-1", number: "1" },

@@ -37,7 +37,7 @@ const { POST } = await import("./route");
 const VIEWER = { userId: "me-uuid", email: "me@example.com", username: "me" };
 const ID = "11111111-1111-1111-1111-111111111111";
 const FOLDER = "22222222-2222-4222-8222-222222222222";
-const ROW = { id: "row-2", tcgId: "base1-58", name: "Pikachu", quantity: 1 };
+const ROW = { id: "row-2", tcgId: "base1-58", number: "58", name: "Pikachu", quantity: 1 };
 
 const post = (body: unknown, id = ID) => postRaw(JSON.stringify(body), id);
 

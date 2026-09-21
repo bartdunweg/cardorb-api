@@ -114,7 +114,7 @@ beforeEach(() => {
   findFolder.mockImplementation(
     async (_u: string, id: string) => folders.find((f) => f.id === id) ?? null,
   );
-  updateRow.mockResolvedValue({ id: ID, tcgId: "sv03pt5-25", isFavorite: true });
+  updateRow.mockResolvedValue({ id: ID, tcgId: "sv03pt5-25", number: "25", isFavorite: true });
   deleteRow.mockResolvedValue(REMOVED);
 });
 afterEach(() => {

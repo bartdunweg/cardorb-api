@@ -56,7 +56,14 @@ export type WebWrite = (typeof WEB_WRITES)[number];
 export const webSetOf = (
   tcgId: string | null | undefined,
   number?: string | null,
-): string | null => (tcgId && !(number && isSubsetNumber(number)) ? setIdOf(tcgId) : null);
+): string | null => {
+  // A row that cannot say which number it wrote cannot say which page shows it: a subset's card
+  // reads as its parent's page, and without the number there is no telling the two apart.
+  if (!tcgId || !number || isSubsetNumber(number)) return null;
+  // Lower case, as the API resolves a set id: the web files its page under the address's own
+  // spelling and folds the same way, so `BASE1` and `base1` are one piece (web#769).
+  return setIdOf(tcgId)?.toLowerCase() ?? null;
+};
 
 /**
  * The one set a group of written rows shares, where they share one: a bulk patch is usually a

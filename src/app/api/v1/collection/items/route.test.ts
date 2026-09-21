@@ -63,7 +63,9 @@ beforeEach(() => {
         ? { id: KANTO, name: "Kanto", kind: "rule", rule: { dex: { from: 1, to: 151 } } }
         : null,
   );
-  updateRows.mockResolvedValue([{ id: A, tcgId: "sv03pt5-25", condition: "Near Mint" }]);
+  updateRows.mockResolvedValue([
+    { id: A, tcgId: "sv03pt5-25", number: "25", condition: "Near Mint" },
+  ]);
 });
 afterEach(() => updateRows.mockClear());
 
@@ -85,7 +87,7 @@ describe("PATCH /api/v1/collection/items", () => {
     );
     expect(await res.json()).toEqual({
       ok: true,
-      cards: [{ id: A, tcgId: "sv03pt5-25", condition: "Near Mint" }],
+      cards: [{ id: A, tcgId: "sv03pt5-25", number: "25", condition: "Near Mint" }],
     });
     expect(forgetOnTheWeb).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "me-uuid" }),
@@ -96,8 +98,8 @@ describe("PATCH /api/v1/collection/items", () => {
 
   it("names the one set the patched rows share", async () => {
     updateRows.mockResolvedValueOnce([
-      { id: A, tcgId: "base1-58" },
-      { id: B, tcgId: "base1-4" },
+      { id: A, tcgId: "base1-58", number: "58" },
+      { id: B, tcgId: "base1-4", number: "4" },
     ]);
     await patch({ ids: [A, B], condition: "Near Mint" });
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", "base1");
@@ -105,8 +107,8 @@ describe("PATCH /api/v1/collection/items", () => {
 
   it("names no set where the patched rows are spread over several, so no other set's page is left stale", async () => {
     updateRows.mockResolvedValueOnce([
-      { id: A, tcgId: "base1-58" },
-      { id: B, tcgId: "sv03pt5-25" },
+      { id: A, tcgId: "base1-58", number: "58" },
+      { id: B, tcgId: "sv03pt5-25", number: "25" },
     ]);
     await patch({ ids: [A, B], condition: "Near Mint" });
     expect(forgetOnTheWeb).toHaveBeenLastCalledWith(expect.anything(), "cards", null);
