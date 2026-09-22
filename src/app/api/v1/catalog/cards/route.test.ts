@@ -13,8 +13,16 @@ vi.mock("@/lib/core/catalogue/page-printings", () => ({
 }));
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
+  /* One mock behind both doors, as the search route's tests do it. The route asks
+     authoriseOpen() since the catalogue opened, and every test written against authorise()
+     still says what it said: a viewer, a refusal, or now null for a reader who offered no
+     credential at all. */
+  authoriseOpen: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
-  readHeaders: () => ({}),
+  /* Distinguishable on purpose: the point of two header sets is which answer carries which,
+     and `{}` for both is what let a cacheable refusal past review on the shelf route. */
+  readHeaders: () => ({ "Cache-Control": "private, no-store" }),
+  openReadHeaders: () => ({ "Cache-Control": "public, max-age=0, s-maxage=60" }),
 }));
 vi.mock("@/lib/core/catalogue/mirror", () => ({
   mirrorCards: (...a: unknown[]) => mirrorCards(...a),
@@ -131,5 +139,64 @@ describe("GET /api/v1/catalog/cards", () => {
     });
     const { cards } = await (await get("base1-4")).json();
     expect(cards[0]).toMatchObject({ owned: true, quantity: 2, itemIds: ["row-1"] });
+  });
+
+  /* The command palette asks this route for the twenty hits it is about to show, and it has to
+     work for a visitor with no account. What such a reader must not get is a holding field
+     reading zero: absent says "we did not look", where 0 and false would say "you have none of
+     this", a claim about a collection nobody named. */
+  describe("without a credential", () => {
+    beforeEach(() => {
+      authorise.mockResolvedValue(null);
+    });
+
+    it("answers the cards to a reader who offered nothing", async () => {
+      const res = await get("base1-4");
+      expect(res.status).toBe(200);
+      const { cards } = await res.json();
+      expect(cards).toHaveLength(1);
+      expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard", printedNumber: "4" });
+    });
+
+    it("leaves the holding fields out rather than answering none held", async () => {
+      const { cards } = await (await get("base1-4")).json();
+      expect(cards[0]).not.toHaveProperty("owned");
+      expect(cards[0]).not.toHaveProperty("wishlist");
+      expect(cards[0]).not.toHaveProperty("quantity");
+      expect(cards[0]).not.toHaveProperty("itemIds");
+    });
+
+    it("keeps the price, which is the card's own fact", async () => {
+      tcgplayerPricesFor.mockImplementation(
+        async () => new Map([["base1-4", { price: { market: 9.5 }, printing: "holo" }]]),
+      );
+      const { cards } = await (await get("base1-4")).json();
+      expect(cards[0]).toMatchObject({ price: { market: 9.5 }, printing: "holo" });
+    });
+
+    it("does not read anybody's rows", async () => {
+      expect((await get("base1-4")).status).toBe(200);
+      expect(getRows).not.toHaveBeenCalled();
+    });
+
+    it("answers with the open window, which a shared cache may hold", async () => {
+      const res = await get("base1-4");
+      expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+    });
+
+    /* A refusal is nobody's to hold: sent with the open window, one bad minute would be stored
+       by the shared cache and handed to every signed-out visitor until it expired. */
+    it("sends a refusal private, not with the open window", async () => {
+      authorise.mockResolvedValue({ status: 401, error: "Sign in to see this." });
+      const res = await get("base1-4");
+      expect(res.status).toBe(401);
+      expect(res.headers.get("cache-control")).toBe("private, no-store");
+    });
+
+    it("sends the 400 on a bad id list private too", async () => {
+      const res = await get("");
+      expect(res.status).toBe(400);
+      expect(res.headers.get("cache-control")).toBe("private, no-store");
+    });
   });
 });
