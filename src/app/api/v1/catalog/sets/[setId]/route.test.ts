@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
+const authoriseOpen = vi.fn();
 const englishSet = vi.fn();
 
 const SET = {
@@ -24,8 +25,10 @@ const setIn = vi.fn();
    test; the ownership join is the real, pure one. */
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
-  refused: (r: { status?: number }) => "status" in r,
+  authoriseOpen: (...a: unknown[]) => authoriseOpen(...a),
+  refused: (r: { status?: number } | null) => !!r && "status" in r,
   readHeaders: () => ({}),
+  openReadHeaders: () => ({}),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
@@ -105,6 +108,9 @@ const open = (query = "", setId = "base1") =>
 
 beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
+  /* The open door answers what the closed one would, so every test written before the catalogue
+     opened reads unchanged. The tests below that want a stranger say so themselves. */
+  authoriseOpen.mockImplementation((...a: unknown[]) => authorise(...a));
   englishSet.mockResolvedValue({ set: SET, cards: [card("1"), card("2"), card("4", "Charizard")] });
   getRows.mockResolvedValue({ rows: [], failed: false });
   tcgplayerPricesFor.mockResolvedValue(new Map());
@@ -462,5 +468,42 @@ describe("GET /api/v1/catalog/sets/[setId]", () => {
     expect(body.totalCount).toBe(3);
     expect(body.ownedCount).toBe(0);
     expect(body.collectionUnavailable).toBe(true);
+  });
+});
+
+describe("without a credential", () => {
+  beforeEach(() => {
+    authoriseOpen.mockResolvedValue(null);
+  });
+
+  it("answers the set and its cards to a reader who offered nothing", async () => {
+    const res = await open();
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.set.id).toBe("base1");
+    expect(body.cards.length).toBeGreaterThan(0);
+  });
+
+  /* Bart's decision: a card's market price is a fact about the card, not about the reader, so it
+     stays in the answer nobody signed for. */
+  it("still prices the cards", async () => {
+    tcgplayerPricesFor.mockResolvedValue(new Map([["base1-4", { price: { market: 340 } }]]));
+    const body = await (await open()).json();
+    expect(body.cards.find((c: { id: string }) => c.id === "base1-4").price).toEqual({
+      market: 340,
+    });
+  });
+
+  /* Absent, never zero and never false: "none" and "not asked" have to stay tellable apart, or a
+     stranger's page reads as an empty collection rather than as nobody's. */
+  it("marks nothing, rather than marking everything as not held", async () => {
+    const body = await (await open()).json();
+    expect(body).not.toHaveProperty("ownedCount");
+    expect(body.cards[0]).not.toHaveProperty("owned");
+  });
+
+  it("asks the collection nothing", async () => {
+    await open();
+    expect(getRows).not.toHaveBeenCalled();
   });
 });
