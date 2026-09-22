@@ -7,7 +7,8 @@ import { searchCards } from "@/lib/core/catalogue/tcgdex-search";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { pagePrintings } from "@/lib/core/catalogue/page-printings";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import type { CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
+import { authoriseOpen, openReadHeaders, readHeaders, refused } from "@/lib/api/guard";
 import { bearer } from "@/lib/api/viewer";
 import { timed } from "@/lib/core/timing";
 import { adminClient } from "@/lib/storage/supabase";
@@ -42,12 +43,19 @@ import { adminClient } from "@/lib/storage/supabase";
  * query), and conflating them is exactly the bug that prompted this: see
  * git history.
  *
- * Every result now carries owned/wishlist/quantity for the caller, the same
- * fields /api/v1/catalog/sets/[setId] attaches — added with browse, because the
- * moment a search result is worth marking is the moment somebody is about to
- * add a second copy of a card they already have without meaning to. The shape
- * is additive: `{ cards }` is still `{ cards }`, and a client that ignores the
- * new fields is unaffected.
+ * A result carries owned/wishlist/quantity for a caller who said who they are,
+ * the same fields /api/v1/catalog/sets/[setId] attaches. Added with browse,
+ * because the moment a search result is worth marking is the moment somebody is
+ * about to add a second copy of a card they already have without meaning to.
+ * The shape is additive: `{ cards }` is still `{ cards }`, and a client that
+ * ignores the new fields is unaffected.
+ *
+ * A request that carries no credential is answered too, and those three fields
+ * are left out of every result rather than sent as false and 0. Absent says
+ * nobody was asked; false and 0 would say the reader holds none of this, which
+ * is a statement about a collection nobody named. It is also what lets the
+ * answer be cached for everybody at once (openReadHeaders), since it belongs to
+ * nobody. The prices stay: what a card trades at is a fact about the card.
  *
  * And a price under every result, as the set page puts one under every card:
  * a hit used to be a name to pick and nothing more, and the web's search opens
@@ -65,12 +73,16 @@ import { adminClient } from "@/lib/storage/supabase";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  const who = await authorise(req);
-  if (refused(who)) {
+  const who = await authoriseOpen(req);
+  if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
       headers: { ...readHeaders(req), ...who.headers },
     });
   }
+  /* A refusal is nobody's to keep, so it keeps readHeaders(); an answer to a reader who named
+     themselves carries their marks and keeps it too. Only the open answer is the same for
+     everybody, and only that one is worth a shared cache holding. */
+  const headers = who ? readHeaders(req) : openReadHeaders(req);
 
   const url = new URL(req.url);
   /* `?language=ja`: the Japanese catalogue rather than the English one, as the set route
@@ -116,19 +128,25 @@ export async function GET(req: Request) {
        region, and the sum is what the person waits for. Together they cost the slowest one.
        getRows() fails soft, so a store outage leaves every result unmarked rather than taking
        the search down with it; a search that fails still fails the request (502 below). */
-    const [{ cards, total }, { rows }, sets] = await Promise.all([
+    const [{ cards, total }, mine, sets] = await Promise.all([
       timed("catalogue search", () =>
         usingFilters
           ? searchCards(filters, page, language, store, { fullArt })
           : searchCards(term, page, language, store, { fullArt }),
       ),
-      timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)),
+      // No viewer, no rows: there is nobody whose collection this would be, so the read is not
+      // made at all rather than made and thrown away.
+      who ? timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)) : null,
       // Out of the catalogue's copy, as the shelf reads it; TCGdex only when the copy is empty.
       language
         ? Promise.resolve([])
         : timed("en set index", () => englishShelfSets().catch(() => [])),
     ]);
-    const marked = markOwnership(ownershipIndex(rows, language, sets), cards);
+    /* The marks go with the rows. Left unmarked the cards keep the shape the catalogue has, which
+       is the point: no owned, no wishlist, no quantity, rather than three fields saying none. */
+    const marked: CatalogueMatch[] = mine
+      ? markOwnership(ownershipIndex(mine.rows, language, sets), cards)
+      : cards;
     /* Keyed by the TCGdex id, which every hit carries and which everything priced is keyed by;
        the fallback is the set route's, for a card that came without the one. */
     const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
@@ -153,7 +171,7 @@ export async function GET(req: Request) {
         })),
         total,
       },
-      { headers: readHeaders(req) },
+      { headers },
     );
   } catch {
     return refuse("catalogue", { headers: readHeaders(req) });
