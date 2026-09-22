@@ -8,6 +8,8 @@ const tcgplayerPricesFor = vi.fn(
 );
 const pagePrintings = vi.fn(async (..._a: unknown[]) => new Map());
 /* The printings are read out of the copy; their rule has its own tests (headline-printing.test.ts). */
+const shelfRead = vi.fn(async () => [{ id: "base1", name: "Base" }]);
+
 vi.mock("@/lib/core/catalogue/page-printings", () => ({
   pagePrintings: (...a: unknown[]) => pagePrintings(...a),
 }));
@@ -28,7 +30,7 @@ vi.mock("@/lib/core/catalogue/mirror", () => ({
   mirrorCards: (...a: unknown[]) => mirrorCards(...a),
 }));
 vi.mock("@/lib/core/catalogue/catalogue", () => ({
-  englishShelfSets: async () => [{ id: "base1", name: "Base" }],
+  englishShelfSets: () => shelfRead(),
 }));
 vi.mock("@/lib/core/collection/collection", () => ({
   getRows: (...a: unknown[]) => getRows(...a),
@@ -199,4 +201,16 @@ describe("GET /api/v1/catalog/cards", () => {
       expect(res.headers.get("cache-control")).toBe("private, no-store");
     });
   });
+});
+
+/**
+ * The shelf is only ever the index ownershipIndex files a reader's rows under. Without a reader
+ * there is nothing to file, so reading it is two store round trips thrown away, on the route the
+ * palette calls for every keystroke's worth of hits.
+ */
+it("does not read the shelf it would have nothing to do with", async () => {
+  authorise.mockResolvedValue(null);
+  shelfRead.mockClear();
+  await GET(new Request("https://api.test/api/v1/catalog/cards?ids=base1-4"));
+  expect(shelfRead).not.toHaveBeenCalled();
 });

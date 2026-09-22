@@ -60,7 +60,9 @@ export async function GET(req: Request) {
       // No viewer, no rows: there is nobody whose collection this would be, so the read is not
       // made at all rather than made and thrown away.
       who ? getRows(who.userId, bearer(req) ?? undefined) : null,
-      englishShelfSets().catch(() => []),
+      /* The shelf is only ever the index that ownershipIndex files rows under, so without a
+         viewer its two store reads are made and thrown away, on this route's hottest path. */
+      who ? englishShelfSets().catch(() => []) : [],
     ]);
     /* The marks go with the rows. Left unmarked the cards keep the shape the catalogue has,
        which is the point: no owned, no wishlist, no quantity, rather than three fields saying

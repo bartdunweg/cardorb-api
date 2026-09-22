@@ -138,9 +138,11 @@ export async function GET(req: Request) {
       // made at all rather than made and thrown away.
       who ? timed("collection rows", () => getRows(who.userId, bearer(req) ?? undefined)) : null,
       // Out of the catalogue's copy, as the shelf reads it; TCGdex only when the copy is empty.
-      language
-        ? Promise.resolve([])
-        : timed("en set index", () => englishShelfSets().catch(() => [])),
+      /* Only the index ownershipIndex files rows under, so a reader who named nobody needs it
+         no more than a Japanese search does: the read is skipped rather than discarded. */
+      who && !language
+        ? timed("en set index", () => englishShelfSets().catch(() => []))
+        : Promise.resolve([]),
     ]);
     /* The marks go with the rows. Left unmarked the cards keep the shape the catalogue has, which
        is the point: no owned, no wishlist, no quantity, rather than three fields saying none. */
