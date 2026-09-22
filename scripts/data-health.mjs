@@ -183,6 +183,90 @@ check(
 );
 
 /**
+ * Sets showing one and the same logo file. A source answers a code it does not hold with a
+ * neighbour's bytes, so 30th Celebration Classic Collection wore the main set's gold wordmark under
+ * its own address (#582, the fault class #530 closed for card pictures). Grouping on the logo
+ * column alone misses that: those two URLs differ and only the files behind them are the same. Our
+ * bucket returns the file's md5 as its ETag, so one HEAD per stored logo compares the bytes without
+ * reading a file, and every group that comes out is either written down here with the reason it
+ * shares, or a set that quietly took another's logo.
+ *
+ * A group is its sets as `language:id`, sorted and joined. All of these were looked at by eye on
+ * 2026-09-22: what they share is a family's own mark (a promo star, an era's Trainer Kit wordmark),
+ * never one member's wordmark worn by another.
+ */
+const SHARED_LOGO_ON_PURPOSE = {
+  // The Black Star Promos of every era: the black PROMO star is the whole line's mark, not one era's.
+  "en:basep + en:bwp + en:dpp + en:hgssp + en:mep + en:np + en:smp + en:svp + en:swshp + en:xyp":
+    "Black Star Promos",
+  // The Japanese promo shelves answer with that same black star, under their own two codes.
+  "ja:M-P + ja:SV-P": "Japanese promo shelves",
+  // POP Series 1 to 9 carry the Pokémon Organized Play seal, which names no series.
+  "en:pop1 + en:pop2 + en:pop3 + en:pop4 + en:pop5 + en:pop6 + en:pop7 + en:pop8 + en:pop9":
+    "POP Series",
+  // Every McDonald's Collection carries the arches, the only mark those sets were given.
+  "en:2011bw + en:2012bw + en:2014xy + en:2015xy + en:2016xy + en:2017sm + en:2018sm + en:2019sm + en:2021swsh":
+    "McDonald's Collections",
+  // A Trainer Kit's halves are one box: they share the era's TRAINER KIT wordmark, per era.
+  "en:tk-ex-latia + en:tk-ex-latio + en:tk-ex-m + en:tk-ex-p": "EX Trainer Kits",
+  "en:tk-dp-l + en:tk-dp-m": "DP Trainer Kit",
+  "en:tk-hs-g + en:tk-hs-r": "HS Trainer Kit",
+  "en:tk-bw-e + en:tk-bw-z": "BW Trainer Kit",
+  "en:tk-xy-b + en:tk-xy-latia + en:tk-xy-latio + en:tk-xy-n + en:tk-xy-p + en:tk-xy-su + en:tk-xy-sy + en:tk-xy-w":
+    "XY Trainer Kits",
+  "en:tk-sm-l + en:tk-sm-r": "SM Trainer Kit",
+  // The Unown Collection is EX Unseen Forces' own subset and has no wordmark of its own (api#488).
+  "en:ex10 + en:exu": "Unseen Forces and its Unown Collection",
+  // The Classic Collection is a subset of 30th Celebration with no wordmark of its own: Bulbapedia
+  // gives it no page, pokesymbols serves the main set's file, and Scrydex answers me55c with me55's
+  // bytes (#582).
+  "en:30th + en:30th-c": "30th Celebration and its Classic Collection",
+  // The Japanese `+` shelves are the `p` shelf under a second code, one set with two names.
+  "ja:SM1+ + ja:SM1p": "Sun & Moon",
+  "ja:SM2p + ja:sm2+": "Facing a New Trial",
+  "ja:SM3+ + ja:SM3p": "Shining Legends",
+  "ja:SM4+ + ja:SM4p": "GX Battle Boost",
+  "ja:SM5+ + ja:SM5p": "Ultra Force",
+};
+const withLogo = await query(
+  "select language, id, logo from catalogue_sets where logo is not null order by language, id",
+);
+const fileOf = new Map();
+const addresses = [...new Set(withLogo.map((r) => r.logo))];
+await Promise.all(
+  Array.from({ length: 8 }, async () => {
+    for (let url = addresses.pop(); url; url = addresses.pop()) {
+      const res = await fetch(url, {
+        method: "HEAD",
+        headers: { "User-Agent": "cardorb.com" },
+      }).catch(() => null);
+      // A logo we cannot read stands for itself: an unreachable file is another check's business,
+      // and folding those together would invent a sharing group out of an outage.
+      fileOf.set(url, (res?.ok && res.headers.get("etag")) || url);
+    }
+  }),
+);
+const perFile = new Map();
+for (const row of withLogo) {
+  const file = fileOf.get(row.logo);
+  perFile.set(file, [...(perFile.get(file) ?? []), `${row.language}:${row.id}`]);
+}
+const sharingGroups = [...perFile.values()]
+  .filter((ids) => ids.length > 1)
+  .map((ids) => [...ids].sort().join(" + "))
+  .sort();
+const sharingUnmeant = sharingGroups.filter((g) => !(g in SHARED_LOGO_ON_PURPOSE));
+check(
+  "Sets that share a logo share it on purpose",
+  sharingUnmeant.length === 0,
+  `${sharingGroups.length} groups share a logo file${
+    sharingUnmeant.length
+      ? `; not written down: ${sharingUnmeant.join("; ")}`
+      : ", each written down"
+  }`,
+);
+
+/**
  * A picture copied from a Limitless folder whose code more than one English set prints. The folder
  * is one of those sets' cards, and a HEAD answers 200 for the other's number all the same: the 30
  * cards of 30th Classic Collection were copied from 30th Celebration's 30C folder, Charizard as
