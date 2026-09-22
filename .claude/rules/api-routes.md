@@ -25,11 +25,16 @@ paths:
     `/confirmation`, `/email`. You cannot be signed in to sign in.
   - **`/usernames/<name>`**, whether a name is free. It is the one open route that uses the
     service-role key, which bypasses RLS: it must never grow a field beyond taken/free.
-  - **Three under `/api/v1/catalog/`**: `/catalog/sets`, `/catalog/sets/<setId>` and
-    `/catalog/search`, which answer a caller who names nobody with the catalogue alone,
-    because the catalogue minus the holdings is nobody's secret. They call `authoriseOpen()`,
-    which refuses a credential that is offered and does not verify, and leaves every holding
-    field out rather than zeroed for a caller who offers none.
+  - **Five under `/api/v1/catalog/`**: `/catalog/sets`, `/catalog/sets/<setId>`,
+    `/catalog/search`, `/catalog/index` and `/catalog/cards`, which answer a caller who names
+    nobody with the catalogue alone, because the catalogue minus the holdings is nobody's
+    secret. They call `authoriseOpen()`, which refuses a credential that is offered and does
+    not verify, and leaves every holding field out rather than zeroed for a caller who offers
+    none. The last two are the command palette's pair, the document it searches in the browser
+    and the prices and marks it asks for the hits it shows, and the palette has to work for a
+    visitor with no account. `/catalog/index` has no holding field to leave out at all; on
+    `/catalog/cards` the price stays where the marks go, because what a card trades at is a
+    fact about the card.
   - **`/health`**.
 
   It said "the three routes under `/api/v1/public/<username>/`" and there were four of those

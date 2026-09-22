@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { classicNumberOf } from "@/lib/core/catalogue/set-codes";
 import { apiError, refuse } from "@/lib/api/respond";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { authoriseOpen, openReadHeaders, readHeaders, refused } from "@/lib/api/guard";
 import { englishShelfSets } from "@/lib/core/catalogue/catalogue";
 import { mirrorCards } from "@/lib/core/catalogue/mirror";
 import { getRows, tcgplayerPricesFor } from "@/lib/core/collection/collection";
 import { pagePrintings } from "@/lib/core/catalogue/page-printings";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
+import type { CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
 import { bearer } from "@/lib/api/viewer";
 import { adminClient } from "@/lib/storage/supabase";
 
@@ -17,19 +18,31 @@ import { adminClient } from "@/lib/storage/supabase";
  * screen. Same shape as a search hit, same reads, in parallel. `ids` is comma-separated
  * TCGdex ids, fifty at most; an id the copy lacks is left out.
  *
- * The price is a search hit's and a set tile's: the headline printing's, the one the card's sheet
- * opens on (headline-printing.ts), named in `printing`.
+ * A request that carries no credential is answered too, because the command palette that asks
+ * this route has to work for a visitor with no account. Owned, wishlist and quantity are left
+ * out of every card then, rather than sent as false and 0: absent says nobody was asked, where
+ * false and 0 would say the reader holds none of this, which is a statement about a collection
+ * nobody named. The collection is not read at all, and the answer, belonging to nobody, is the
+ * same for everybody and worth a shared cache holding (openReadHeaders).
+ *
+ * The price stays either way. The price is a search hit's and a set tile's: the headline
+ * printing's, the one the card's sheet opens on (headline-printing.ts), named in `printing`,
+ * and what a card trades at is a fact about the card rather than about its reader.
  */
 export const dynamic = "force-dynamic";
 const MAX_IDS = 50;
 
 export async function GET(req: Request) {
-  const who = await authorise(req);
-  if (refused(who)) {
+  const who = await authoriseOpen(req);
+  if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
       headers: { ...readHeaders(req), ...who.headers },
     });
   }
+  /* A refusal is nobody's to keep, so every one below keeps readHeaders(); an answer to a
+     reader who named themselves carries their marks and keeps it too. Only the open answer is
+     the same for everybody, and only that one is worth a shared cache holding. */
+  const headers = who ? readHeaders(req) : openReadHeaders(req);
   const ids = (new URL(req.url).searchParams.get("ids") ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -42,12 +55,21 @@ export async function GET(req: Request) {
   if (!db) return refuse("noDatabase", { headers: readHeaders(req) });
 
   try {
-    const [cards, { rows }, sets] = await Promise.all([
+    const [cards, mine, sets] = await Promise.all([
       mirrorCards(db, [...new Set(ids)]),
-      getRows(who.userId, bearer(req) ?? undefined),
-      englishShelfSets().catch(() => []),
+      // No viewer, no rows: there is nobody whose collection this would be, so the read is not
+      // made at all rather than made and thrown away.
+      who ? getRows(who.userId, bearer(req) ?? undefined) : null,
+      /* The shelf is only ever the index that ownershipIndex files rows under, so without a
+         viewer its two store reads are made and thrown away, on this route's hottest path. */
+      who ? englishShelfSets().catch(() => []) : [],
     ]);
-    const marked = markOwnership(ownershipIndex(rows, null, sets), cards);
+    /* The marks go with the rows. Left unmarked the cards keep the shape the catalogue has,
+       which is the point: no owned, no wishlist, no quantity, rather than three fields saying
+       none. */
+    const marked: CatalogueMatch[] = mine
+      ? markOwnership(ownershipIndex(mine.rows, null, sets), cards)
+      : cards;
     const priceKey = (c: (typeof marked)[number]) => c.tcgId ?? c.id;
     const printingsRead = pagePrintings(
       marked.map((c) => ({ key: priceKey(c), sheet: c.sheet })),
@@ -65,7 +87,7 @@ export async function GET(req: Request) {
           printing: prices.get(priceKey(c))?.printing ?? null,
         })),
       },
-      { headers: readHeaders(req) },
+      { headers },
     );
   } catch (err) {
     console.error("Catalogue cards unavailable:", err);

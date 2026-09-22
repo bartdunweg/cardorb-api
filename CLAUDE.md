@@ -8,9 +8,10 @@ repository is the API only; there is no UI here. Both clients call it with a bea
 
 A caller is usually an account: a Supabase access token as bearer, or the session cookie on
 this origin. Some routes answer without one. The public profile under
-`/api/v1/public/<username>/` and the species list serve nobody's secret, and the three
+`/api/v1/public/<username>/` and the species list serve nobody's secret, and the five
 catalogue routes answer a caller who names nobody with the catalogue and without their
-holdings. `.claude/rules/api-routes.md` keeps the whole list.
+holdings. Five, not three: `/catalog/index` and `/catalog/cards` are the command palette and
+are called by the browser itself, which is how they were missed the first time. `.claude/rules/api-routes.md` keeps the whole list.
 
 ## Stack
 

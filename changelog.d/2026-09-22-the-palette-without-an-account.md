@@ -1,0 +1,1 @@
+- The command palette works without an account: the card index and the card lookup behind it answer a caller who carries no credential, the way the rest of the catalogue already did. A card's price comes with the answer, what the caller owns or wished for does not.

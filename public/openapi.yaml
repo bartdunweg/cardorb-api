@@ -89,8 +89,8 @@ components:
       description: The catalogue routes answer a caller who named nobody too. An answer carrying the caller's own holdings is that caller's alone and is never cached in between; an answer to a caller who named nobody is the catalogue by itself, cached at the CDN for a minute. Every refusal on these routes is private, whoever asked.
       schema: { type: string, enum: ["private, no-store", "public, max-age=0, s-maxage=60"] }
     Vary-Catalogue:
-      description: The catalogue routes answer differently by credential, so a cache keys on the credential and the origin.
-      schema: { type: string, const: "Origin, Authorization, Cookie" }
+      description: The catalogue routes answer differently by credential. The open answer, the only one a shared cache may store, keys on the credential and the origin; the answer to a named caller is private and keys on the origin alone.
+      schema: { type: string, enum: ["Origin", "Origin, Authorization, Cookie"] }
     Cache-Control-Public:
       description: Public answers are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute.
       schema: { type: string, example: "public, max-age=0, s-maxage=60" }
@@ -1704,14 +1704,25 @@ paths:
         Every English card the nightly copy holds, compact: `sets` by id with name, era, release
         date, scan folder and printed code; `cards` as arrays of id, set id, number, name, rarity and types,
         with a seventh element only where the scan is not at `sets[set].image + "/" + number`
-        (a stem, or null for none). Cards come newest set first, by number within one. Cached a
-        day in the browser under its `ETag`; a request carrying `If-None-Match` gets 304. What
-        is personal or daily about a hit comes from `GET /v1/catalog/cards`.
+        (a stem, or null for none). Cards come newest set first, by number within one. Kept in
+        the browser under its `ETag` and revalidated on every load; a request carrying
+        `If-None-Match` gets 304. What is personal or daily about a hit comes from
+        `GET /v1/catalog/cards`.
+
+        Open: a caller who names nobody is answered with the same document, because it carries
+        no holdings, no prices and no name. The credential decides only who may hold the
+        answer. A credential that is offered and does not verify is still a 401.
+      security: []
       responses:
         "200":
           description: The document.
           headers:
-            Cache-Control: { schema: { type: string, const: "private, max-age=86400" } }
+            Cache-Control:
+              description: A named caller's answer is theirs to keep and nothing in between caches it; an answer to a caller who named nobody is the same document for everybody and is cached at the CDN for a minute. Both revalidate in the browser, so a correction to the copy lands on the next load.
+              schema: { type: string, enum: ["private, no-cache", "public, max-age=0, s-maxage=60"] }
+            Vary:
+              description: The route answers by credential, so a cache keys on the credential and the origin.
+              schema: { type: string, enum: ["Origin, Authorization", "Origin, Authorization, Cookie"] }
             ETag: { schema: { type: string } }
           content:
             application/json:
@@ -1752,12 +1763,20 @@ paths:
         For a browser that searched `GET /v1/catalog/index` itself: the twenty hits on screen,
         with owned, wishlist, quantity and price attached, the same shape a search hit has.
         `ids` is comma-separated TCGdex ids, fifty at most; an id the copy lacks is left out.
+
+        Open: a caller who names nobody is answered with the cards and without any holdings,
+        `owned`, `wishlist`, `quantity` and `itemIds` left out rather than zeroed. The price
+        stays, because what a card trades at is a fact about the card. A credential that is
+        offered and does not verify is still a 401.
+      security: []
       parameters:
         - { name: ids, in: query, required: true, schema: { type: string } }
       responses:
         "200":
           description: The cards, in the order asked.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema:
