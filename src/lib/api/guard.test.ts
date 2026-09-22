@@ -365,7 +365,7 @@ describe("openReadHeaders", () => {
   });
 
   it("varies on everything that changes the answer", () => {
-    const vary = openReadHeaders(req({}))["Vary"].split(",").map((v) => v.trim());
+    const vary = (openReadHeaders(req({}))["Vary"] ?? "").split(",").map((v) => v.trim());
     expect(vary).toContain("Origin");
     expect(vary).toContain("Authorization");
     expect(vary).toContain("Cookie");
