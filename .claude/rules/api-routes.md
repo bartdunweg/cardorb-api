@@ -13,7 +13,7 @@ paths:
 
   ```
   find src/app/api/v1 -name route.ts | while read f; do
-    grep -qE 'authorise|requestViewer|refuseCron' "$f" || echo "${f#src/app/api/v1}"
+    grep -qE 'authorise\(|authoriseWrite|requestViewer|refuseCron' "$f" || echo "${f#src/app/api/v1}"
   done | sort
   ```
 
@@ -25,10 +25,17 @@ paths:
     `/confirmation`, `/email`. You cannot be signed in to sign in.
   - **`/usernames/<name>`**, whether a name is free. It is the one open route that uses the
     service-role key, which bypasses RLS: it must never grow a field beyond taken/free.
+  - **Three under `/api/v1/catalog/`**: `/catalog/sets`, `/catalog/sets/<setId>` and
+    `/catalog/search`, which answer a caller who names nobody with the catalogue alone,
+    because the catalogue minus the holdings is nobody's secret. They call `authoriseOpen()`,
+    which refuses a credential that is offered and does not verify, and leaves every holding
+    field out rather than zeroed for a caller who offers none.
   - **`/health`**.
 
   It said "the three routes under `/api/v1/public/<username>/`" and there were four of those
-  even then, none of the doors, and no species route yet.
+  even then, none of the doors, and no species route yet. The grep names `authorise(` and `authoriseWrite`
+  rather than `authorise`, because `authoriseOpen` contains that shorter string too: with the
+  looser pattern the three catalogue routes counted as guarded and opened unseen.
 - **`/api/v1/collection` and `/api/v1/cards/:tcgId` call `authorise()`** and refuse an
   anonymous caller. They used to be open; they were closed when the public profile shipped,
   and each route's docstring says why. Do not "fix" the guard back off.
