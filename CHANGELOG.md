@@ -4,9 +4,13 @@ Generated from the fragments in `changelog.d/` by `pnpm run changelog`.
 Do not hand-edit this file; add a fragment instead. `scripts/verify.sh` fails
 if the two have drifted apart.
 
+## 2026-09-22
+
+- Data health now reports two sets showing the same logo file, comparing the stored bytes and not only the address, so a set that quietly took another's logo is named the next morning. The seventeen groups that share one on purpose are written down with their reason: the Black Star Promos, the Japanese promo shelves, POP Series, the McDonald's Collections, each era's Trainer Kit wordmark, the Japanese `+` and `p` shelves, EX Unseen Forces and its Unown Collection, and 30th Celebration and its Classic Collection.
+
 ## 2026-09-21
 
-- A card written through the API names the set it is in when it tells cardorb.com, so the web forgets that set's page alone and every other set page it holds keeps standing. A write that cannot name one set, a CSV import, a bulk patch across several sets, a card with no catalogue id, and a subset's card whose page on the web is its parent's, forgets every set page as before.
+- A card written from the phone names the set it is in when the API tells cardorb.com, so the web forgets that set's page alone and every other set page it holds keeps standing. A write that cannot name one set, a CSV import, a bulk patch across several sets, a card with no catalogue id, and a subset's card whose page on the web is its parent's, forgets every set page as before.
 
 ## 2026-09-20
 
