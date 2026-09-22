@@ -358,10 +358,14 @@ describe("authoriseOpen", () => {
  * catalogue to the next stranger who asks for it.
  */
 describe("openReadHeaders", () => {
+  it("serves nothing while stale, because nothing purges this host's CDN", () => {
+    expect(openReadHeaders(req({}))["Cache-Control"]).not.toContain("stale-while-revalidate");
+  });
+
   it("lets a shared cache hold the answer", () => {
-    expect(openReadHeaders(req({}))["Cache-Control"]).toBe(
-      "public, s-maxage=300, stale-while-revalidate=86400",
-    );
+    // The window the four routes under /v1/public/<username>/ already share:
+    // a minute at the CDN, nothing in the browser, nothing served while stale.
+    expect(openReadHeaders(req({}))["Cache-Control"]).toBe("public, max-age=0, s-maxage=60");
   });
 
   it("varies on everything that changes the answer", () => {
@@ -384,5 +388,43 @@ describe("openReadHeaders", () => {
 
   it("is the only one of the two that is cacheable", () => {
     expect(readHeaders(req({}))["Cache-Control"]).toBe("private, no-store");
+  });
+});
+
+/**
+ * The cookie a signed-in browser actually carries.
+ *
+ * `binder_session` stopped being the name: @supabase/ssr writes
+ * `sb-<ref>-auth-token`, split across `.0` and `.1` when it is large. Under
+ * authorise() missing that only chose a stricter limiter. Under
+ * authoriseOpen() it decides identity, so a reader signed in with nothing but
+ * a cookie would have been handed the anonymous catalogue and shown their own
+ * collection as empty.
+ */
+describe("authoriseOpen and the browser's real session cookie", () => {
+  it("does not read a cookie-only reader as nobody", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(req({ cookie: "sb-abcdefgh-auth-token=a-token" }));
+    expect(answer).not.toBeNull();
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("reads a split session cookie the same way", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(
+      req({ cookie: "other=1; sb-abcdefgh-auth-token.0=half; sb-abcdefgh-auth-token.1=rest" }),
+    );
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("refuses a session cookie that does not verify, rather than serving the catalogue", async () => {
+    viewer = null;
+    const answer = await authoriseOpen(req({ cookie: "sb-abcdefgh-auth-token=stale" }));
+    expect((answer as { status: number }).status).toBe(401);
+  });
+
+  it("still reads a request carrying no cookie of ours as nobody", async () => {
+    viewer = SOMEBODY;
+    expect(await authoriseOpen(req({ cookie: "consent=yes; theme=dark" }))).toBeNull();
   });
 });

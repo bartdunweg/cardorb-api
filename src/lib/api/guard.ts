@@ -1,6 +1,6 @@
 import { createRateLimiter } from "./rate-limit";
-import { apiError, refuse, REFUSALS, retryAfter } from "./respond";
-import { SESSION_COOKIE } from "./session-cookie";
+import { apiError, PUBLIC_READ_CACHE, refuse, REFUSALS, retryAfter } from "./respond";
+import { SESSION_COOKIE, isAuthCookie } from "./session-cookie";
 import { StoreNotConfigured } from "../storage/errors";
 import { configured } from "../storage/supabase";
 import { requestViewer, type Viewer } from "./viewer";
@@ -50,9 +50,30 @@ const withCredential = createRateLimiter(60_000, 600);
  */
 const openRead = createRateLimiter(60_000, 120);
 
-const carriesCredential = (req: Request): boolean =>
-  /^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "") ||
-  (req.headers.get("cookie") ?? "").includes(`${SESSION_COOKIE}=`);
+/**
+ * Whether this request offered anything at all that could name a person.
+ *
+ * It used to look for `binder_session=`, a name that stopped being ours: a
+ * signed-in browser carries `sb-<project-ref>-auth-token`, split across `.0`
+ * and `.1` when it is too large, which is why session-cookie.ts answers this
+ * with a predicate rather than a constant.
+ *
+ * Under authorise() missing that was harmless, since it only chose the
+ * stricter limiter and requestViewer() read the Supabase jar and named the
+ * person anyway. Under authoriseOpen() it decides identity: a request that
+ * offers nothing is never asked who it is, so a cookie-only reader would have
+ * been handed the anonymous catalogue and shown an empty collection of their
+ * own. The old name is still accepted, because accepting one more cookie
+ * costs nothing and refusing one costs somebody their marks.
+ */
+const carriesCredential = (req: Request): boolean => {
+  if (/^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "")) return true;
+  const cookie = req.headers.get("cookie") ?? "";
+  if (cookie.includes(`${SESSION_COOKIE}=`)) return true;
+  return cookie
+    .split(";")
+    .some((pair) => isAuthCookie(pair.split("=")[0]?.trim() ?? ""));
+};
 
 /**
  * What a route sends instead of the viewer. `headers` is the rare extra a
@@ -295,8 +316,14 @@ export function storeErrorResponse(err: unknown, req: Request, operation: string
  *
  * readHeaders() says `private, no-store` because its answer carries the
  * reader's own holdings. This answer carries none, so it is the same for
- * everybody and worth holding: five minutes fresh, a day servable while it
- * refreshes behind the reader's back.
+ * everybody and worth holding.
+ *
+ * The window is PUBLIC_READ_CACHE, the one the four routes under
+ * /v1/public/<username>/ already share, rather than a second one invented
+ * here. The reason those run a minute with no stale serving applies just as
+ * well: nothing purges this host's CDN, so whatever is held is held until it
+ * expires. A catalogue card carries its price, and the nightly write would
+ * otherwise be a day reaching a signed-out reader.
  *
  * Vary is the dangerous line, and it names all three. One address answers one
  * thing with a credential and another without, so a shared cache that did not
@@ -311,7 +338,7 @@ export function openReadHeaders(req: Request): Record<string, string> {
       ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true" }
       : {}),
     Vary: "Origin, Authorization, Cookie",
-    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+    "Cache-Control": PUBLIC_READ_CACHE,
   };
 }
 
