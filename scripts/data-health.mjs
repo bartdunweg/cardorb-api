@@ -184,12 +184,13 @@ check(
 
 /**
  * Sets showing one and the same logo file. A source answers a code it does not hold with a
- * neighbour's bytes, so 30th Celebration Classic Collection wore the main set's gold wordmark under
- * its own address (#582, the fault class #530 closed for card pictures). Grouping on the logo
- * column alone misses that: those two URLs differ and only the files behind them are the same. Our
- * bucket returns the file's md5 as its ETag, so one HEAD per stored logo compares the bytes without
- * reading a file, and every group that comes out is either written down here with the reason it
- * shares, or a set that quietly took another's logo.
+ * neighbour's bytes, the fault class #530 closed for card pictures: 30th Celebration Classic
+ * Collection showing the main set's gold wordmark is how it was looked for one layer out (#582),
+ * and that pair turned out to be meant, since the subset has no wordmark of its own. Grouping on
+ * the logo column alone would not have found it either way: those two URLs differ and only the
+ * files behind them are the same. Our bucket returns a file's md5 as its ETag, so one HEAD per
+ * stored logo compares the bytes without reading a file, and every group that comes out is either
+ * written down here with the reason it shares, or a set that quietly took another's logo.
  *
  * A group is its sets as `language:id`, sorted and joined. All of these were looked at by eye on
  * 2026-09-22: what they share is a family's own mark (a promo star, an era's Trainer Kit wordmark),
@@ -233,16 +234,22 @@ const withLogo = await query(
 );
 const fileOf = new Map();
 const addresses = [...new Set(withLogo.map((r) => r.logo))];
+let logosUnread = 0;
 await Promise.all(
   Array.from({ length: 8 }, async () => {
-    for (let url = addresses.pop(); url; url = addresses.pop()) {
+    while (addresses.length) {
+      const url = addresses.pop();
       const res = await fetch(url, {
         method: "HEAD",
         headers: { "User-Agent": "cardorb.com" },
+        signal: AbortSignal.timeout(8_000),
       }).catch(() => null);
-      // A logo we cannot read stands for itself: an unreachable file is another check's business,
-      // and folding those together would invent a sharing group out of an outage.
-      fileOf.set(url, (res?.ok && res.headers.get("etag")) || url);
+      const tag = res?.ok ? res.headers.get("etag") : null;
+      // A logo nobody answered for stands for itself, so an outage cannot fold unrelated sets into
+      // one group. It is counted instead: a night where the bucket is silent would otherwise report
+      // no sharing at all and pass, which is the morning this check exists for.
+      if (!tag) logosUnread++;
+      fileOf.set(url, tag ?? url);
     }
   }),
 );
@@ -258,11 +265,11 @@ const sharingGroups = [...perFile.values()]
 const sharingUnmeant = sharingGroups.filter((g) => !(g in SHARED_LOGO_ON_PURPOSE));
 check(
   "Sets that share a logo share it on purpose",
-  sharingUnmeant.length === 0,
-  `${sharingGroups.length} groups share a logo file${
+  sharingUnmeant.length === 0 && logosUnread === 0,
+  `${sharingGroups.length} groups share a logo file; ${logosUnread} logos unread${
     sharingUnmeant.length
       ? `; not written down: ${sharingUnmeant.join("; ")}`
-      : ", each written down"
+      : ` (${Object.values(SHARED_LOGO_ON_PURPOSE).join(", ")})`
   }`,
 );
 
