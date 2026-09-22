@@ -1,18 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const authorise = vi.fn();
+const authoriseOpen = vi.fn();
 const listSets = vi.fn();
 const getRows = vi.fn();
 
 /* guard.ts, viewer.ts and collection.ts are all `import "server-only"`
-   underneath, which throws the moment vitest imports them — see
+   underneath, which throws the moment vitest imports them, see
    app/api/v1/catalog/search/route.test.ts, whose pattern this follows. The
    ownership join itself is the real one: it is pure, and the point of these
    tests is what the route does with it. */
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
+  authoriseOpen: (...a: unknown[]) => authoriseOpen(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
+  openReadHeaders: () => ({}),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
@@ -69,6 +72,9 @@ const sets = () => GET(new Request("https://cardorb.com/api/v1/catalog/sets"));
 
 beforeEach(() => {
   authorise.mockResolvedValue(VIEWER);
+  /* The route asks the open door now. It answers what authorise() would, so the
+     tests that set a viewer or a refusal keep saying what they always said. */
+  authoriseOpen.mockImplementation((...a: unknown[]) => authorise(...a));
   listSets.mockResolvedValue([SET]);
   getRows.mockResolvedValue({ rows: [], failed: false });
 });
@@ -149,5 +155,34 @@ describe("GET /api/v1/catalog/sets", () => {
 
   it("says nothing about availability on the ordinary path", async () => {
     expect(await (await sets()).json()).not.toHaveProperty("collectionUnavailable");
+  });
+});
+
+describe("without a credential", () => {
+  beforeEach(() => authoriseOpen.mockResolvedValue(null));
+
+  it("serves the shelf to a reader who offered nothing", async () => {
+    const res = await sets();
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.sets).toHaveLength(1);
+    expect(body.sets[0]).toMatchObject({ id: "base1", total: 102 });
+  });
+
+  /* Absent, not zero. "You own none of these" and "we did not ask" are
+     different sentences, and a client can only tell them apart by the field
+     being missing. */
+  it("leaves the holdings off rather than answering zero", async () => {
+    const { sets: out } = await (await sets()).json();
+    expect(out[0]).not.toHaveProperty("ownedCount");
+  });
+
+  it("says nothing about a collection it never read", async () => {
+    expect(await (await sets()).json()).not.toHaveProperty("failed");
+  });
+
+  it("does not read the collection at all", async () => {
+    await sets();
+    expect(getRows).not.toHaveBeenCalled();
   });
 });
