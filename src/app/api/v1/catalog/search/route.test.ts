@@ -11,8 +11,13 @@ const pagePrintings = vi.fn(async (..._a: unknown[]) => new Map());
 // wholesale rather than importOriginal()-ed.
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
+  /* One mock behind both doors. The route asks authoriseOpen() since the catalogue opened, and
+     every test written against authorise() still says what it said: a viewer, a refusal, or now
+     null for a reader who offered no credential at all. */
+  authoriseOpen: (...a: unknown[]) => authorise(...a),
   refused: (r: { status?: number }) => "status" in r,
   readHeaders: () => ({}),
+  openReadHeaders: () => ({}),
 }));
 vi.mock("@/lib/core/catalogue/tcgdex-search", () => ({
   searchCards: (...a: unknown[]) => searchCards(...a),
@@ -299,5 +304,36 @@ describe("GET /api/v1/catalog/search", () => {
     const res = await search(new URLSearchParams({ query: "char", language: "de" }));
     expect(res.status).toBe(400);
     expect(searchCards).not.toHaveBeenCalled();
+  });
+
+  /* The catalogue is a fact about the cards, so a reader who offers nothing gets it. What they
+     must not get is a holding field reading zero: absent says "we did not look", where 0 and
+     false would say "you have none of this", which is a claim about somebody's collection that
+     nobody asked about. */
+  describe("without a credential", () => {
+    beforeEach(() => {
+      authorise.mockResolvedValue(null);
+    });
+
+    it("answers the catalogue to a reader who offered nothing", async () => {
+      const res = await search(new URLSearchParams({ query: "char" }));
+      expect(res.status).toBe(200);
+      const { cards } = await res.json();
+      expect(cards).toHaveLength(1);
+      expect(cards[0]).toMatchObject({ id: "base1-4", name: "Charizard" });
+    });
+
+    it("leaves the holding fields out rather than answering none held", async () => {
+      const { cards } = await (await search(new URLSearchParams({ query: "char" }))).json();
+      expect(cards[0]).not.toHaveProperty("owned");
+      expect(cards[0]).not.toHaveProperty("wishlist");
+      expect(cards[0]).not.toHaveProperty("quantity");
+    });
+
+    it("does not read anybody's rows", async () => {
+      const res = await search(new URLSearchParams({ query: "char" }));
+      expect(res.status).toBe(200);
+      expect(getRows).not.toHaveBeenCalled();
+    });
   });
 });

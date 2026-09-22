@@ -1,0 +1,1 @@
+- Every set, a set's cards and the search answer a caller who carries no credential, so the catalogue can be read without an account. What that caller gets is the catalogue alone: whether a card is owned, wished for or held in any number is left out of the answer rather than sent as nothing, and a credential that is offered and does not verify is refused as before.

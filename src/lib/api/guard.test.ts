@@ -18,6 +18,8 @@ vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
 
 const {
   authorise,
+  authoriseOpen,
+  openReadHeaders,
   authoriseWrite,
   originAllowed,
   readHeaders,
@@ -287,5 +289,142 @@ describe("storeErrorResponse", () => {
     );
     expect(res.status).toBe(502);
     vi.restoreAllMocks();
+  });
+});
+
+/**
+ * The door the catalogue routes use, which has a third answer.
+ *
+ * Three cases and they are the whole of it: nobody offered anything (null, and
+ * the route answers the catalogue), somebody offered something that does not
+ * verify (refused, because a session that just expired must not quietly become
+ * a stranger), and somebody offered something good (the viewer, exactly as
+ * authorise() would have answered).
+ */
+describe("authoriseOpen", () => {
+  it("answers null where nothing was offered", async () => {
+    expect(await authoriseOpen(req({}))).toBeNull();
+  });
+
+  it("never asks who the caller is when nothing was offered", async () => {
+    // viewer is SOMEBODY by default; answering null proves requestViewer was
+    // not consulted rather than that it said no.
+    viewer = SOMEBODY;
+    expect(await authoriseOpen(req({}))).toBeNull();
+  });
+
+  it("refuses a credential that does not verify, rather than reading it as nobody", async () => {
+    viewer = null;
+    const answer = await authoriseOpen(req({ bearer: KEY }));
+    expect(answer).not.toBeNull();
+    expect(refused(answer!)).toBe(true);
+    expect((answer as { status: number }).status).toBe(401);
+  });
+
+  it("answers the viewer when the credential verifies", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(req({ bearer: KEY }));
+    expect(refused(answer!)).toBe(false);
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("still turns away a cross-site origin, credential or not", async () => {
+    const answer = await authoriseOpen(req({ origin: "https://evil.example" }));
+    expect((answer as { status: number }).status).toBe(403);
+  });
+
+  it("still refuses everything when no database is configured", async () => {
+    hasDatabase = false;
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const answer = await authoriseOpen(req({}));
+    expect((answer as { status: number }).status).toBe(503);
+    vi.restoreAllMocks();
+  });
+
+  it("lets a reader turn more pages than someone guessing at a key would get", async () => {
+    // The `guessing` ceiling is ten a minute. A visitor browsing sets is not a
+    // probe, so the same address must get well past ten here.
+    const ip = "10.9.9.9";
+    for (let i = 0; i < 30; i++) expect(await authoriseOpen(req({ ip }))).toBeNull();
+  });
+});
+
+/**
+ * The headers on an answer that belongs to nobody.
+ *
+ * The Vary test is the one that matters. One address now answers two
+ * different things depending on the credential, so a shared cache that does
+ * not vary on Authorization and Cookie could hand one person's marked-up
+ * catalogue to the next stranger who asks for it.
+ */
+describe("openReadHeaders", () => {
+  it("serves nothing while stale, because nothing purges this host's CDN", () => {
+    expect(openReadHeaders(req({}))["Cache-Control"]).not.toContain("stale-while-revalidate");
+  });
+
+  it("lets a shared cache hold the answer", () => {
+    // The window the four routes under /v1/public/<username>/ already share:
+    // a minute at the CDN, nothing in the browser, nothing served while stale.
+    expect(openReadHeaders(req({}))["Cache-Control"]).toBe("public, max-age=0, s-maxage=60");
+  });
+
+  it("varies on everything that changes the answer", () => {
+    const vary = (openReadHeaders(req({}))["Vary"] ?? "").split(",").map((v) => v.trim());
+    expect(vary).toContain("Origin");
+    expect(vary).toContain("Authorization");
+    expect(vary).toContain("Cookie");
+  });
+
+  it("names an allowed origin, as readHeaders does", () => {
+    const h = openReadHeaders(req({ origin: "https://app.example" }));
+    expect(h["Access-Control-Allow-Origin"]).toBe("https://app.example");
+    expect(h["Access-Control-Allow-Credentials"]).toBe("true");
+  });
+
+  it("names no origin that is not allowed", () => {
+    const h = openReadHeaders(req({ origin: "https://evil.example" }));
+    expect(h["Access-Control-Allow-Origin"]).toBeUndefined();
+  });
+
+  it("is the only one of the two that is cacheable", () => {
+    expect(readHeaders(req({}))["Cache-Control"]).toBe("private, no-store");
+  });
+});
+
+/**
+ * The cookie a signed-in browser actually carries.
+ *
+ * `binder_session` stopped being the name: @supabase/ssr writes
+ * `sb-<ref>-auth-token`, split across `.0` and `.1` when it is large. Under
+ * authorise() missing that only chose a stricter limiter. Under
+ * authoriseOpen() it decides identity, so a reader signed in with nothing but
+ * a cookie would have been handed the anonymous catalogue and shown their own
+ * collection as empty.
+ */
+describe("authoriseOpen and the browser's real session cookie", () => {
+  it("does not read a cookie-only reader as nobody", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(req({ cookie: "sb-abcdefgh-auth-token=a-token" }));
+    expect(answer).not.toBeNull();
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("reads a split session cookie the same way", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(
+      req({ cookie: "other=1; sb-abcdefgh-auth-token.0=half; sb-abcdefgh-auth-token.1=rest" }),
+    );
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("refuses a session cookie that does not verify, rather than serving the catalogue", async () => {
+    viewer = null;
+    const answer = await authoriseOpen(req({ cookie: "sb-abcdefgh-auth-token=stale" }));
+    expect((answer as { status: number }).status).toBe(401);
+  });
+
+  it("still reads a request carrying no cookie of ours as nobody", async () => {
+    viewer = SOMEBODY;
+    expect(await authoriseOpen(req({ cookie: "consent=yes; theme=dark" }))).toBeNull();
   });
 });

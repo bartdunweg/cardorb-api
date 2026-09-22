@@ -6,9 +6,11 @@ The API behind Card Orb: a Pokémon card collection (~1,600 cards) kept in Postg
 its own repository since 2026-09-02) and the iOS app (`bartdunweg/cardorb-ios`). This
 repository is the API only; there is no UI here. Both clients call it with a bearer token.
 
-Every caller is an account: a Supabase access token as bearer, or the session cookie on
-this origin. The only unkeyed routes are the three under `/api/v1/public/<username>/`,
-which serve a public profile without prices.
+A caller is usually an account: a Supabase access token as bearer, or the session cookie on
+this origin. Some routes answer without one. The public profile under
+`/api/v1/public/<username>/` and the species list serve nobody's secret, and the three
+catalogue routes answer a caller who names nobody with the catalogue and without their
+holdings. `.claude/rules/api-routes.md` keeps the whole list.
 
 ## Stack
 

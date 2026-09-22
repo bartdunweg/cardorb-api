@@ -85,6 +85,12 @@ components:
     Cache-Control-Private:
       description: Authorised answers are never cached by anything in between.
       schema: { type: string, const: "private, no-store" }
+    Cache-Control-Catalogue:
+      description: The catalogue routes answer a caller who named nobody too. An answer carrying the caller's own holdings is that caller's alone and is never cached in between; an answer to a caller who named nobody is the catalogue by itself, cached at the CDN for a minute. Every refusal on these routes is private, whoever asked.
+      schema: { type: string, enum: ["private, no-store", "public, max-age=0, s-maxage=60"] }
+    Vary-Catalogue:
+      description: The catalogue routes answer differently by credential, so a cache keys on the credential and the origin.
+      schema: { type: string, const: "Origin, Authorization, Cookie" }
     Cache-Control-Public:
       description: Public answers are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute.
       schema: { type: string, example: "public, max-age=0, s-maxage=60" }
@@ -604,19 +610,18 @@ components:
       allOf:
         - $ref: "#/components/schemas/CatalogueSet"
         - type: object
-          required: [ownedCount, wishlistCount]
           properties:
             ownedCount:
               type: integer
-              description: Distinct cards of this set you own, so never more than `total`. Copies do not add up.
+              description: Distinct cards of this set you own, so never more than `total`. Copies do not add up. Only for a caller who named themselves; absent otherwise, not zero.
             wishlistCount:
               type: integer
-              description: Cards of this set on your wishlist.
+              description: Cards of this set on your wishlist. Only for a caller who named themselves; absent otherwise, not zero.
 
     BrowseCard:
       type: object
       description: A catalogue card with the caller's own answer attached.
-      required: [id, number, name, setName, image, imageHigh, rarity, types, owned, wishlist, quantity, itemIds]
+      required: [id, number, name, setName, image, imageHigh, rarity, types]
       properties:
         id: { type: string }
         number: { type: string, description: "The catalogue's number, what ownership and a new row match by." }
@@ -629,10 +634,10 @@ components:
         rarity: { type: [string, "null"] }
         types: { type: array, items: { type: string } }
         series: { type: [string, "null"], description: "Null where the catalogue has no series for the set — TCGdex leaves it out on some non-English sets." }
-        owned: { type: boolean }
-        wishlist: { type: boolean }
-        quantity: { type: integer, description: "Summed over owned rows only." }
-        itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched." }
+        owned: { type: boolean, description: "Only for a caller who named themselves; absent otherwise, not false." }
+        wishlist: { type: boolean, description: "Only for a caller who named themselves; absent otherwise, not false." }
+        quantity: { type: integer, description: "Summed over owned rows only. Only for a caller who named themselves; absent otherwise, not zero." }
+        itemIds: { type: array, items: { type: string }, description: "Every collection row this card matched. Only for a caller who named themselves; absent otherwise, not empty." }
         fullArt: { type: boolean, description: "The illustration covers the whole card, as the catalogue's copy decides it at night. Only sent by GET /catalog/sets/{setId}, and only for a set read out of the copy: a set read live from the catalogue leaves it out rather than guess." }
         price:
           $ref: "#/components/schemas/Price"
@@ -1552,12 +1557,19 @@ paths:
       tags: [Catalogue]
       operationId: listSets
       summary: Every set, with how much of each the caller holds
+      description: |
+        Open: a caller who names nobody is answered with the sets and without any
+        holdings, `ownedCount` and `wishlistCount` left out rather than zeroed. A
+        credential that is offered and does not verify is still a 401.
+      security: []
       parameters:
         - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "That language's own catalogue (TCGdex); left out, English. Sets and cards there have their own ids and names." }
       responses:
         "200":
           description: The sets.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema:
@@ -1581,6 +1593,11 @@ paths:
       tags: [Catalogue]
       operationId: getSet
       summary: One whole set, a page at a time
+      description: |
+        Open: a caller who names nobody is answered with the set and its cards and
+        without any holdings, the holding fields left out rather than zeroed. A
+        credential that is offered and does not verify is still a 401.
+      security: []
       parameters:
         - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "That language's own catalogue (TCGdex); left out, English." }
         - { name: setId, in: path, required: true, schema: { type: string }, description: "pokemontcg.io's set id, e.g. `swsh3`." }
@@ -1590,12 +1607,14 @@ paths:
       responses:
         "200":
           description: The page.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema:
                 type: object
-                required: [set, cards, page, pageSize, totalCount, ownedCount, hasMore]
+                required: [set, cards, page, pageSize, totalCount, hasMore]
                 properties:
                   set:
                     allOf:
@@ -1614,7 +1633,7 @@ paths:
                   page: { type: integer }
                   pageSize: { type: integer }
                   totalCount: { type: integer }
-                  ownedCount: { type: integer }
+                  ownedCount: { type: integer, description: "Distinct cards of the set the caller owns. Only for a caller who named themselves; absent otherwise, not zero." }
                   hasMore: { type: boolean }
                   collectionUnavailable: { type: boolean, const: true }
                   priceChangesUnavailable: { type: boolean, const: true, description: "With `from`: the price lines could not be read, and every `priceChange` on the page is null for that reason rather than for want of readings." }
@@ -1643,6 +1662,11 @@ paths:
         beside other words ("pal 123"), unless a matching card holds it as a word of its name
         ("charizard ex") or the set holds no card the other words find. On its own it adds the
         set's cards after every name that starts with it. A code two sets share names both.
+
+        Open: a caller who names nobody is answered with the matches and without any
+        holdings, the holding fields left out rather than zeroed. A credential that is
+        offered and does not verify is still a 401.
+      security: []
       parameters:
         - { name: query, in: query, schema: { type: string, minLength: 2 } }
         - { name: name, in: query, schema: { type: string } }
@@ -1653,7 +1677,9 @@ paths:
       responses:
         "200":
           description: The matches.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema:

@@ -1,6 +1,6 @@
 import { createRateLimiter } from "./rate-limit";
-import { apiError, refuse, REFUSALS, retryAfter } from "./respond";
-import { SESSION_COOKIE } from "./session-cookie";
+import { apiError, PUBLIC_READ_CACHE, refuse, REFUSALS, retryAfter } from "./respond";
+import { SESSION_COOKIE, isAuthCookie } from "./session-cookie";
 import { StoreNotConfigured } from "../storage/errors";
 import { configured } from "../storage/supabase";
 import { requestViewer, type Viewer } from "./viewer";
@@ -39,9 +39,39 @@ import { requestViewer, type Viewer } from "./viewer";
 const guessing = createRateLimiter(60_000, 10);
 const withCredential = createRateLimiter(60_000, 600);
 
-const carriesCredential = (req: Request): boolean =>
-  /^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "") ||
-  (req.headers.get("cookie") ?? "").includes(`${SESSION_COOKIE}=`);
+/**
+ * A third ceiling, for the routes a stranger is allowed to read.
+ *
+ * `guessing` is ten a minute because a request with no credential used to be a
+ * probe and nothing else. Since the catalogue opened it is usually a visitor
+ * turning pages in Browse, and ten would stop the second one. This sits
+ * between the two: high enough for a person reading, low enough that copying
+ * the whole catalogue from one address takes visible effort.
+ */
+const openRead = createRateLimiter(60_000, 120);
+
+/**
+ * Whether this request offered anything at all that could name a person.
+ *
+ * It used to look for `binder_session=`, a name that stopped being ours: a
+ * signed-in browser carries `sb-<project-ref>-auth-token`, split across `.0`
+ * and `.1` when it is too large, which is why session-cookie.ts answers this
+ * with a predicate rather than a constant.
+ *
+ * Under authorise() missing that was harmless, since it only chose the
+ * stricter limiter and requestViewer() read the Supabase jar and named the
+ * person anyway. Under authoriseOpen() it decides identity: a request that
+ * offers nothing is never asked who it is, so a cookie-only reader would have
+ * been handed the anonymous catalogue and shown an empty collection of their
+ * own. The old name is still accepted, because accepting one more cookie
+ * costs nothing and refusing one costs somebody their marks.
+ */
+const carriesCredential = (req: Request): boolean => {
+  if (/^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "")) return true;
+  const cookie = req.headers.get("cookie") ?? "";
+  if (cookie.includes(`${SESSION_COOKIE}=`)) return true;
+  return cookie.split(";").some((pair) => isAuthCookie(pair.split("=")[0]?.trim() ?? ""));
+};
 
 /**
  * What a route sends instead of the viewer. `headers` is the rare extra a
@@ -191,6 +221,49 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
   return viewer;
 }
 
+/**
+ * The same door, for a route that has something to say to nobody.
+ *
+ * Three answers rather than two. A Refusal is sent as it is, a Viewer is the
+ * person asking, and null is "nothing was offered, and this route allows
+ * that". Only the catalogue routes reach for it, and only because their answer
+ * without the holdings is nobody's secret.
+ *
+ * A credential that is offered and does not verify is refused, never read as
+ * null. Downgrading it would show somebody whose session had just run out a
+ * catalogue with their own collection missing from it, which reads as data
+ * loss: the worst lie this door could tell.
+ *
+ * The order is authorise()'s, for the same reason: the checks that need no
+ * secret come first, so a flood is turned away before it reaches the limiter's
+ * map, let alone a signature check.
+ */
+export async function authoriseOpen(req: Request): Promise<Refusal | Viewer | null> {
+  if (!originAllowed(req)) return { status: 403, error: "Forbidden" };
+
+  const ip =
+    req.headers.get("x-real-ip")?.trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+  const offered = carriesCredential(req);
+  const wait = (offered ? withCredential : openRead)(ip);
+  if (wait) return { ...REFUSALS.tooMany, headers: retryAfter(wait) };
+
+  if (!configured()) {
+    console.error("No database is configured: every request will be refused");
+    return { status: 503, error: NO_DATABASE_CONFIGURED };
+  }
+
+  // Nothing offered: the route answers the catalogue and asks nobody who this
+  // is. requestViewer() is not called at all, which is also why an open read
+  // costs no signature check.
+  if (!offered) return null;
+
+  const viewer = await requestViewer(req);
+  if (!viewer) return { ...REFUSALS.signIn };
+  return viewer;
+}
+
 /** Whether authorise() said no. Narrow, so the caller keeps the viewer typed. */
 export const refused = (r: Refusal | Viewer): r is Refusal => "status" in r;
 
@@ -234,6 +307,37 @@ export function storeErrorResponse(err: unknown, req: Request, operation: string
   console.error(`${operation}:`, err instanceof Error ? err.message : err);
   if (err instanceof StoreNotConfigured) return refuse("noDatabase", { headers: readHeaders(req) });
   return apiError(502, `${operation}.`, undefined, { headers: readHeaders(req) });
+}
+
+/**
+ * What a catalogue route sends when it answered nobody in particular.
+ *
+ * readHeaders() says `private, no-store` because its answer carries the
+ * reader's own holdings. This answer carries none, so it is the same for
+ * everybody and worth holding.
+ *
+ * The window is PUBLIC_READ_CACHE, the one the four routes under
+ * /v1/public/<username>/ already share, rather than a second one invented
+ * here. The reason those run a minute with no stale serving applies just as
+ * well: nothing purges this host's CDN, so whatever is held is held until it
+ * expires. A catalogue card carries its price, and the nightly write would
+ * otherwise be a day reaching a signed-out reader.
+ *
+ * Vary is the dangerous line, and it names all three. One address answers one
+ * thing with a credential and another without, so a shared cache that did not
+ * vary on Authorization and Cookie could hand somebody's marked-up catalogue
+ * to the next stranger who asked. Origin is there for the CORS pair, as in
+ * readHeaders().
+ */
+export function openReadHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  return {
+    ...(origin && allowed().includes(origin)
+      ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true" }
+      : {}),
+    Vary: "Origin, Authorization, Cookie",
+    "Cache-Control": PUBLIC_READ_CACHE,
+  };
 }
 
 export function readHeaders(req: Request): Record<string, string> {

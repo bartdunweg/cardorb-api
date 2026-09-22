@@ -18,17 +18,22 @@ import { priceLanguageOf } from "@/lib/core/price-months.mjs";
 import { markOwnership, ownershipIndex } from "@/lib/core/collection/ownership";
 import { galleriesByParent } from "@/lib/core/catalogue/set-galleries";
 import { englishSetOfDay, englishShelfSets } from "@/lib/core/catalogue/catalogue";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { authoriseOpen, openReadHeaders, readHeaders, refused } from "@/lib/api/guard";
+import type { CatalogueMatch } from "@/lib/core/catalogue/ptcg-search";
 import { bearer } from "@/lib/api/viewer";
 import { elapsed, logTiming, timed } from "@/lib/core/timing";
 
 /**
  * One set, all of it, with the viewer's own cards marked.
  *
+ * Marked only where there is a viewer. A request that carries no credential is answered with the
+ * set, its cards and their prices, and with no field saying what anybody holds: the catalogue is
+ * nobody's secret, so Browse can be read before signing in.
+ *
  * Paged in memory rather than at the source, and that is deliberate: the set
  * is read whole once and kept for a day (it is the same for everybody), so
  * slicing here costs nothing and buys two things a forwarded
- * page could not give — an exact `totalCount`, and an ownership mark that is
+ * page could not give: an exact `totalCount`, and an ownership mark that is
  * right for every card rather than for the twenty that happened to come back.
  *
  * The default page is 60 because that is roughly three screens of a grid. The
@@ -56,12 +61,18 @@ const intParam = (raw: string | null, fallback: number, max: number) => {
 
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
   const began = performance.now();
-  const who = await authorise(req);
-  if (refused(who)) {
+  /* Nobody is allowed through this door. The set, its cards and their prices are the catalogue,
+     the same page for every reader, so a visitor who has not signed in is shown it rather than a
+     lock. A credential that is offered still has to verify; what it buys is the marks below. */
+  const who = await authoriseOpen(req);
+  if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
       headers: { ...readHeaders(req), ...who.headers },
     });
   }
+  /* An answer with nobody's holdings in it is the same for everybody and worth a shared cache;
+     one with them in it is that reader's alone and is held nowhere (guard.ts). */
+  const headers = who ? readHeaders(req) : openReadHeaders(req);
 
   const { setId } = await params;
   const url = new URL(req.url);
@@ -84,8 +95,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   const from = fromDay?.from ?? null;
 
   /* The viewer's rows do not wait on the catalogue: both are read at once. getRows never throws,
-     it says `failed`, so a set that turns out not to exist leaves nothing unhandled. */
-  const rowsRead = getRows(who.userId, bearer(req) ?? undefined);
+     it says `failed`, so a set that turns out not to exist leaves nothing unhandled. Nobody
+     asking means nothing to read, and the collection is not touched at all. */
+  const rowsRead = who ? getRows(who.userId, bearer(req) ?? undefined) : null;
 
   let set;
   let cards;
@@ -140,17 +152,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
     return refuse("catalogue", { headers: readHeaders(req) });
   }
 
-  const { rows, failed } = await timed("set rows", () => rowsRead);
+  const mine = rowsRead ? await timed("set rows", () => rowsRead) : null;
   /* Keyed by the catalogue being shown. A row of that language carrying that catalogue's card
      id marks its own shelf exactly, by id; every other row marks the English one. Both
      directions matter, because a Japanese set named like an English one (Black Bolt) would
      otherwise be counted by the English cards, and was. */
-  const index = ownershipIndex(
-    rows,
-    isBrowseLanguage(language) ? language : null,
-    isBrowseLanguage(language) ? [] : await englishShelfSets(),
-  );
-  const marked = markOwnership(index, cards);
+  const held = mine
+    ? markOwnership(
+        ownershipIndex(
+          mine.rows,
+          isBrowseLanguage(language) ? language : null,
+          isBrowseLanguage(language) ? [] : await englishShelfSets(),
+        ),
+        cards,
+      )
+    : null;
+  /* The catalogue's own cards where there is nobody to mark them for: the same list, without the
+     marks, rather than a list of marks that all say no. */
+  const marked: CatalogueMatch[] = held ?? cards;
   const start = (page - 1) * pageSize;
   const onPage = marked.slice(start, start + pageSize);
   /* The pictures as the catalogue's copy has them, for the English shelf: this route builds a
@@ -201,7 +220,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       "set price changes",
       () =>
         getCardPrices(
-          who.userId,
+          /* The lines are card_price_months, the catalogue's and the same for everybody: the
+             userId is the cache key and the tag a write drops, never a filter. A reader who
+             offered nothing shares one entry, under a name no account can be given. */
+          who?.userId ?? "catalogue",
           priced.map(({ tcgId, language }) => ({ tcgId, language })),
           bearer(req) ?? undefined,
           from,
@@ -231,6 +253,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
              ownership and a new row match by; they differ on a Classic Collection card only, which
              prints its original card's number (classicNumberOf). */
           printedNumber: classicNumberOf(c.tcgId) ?? c.number,
+          /* Priced for everybody, signed in or not (Bart, 2026-09-22): what a card sells for is a
+             fact about the card, out of TCGplayer's own market, and not a thing about the reader.
+             What the reader holds of it is, and that is what goes missing above. */
           price: prices.get(priceKey(c))?.price ?? null,
           /* The printing that price is, keyed as the sheet's buttons are ("reverse-holo",
              "holo/cosmos"); null where the card has no price. */
@@ -245,13 +270,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       page,
       pageSize,
       totalCount: marked.length,
-      /* Over the whole set, not over the page — the count a header wants to
-         show is "12 of 207", and a page of 60 cannot answer it. */
-      ownedCount: marked.filter((c) => c.owned).length,
+      /* Over the whole set, not over the page: the count a header wants to
+         show is "12 of 207", and a page of 60 cannot answer it. Absent rather than zero where
+         nobody asked, because "none of them" and "nobody asked" are different answers and a
+         client that cannot tell them apart shows a stranger an empty collection. */
+      ...(held ? { ownedCount: held.filter((c) => c.owned).length } : {}),
       hasMore: start + pageSize < marked.length,
-      ...(failed ? { collectionUnavailable: true } : {}),
+      ...(mine?.failed ? { collectionUnavailable: true } : {}),
       ...(changesFailed ? { priceChangesUnavailable: true } : {}),
     },
-    { headers: readHeaders(req) },
+    { headers },
   );
 }
