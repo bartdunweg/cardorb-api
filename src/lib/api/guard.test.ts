@@ -19,6 +19,7 @@ vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
 const {
   authorise,
   authoriseOpen,
+  openReadHeaders,
   authoriseWrite,
   originAllowed,
   readHeaders,
@@ -345,5 +346,43 @@ describe("authoriseOpen", () => {
     // probe, so the same address must get well past ten here.
     const ip = "10.9.9.9";
     for (let i = 0; i < 30; i++) expect(await authoriseOpen(req({ ip }))).toBeNull();
+  });
+});
+
+/**
+ * The headers on an answer that belongs to nobody.
+ *
+ * The Vary test is the one that matters. One address now answers two
+ * different things depending on the credential, so a shared cache that does
+ * not vary on Authorization and Cookie could hand one person's marked-up
+ * catalogue to the next stranger who asks for it.
+ */
+describe("openReadHeaders", () => {
+  it("lets a shared cache hold the answer", () => {
+    expect(openReadHeaders(req({}))["Cache-Control"]).toBe(
+      "public, s-maxage=300, stale-while-revalidate=86400",
+    );
+  });
+
+  it("varies on everything that changes the answer", () => {
+    const vary = openReadHeaders(req({}))["Vary"].split(",").map((v) => v.trim());
+    expect(vary).toContain("Origin");
+    expect(vary).toContain("Authorization");
+    expect(vary).toContain("Cookie");
+  });
+
+  it("names an allowed origin, as readHeaders does", () => {
+    const h = openReadHeaders(req({ origin: "https://app.example" }));
+    expect(h["Access-Control-Allow-Origin"]).toBe("https://app.example");
+    expect(h["Access-Control-Allow-Credentials"]).toBe("true");
+  });
+
+  it("names no origin that is not allowed", () => {
+    const h = openReadHeaders(req({ origin: "https://evil.example" }));
+    expect(h["Access-Control-Allow-Origin"]).toBeUndefined();
+  });
+
+  it("is the only one of the two that is cacheable", () => {
+    expect(readHeaders(req({}))["Cache-Control"]).toBe("private, no-store");
   });
 });

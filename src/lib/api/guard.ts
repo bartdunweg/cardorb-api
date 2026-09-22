@@ -290,6 +290,31 @@ export function storeErrorResponse(err: unknown, req: Request, operation: string
   return apiError(502, `${operation}.`, undefined, { headers: readHeaders(req) });
 }
 
+/**
+ * What a catalogue route sends when it answered nobody in particular.
+ *
+ * readHeaders() says `private, no-store` because its answer carries the
+ * reader's own holdings. This answer carries none, so it is the same for
+ * everybody and worth holding: five minutes fresh, a day servable while it
+ * refreshes behind the reader's back.
+ *
+ * Vary is the dangerous line, and it names all three. One address answers one
+ * thing with a credential and another without, so a shared cache that did not
+ * vary on Authorization and Cookie could hand somebody's marked-up catalogue
+ * to the next stranger who asked. Origin is there for the CORS pair, as in
+ * readHeaders().
+ */
+export function openReadHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin");
+  return {
+    ...(origin && allowed().includes(origin)
+      ? { "Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true" }
+      : {}),
+    Vary: "Origin, Authorization, Cookie",
+    "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+  };
+}
+
 export function readHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get("origin");
   return {
