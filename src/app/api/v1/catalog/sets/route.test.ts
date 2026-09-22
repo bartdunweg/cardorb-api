@@ -14,8 +14,10 @@ vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
   authoriseOpen: (...a: unknown[]) => authoriseOpen(...a),
   refused: (r: { status?: number }) => "status" in r,
-  readHeaders: () => ({}),
-  openReadHeaders: () => ({}),
+  /* Distinguishable on purpose: the point of two header sets is which answer
+     carries which, and `{}` for both hid a refusal going out cacheable. */
+  readHeaders: () => ({ "cache-control": "private, no-store" }),
+  openReadHeaders: () => ({ "cache-control": "public, max-age=0, s-maxage=60" }),
 }));
 vi.mock("@/lib/api/viewer", () => ({ bearer: () => null }));
 vi.mock("@/lib/core/collection/collection", () => ({
@@ -184,5 +186,39 @@ describe("without a credential", () => {
   it("does not read the collection at all", async () => {
     await sets();
     expect(getRows).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * A refusal is nobody's to hold.
+ *
+ * The open window is a shared cache's to keep, so a catalogue outage sent
+ * with it would be stored once and handed to every signed-out visitor until
+ * it expired. One TCGdex hiccup would read as the catalogue being empty for
+ * everybody, long after it came back.
+ */
+describe("a failure is never cached, credential or not", () => {
+  beforeEach(() => {
+    authoriseOpen.mockResolvedValue(null);
+  });
+
+  it("sends a catalogue refusal with no-store even for a reader with no account", async () => {
+    listSets.mockRejectedValue(new Error("TCGdex answered 503"));
+    const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
+    expect(res.status).toBe(502);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("sends a bad language with no-store too", async () => {
+    const res = await GET(new Request("https://api.test/api/v1/catalog/sets?language=xx"));
+    expect(res.status).toBe(400);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("still sends the shelf itself with the open window", async () => {
+    listSets.mockResolvedValue([SET]);
+    const res = await GET(new Request("https://api.test/api/v1/catalog/sets"));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
   });
 });

@@ -51,7 +51,7 @@ export async function GET(req: Request) {
   // `?language=ja`: the Japanese catalogue (TCGdex); left out, English.
   const language = new URL(req.url).searchParams.get("language");
   if (language && language !== "en" && !isBrowseLanguage(language))
-    return apiError(400, "language must be en or ja.", undefined, { headers });
+    return apiError(400, "language must be en or ja.", undefined, { headers: readHeaders(req) });
   let sets;
   try {
     // The English shelf with the promo star and pokemontcg.io's wordmark where TCGdex has none,
@@ -64,7 +64,10 @@ export async function GET(req: Request) {
     /* Distinct from an empty list, and distinct from a 500: the catalogue
        refused, the request is worth retrying, and the client can say so. The
        one sentence every catalogue route sends, from REFUSALS. */
-    return refuse("catalogue", { headers });
+    /* readHeaders, not the open window: a refusal is nobody's to hold. Sent with the cacheable
+       headers, one TCGdex outage would be stored by the shared cache and handed to every
+       signed-out visitor until it expired. The sibling routes do the same. */
+    return refuse("catalogue", { headers: readHeaders(req) });
   }
 
   /* A store outage costs the ownership marks, not the shelf. getRows() already
