@@ -39,6 +39,17 @@ import { requestViewer, type Viewer } from "./viewer";
 const guessing = createRateLimiter(60_000, 10);
 const withCredential = createRateLimiter(60_000, 600);
 
+/**
+ * A third ceiling, for the routes a stranger is allowed to read.
+ *
+ * `guessing` is ten a minute because a request with no credential used to be a
+ * probe and nothing else. Since the catalogue opened it is usually a visitor
+ * turning pages in Browse, and ten would stop the second one. This sits
+ * between the two: high enough for a person reading, low enough that copying
+ * the whole catalogue from one address takes visible effort.
+ */
+const openRead = createRateLimiter(60_000, 120);
+
 const carriesCredential = (req: Request): boolean =>
   /^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "") ||
   (req.headers.get("cookie") ?? "").includes(`${SESSION_COOKIE}=`);
@@ -187,6 +198,49 @@ export async function authorise(req: Request): Promise<Refusal | Viewer> {
   const viewer = await requestViewer(req);
   // The same sentence the cookie-only routes send through refuse("signIn"):
   // two wordings for one condition had the clients showing either.
+  if (!viewer) return { ...REFUSALS.signIn };
+  return viewer;
+}
+
+/**
+ * The same door, for a route that has something to say to nobody.
+ *
+ * Three answers rather than two. A Refusal is sent as it is, a Viewer is the
+ * person asking, and null is "nothing was offered, and this route allows
+ * that". Only the catalogue routes reach for it, and only because their answer
+ * without the holdings is nobody's secret.
+ *
+ * A credential that is offered and does not verify is refused, never read as
+ * null. Downgrading it would show somebody whose session had just run out a
+ * catalogue with their own collection missing from it, which reads as data
+ * loss: the worst lie this door could tell.
+ *
+ * The order is authorise()'s, for the same reason: the checks that need no
+ * secret come first, so a flood is turned away before it reaches the limiter's
+ * map, let alone a signature check.
+ */
+export async function authoriseOpen(req: Request): Promise<Refusal | Viewer | null> {
+  if (!originAllowed(req)) return { status: 403, error: "Forbidden" };
+
+  const ip =
+    req.headers.get("x-real-ip")?.trim() ||
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+  const offered = carriesCredential(req);
+  const wait = (offered ? withCredential : openRead)(ip);
+  if (wait) return { ...REFUSALS.tooMany, headers: retryAfter(wait) };
+
+  if (!configured()) {
+    console.error("No database is configured: every request will be refused");
+    return { status: 503, error: NO_DATABASE_CONFIGURED };
+  }
+
+  // Nothing offered: the route answers the catalogue and asks nobody who this
+  // is. requestViewer() is not called at all, which is also why an open read
+  // costs no signature check.
+  if (!offered) return null;
+
+  const viewer = await requestViewer(req);
   if (!viewer) return { ...REFUSALS.signIn };
   return viewer;
 }

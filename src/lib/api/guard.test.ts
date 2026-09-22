@@ -18,6 +18,7 @@ vi.mock("../storage/supabase", () => ({ configured: () => hasDatabase }));
 
 const {
   authorise,
+  authoriseOpen,
   authoriseWrite,
   originAllowed,
   readHeaders,
@@ -287,5 +288,62 @@ describe("storeErrorResponse", () => {
     );
     expect(res.status).toBe(502);
     vi.restoreAllMocks();
+  });
+});
+
+/**
+ * The door the catalogue routes use, which has a third answer.
+ *
+ * Three cases and they are the whole of it: nobody offered anything (null, and
+ * the route answers the catalogue), somebody offered something that does not
+ * verify (refused, because a session that just expired must not quietly become
+ * a stranger), and somebody offered something good (the viewer, exactly as
+ * authorise() would have answered).
+ */
+describe("authoriseOpen", () => {
+  it("answers null where nothing was offered", async () => {
+    expect(await authoriseOpen(req({}))).toBeNull();
+  });
+
+  it("never asks who the caller is when nothing was offered", async () => {
+    // viewer is SOMEBODY by default; answering null proves requestViewer was
+    // not consulted rather than that it said no.
+    viewer = SOMEBODY;
+    expect(await authoriseOpen(req({}))).toBeNull();
+  });
+
+  it("refuses a credential that does not verify, rather than reading it as nobody", async () => {
+    viewer = null;
+    const answer = await authoriseOpen(req({ bearer: KEY }));
+    expect(answer).not.toBeNull();
+    expect(refused(answer!)).toBe(true);
+    expect((answer as { status: number }).status).toBe(401);
+  });
+
+  it("answers the viewer when the credential verifies", async () => {
+    viewer = SOMEBODY;
+    const answer = await authoriseOpen(req({ bearer: KEY }));
+    expect(refused(answer!)).toBe(false);
+    expect((answer as Viewer).userId).toBe("user-1");
+  });
+
+  it("still turns away a cross-site origin, credential or not", async () => {
+    const answer = await authoriseOpen(req({ origin: "https://evil.example" }));
+    expect((answer as { status: number }).status).toBe(403);
+  });
+
+  it("still refuses everything when no database is configured", async () => {
+    hasDatabase = false;
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const answer = await authoriseOpen(req({}));
+    expect((answer as { status: number }).status).toBe(503);
+    vi.restoreAllMocks();
+  });
+
+  it("lets a reader turn more pages than someone guessing at a key would get", async () => {
+    // The `guessing` ceiling is ten a minute. A visitor browsing sets is not a
+    // probe, so the same address must get well past ten here.
+    const ip = "10.9.9.9";
+    for (let i = 0; i < 30; i++) expect(await authoriseOpen(req({ ip }))).toBeNull();
   });
 });
