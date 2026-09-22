@@ -70,9 +70,7 @@ const carriesCredential = (req: Request): boolean => {
   if (/^bearer\s+\S+/i.test(req.headers.get("authorization") ?? "")) return true;
   const cookie = req.headers.get("cookie") ?? "";
   if (cookie.includes(`${SESSION_COOKIE}=`)) return true;
-  return cookie
-    .split(";")
-    .some((pair) => isAuthCookie(pair.split("=")[0]?.trim() ?? ""));
+  return cookie.split(";").some((pair) => isAuthCookie(pair.split("=")[0]?.trim() ?? ""));
 };
 
 /**
