@@ -89,8 +89,8 @@ components:
       description: The catalogue routes answer a caller who named nobody too. An answer carrying the caller's own holdings is that caller's alone and is never cached in between; an answer to a caller who named nobody is the catalogue by itself, cached at the CDN for a minute. Every refusal on these routes is private, whoever asked.
       schema: { type: string, enum: ["private, no-store", "public, max-age=0, s-maxage=60"] }
     Vary-Catalogue:
-      description: The catalogue routes answer differently by credential, so a cache keys on the credential and the origin.
-      schema: { type: string, const: "Origin, Authorization, Cookie" }
+      description: The catalogue routes answer differently by credential. The open answer, the only one a shared cache may store, keys on the credential and the origin; the answer to a named caller is private and keys on the origin alone.
+      schema: { type: string, enum: ["Origin", "Origin, Authorization, Cookie"] }
     Cache-Control-Public:
       description: Public answers are cached at the CDN for a minute and never served stale, so a profile turned private is gone within that minute.
       schema: { type: string, example: "public, max-age=0, s-maxage=60" }
