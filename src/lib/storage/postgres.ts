@@ -530,6 +530,32 @@ export async function listHistoryPrices(
   return parts.flat();
 }
 
+/** A market mover candidate as the store narrows them: the printing, and the day its window ends. */
+export type MarketMoverCandidate = { tcgId: string; printing: string; untilDay: string };
+
+/**
+ * The English printings whose price moved most in euros over the `days` to the latest day any row
+ * has, `limit` of them, biggest first (migration 20260923120000). Narrowed in Postgres so the lines
+ * of the whole catalogue never come into the API; ranked on the figures as stored, before the stray
+ * rule, so the caller asks for far more than it shows. Service role only: `db` is adminClient().
+ */
+export async function marketMoverCandidates(
+  db: SupabaseClient,
+  days: number,
+  limit: number,
+): Promise<MarketMoverCandidate[]> {
+  const { data, error } = await db.rpc("market_mover_candidates", {
+    p_days: days,
+    p_limit: limit,
+  });
+  if (error) throw new Error(`Reading the market's movers failed: ${error.message}`);
+  return ((data ?? []) as { tcg_id: string; printing: string; until_day: string }[]).map((r) => ({
+    tcgId: r.tcg_id,
+    printing: r.printing,
+    untilDay: r.until_day,
+  }));
+}
+
 /**
  * One account's value history before `before`, replaced by `points`.
  *
