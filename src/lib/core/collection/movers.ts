@@ -242,11 +242,24 @@ export function moversOf(
   // Ranked by what it did to the collection, not by percentage: a common that
   // doubled from four cents is a bigger number and a smaller event than a
   // Charizard that gained eight euros.
-  const byTotal = [...movers].sort((a, b) => b.total - a.total);
+  return splitByMove(movers, (m) => m.total, top);
+}
+
+/**
+ * Risers and fallers, each biggest first, `top` each way: the one ranking every movers list here
+ * uses, by the euros a move is worth and never by its percentage (moversOf says why). A collection
+ * ranks by the move times the copies held; the market (market-movers.ts) by the move of one copy.
+ */
+export function splitByMove<T>(
+  movers: T[],
+  worth: (m: T) => number,
+  top: number,
+): { up: T[]; down: T[] } {
+  const byWorth = [...movers].sort((a, b) => worth(b) - worth(a));
   return {
-    up: byTotal.filter((m) => m.total > 0).slice(0, top),
-    down: byTotal
-      .filter((m) => m.total < 0)
+    up: byWorth.filter((m) => worth(m) > 0).slice(0, top),
+    down: byWorth
+      .filter((m) => worth(m) < 0)
       .reverse()
       .slice(0, top),
   };

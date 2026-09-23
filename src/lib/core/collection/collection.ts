@@ -71,6 +71,7 @@ import {
   printProductKey,
   runKey,
   runLinksOf,
+  STRAY_WINDOW_DAYS,
 } from "../price-months.mjs";
 import type { Finish, FoilPattern } from "./collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
@@ -99,10 +100,15 @@ import {
   readTcgplayerPrices,
   catalogueProductIds,
   printProductsOfCards,
+  marketMoverCandidates,
+  catalogueCardsById,
 } from "../../storage/postgres";
 import { rememberedScans } from "./remembered-scans";
 import { heldDays, holdShelfPrice, holdStrayPrices } from "./held-prices";
 import { endsOfLines, type CardPricePoint } from "./movers";
+import { type MarketMove, marketMoversOf } from "./market-movers";
+import { ownScan } from "../catalogue/artwork";
+import { classicNumberOf } from "../catalogue/set-codes";
 import { dayTotals, earlyLine, folderSeries, holdingsSeries } from "./folder-history";
 import { HISTORY_FROM, tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
@@ -2005,6 +2011,96 @@ export const getMoverPrices = cache(
     }
   },
 );
+
+/** One market mover as a tile draws it: the card, the printing and the move, nothing of anybody's. */
+export type MarketMoverTile = MarketMove & {
+  name: string;
+  setName: string;
+  /** The catalogue's number, which a card is matched by. */
+  number: string;
+  /** As the card prints it, for its label (classicNumberOf, as /catalog/cards answers it). */
+  printedNumber: string;
+  /** A file of ours or null (ownScan): no other host's address leaves the API. */
+  image: string | null;
+};
+
+/** The market movers, and whether they could be read: failed is never answered as nothing moved. */
+export type MarketMovers = { up: MarketMoverTile[]; down: MarketMoverTile[]; failed: boolean };
+
+/** How many candidates the store narrows to: twenty times the list, room for the stray rule's takings. */
+const MARKET_CANDIDATES = 200;
+
+const daysBefore = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);
+
+/**
+ * The printings that moved most across the whole English catalogue over the `days` to the latest
+ * price day, ten each way, for GET /v1/catalog/movers.
+ *
+ * Three reads. Postgres narrows the catalogue to MARKET_CANDIDATES printings on the figures as
+ * stored (marketMoverCandidates), so no request pulls twenty thousand cards' lines into Node. Their
+ * lines come through listHistoryPrices, the read the collection's movers and every chart use, laid
+ * out by daysFromMonths: a figure one odd sale set is held over with the figure before it there, so
+ * the market movers are protected by the same filtering as a person's, not a second one. The lines
+ * reach STRAY_WINDOW_DAYS back before the window, because that is how far either side the rule looks
+ * for a figure's neighbours, and a window's first day judged without them is not judged at all.
+ * marketMoversOf compares and ranks. Then the names and pictures of the tiles, for the movers alone
+ * and in one read (catalogueCardsById), since a candidate the rule held flat has no tile to name.
+ *
+ * Read through the service role. Every reader is answered the same list, and `anon` has no grant on
+ * card_price_months or the function (getCardPrices says why it is kept off).
+ *
+ * Kept a day under the price day, as every price cache here is keyed (latestPriceDay), and hung on
+ * priceHistoryTag, so the nightly write that brings a new day drops it the moment it lands.
+ */
+export async function getMarketMovers(days = 7): Promise<MarketMovers> {
+  const nothing = { up: [], down: [] };
+  const db = adminClient();
+  // Without the service role nothing can be read for this list, and an empty one reads as "nothing moved".
+  if (!db) return { ...nothing, failed: true };
+  try {
+    const priceDay = await latestPriceDay();
+    const movers = await unstable_cache(
+      async () => {
+        const candidates = await marketMoverCandidates(db, days, MARKET_CANDIDATES);
+        const until = candidates[0]?.untilDay;
+        if (!until) return nothing;
+        const from = daysBefore(until, days);
+        const cards = [...new Set(candidates.map((c) => c.tcgId))].map((tcgId) => ({
+          tcgId,
+          language: "en" as const,
+        }));
+        const lines = await listHistoryPrices(db, cards, daysBefore(from, STRAY_WINDOW_DAYS));
+        const { up, down } = marketMoversOf(candidates, lines, { from, to: until });
+        const ids = [...new Set([...up, ...down].map((m) => m.tcgId))];
+        const facts = new Map((await catalogueCardsById(db, ids, "en")).map((r) => [r.id, r]));
+        /* A mover the copy holds no card for is left out rather than drawn as a tile with no name:
+           the copy is every English card TCGplayer prices, so this is a card between two nights. */
+        const tile = (m: MarketMove): MarketMoverTile[] => {
+          const card = facts.get(m.tcgId);
+          if (!card) return [];
+          return [
+            {
+              ...m,
+              name: card.name,
+              setName: card.set_name,
+              number: card.local_id,
+              printedNumber: classicNumberOf(m.tcgId) ?? card.local_id,
+              image: ownScan(card.image).image,
+            },
+          ];
+        };
+        return { up: up.flatMap(tile), down: down.flatMap(tile) };
+      },
+      ["market-movers", "v1", priceDay, String(days)],
+      { revalidate: DAY, tags: [priceHistoryTag] },
+    )();
+    return { ...movers, failed: false };
+  } catch (err) {
+    console.error("The market's movers are unavailable, retrying on the next request:", err);
+    return { ...nothing, failed: true };
+  }
+}
 
 /** The line and whether it could be built: the shape getCardPrices answers, for the same reason. */
 export type RecentValue = { snapshots: ValueSnapshot[]; failed: boolean };
