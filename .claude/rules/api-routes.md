@@ -35,15 +35,29 @@ paths:
     visitor with no account. `/catalog/index` has no holding field to leave out at all; on
     `/catalog/cards` the price stays where the marks go, because what a card trades at is a
     fact about the card.
+  - **Two under `/api/v1/cards/<tcgId>`**: the card itself and `/prices`, its price line, since
+    2026-09-23. The card sheet opens from Browse, and a visitor saw its price line read "could
+    not be loaded". Neither answer carries anything of the reader's, and the price that was the
+    reason to close them is a catalogue price the owner made public on 2026-09-22, history
+    included: one card's price was already readable through `/catalog/sets/<setId>`. What stays
+    shut is a person's collection, which is what a stranger could total up. They call
+    `authoriseOpen()` like the catalogue routes, and `/prices` reads under the key `catalogue`
+    for a caller who names nobody. That caller's price lines (here and on
+    `/catalog/sets/<setId>?from=`) are read through the service role, passed as
+    `getCardPrices(…, "nobody")`: `anon` has no grant on `card_price_months`, and is not to get
+    one, because with the anon key every browser carries it would read the table straight
+    through PostgREST, past the API's limiter.
   - **`/health`**.
 
   It said "the three routes under `/api/v1/public/<username>/`" and there were four of those
   even then, none of the doors, and no species route yet. The grep names `authorise(` and `authoriseWrite`
   rather than `authorise`, because `authoriseOpen` contains that shorter string too: with the
   looser pattern the three catalogue routes counted as guarded and opened unseen.
-- **`/api/v1/collection` and `/api/v1/cards/:tcgId` call `authorise()`** and refuse an
-  anonymous caller. They used to be open; they were closed when the public profile shipped,
-  and each route's docstring says why. Do not "fix" the guard back off.
+- **`/api/v1/collection` calls `authorise()`** and refuses an anonymous caller. It used to be
+  open; it was closed when the public profile shipped, and its docstring says why. Do not "fix"
+  the guard back off. `/api/v1/cards/:tcgId` was closed with it, for the price it carries, and
+  opened again on 2026-09-23 once catalogue prices were public (see the open set above): its
+  answer is the card's, where the collection's is a person's.
 - **A public collection exposes exactly two variant fields, `rarity` and `owned`.** It is an
   allow-list, so a new column is excluded by default. An earlier version nulled the price and
   left `card.variants` untouched, publishing purchase price, date, condition and grade.

@@ -1257,13 +1257,21 @@ paths:
       tags: [Collection]
       operationId: getCard
       summary: One card, its printings and its price
+      description: |
+        Open: a caller who names nobody is answered with the same card, because nothing on it
+        is the caller's. Its price is a catalogue price, public since 2026-09-22. The credential
+        decides only who may hold the answer. A credential that is offered and does not verify
+        is still a 401.
+      security: []
       parameters:
         - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
         - { name: language, in: query, required: false, schema: { type: string, enum: [en, ja] }, description: "Which catalogue holds this id; left out, English. A Japanese id is a 404 in the English catalogue and the other way round. `languages` comes back empty for a Japanese one: the Western catalogues share the English ids, so a copy of it can only be its own language." }
       responses:
         "200":
           description: The card.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CardDetail" }
@@ -1279,7 +1287,13 @@ paths:
       tags: [Value]
       operationId: getCardPrices
       summary: One card's price, day by day, over the last ninety days
-      description: The nightly readings for a held card. A card with no readings answers an empty list, not a 404.
+      description: |
+        The nightly readings for a held card. A card with no readings answers an empty list, not a 404.
+
+        Open: a caller who names nobody is answered with the same line, because a card's price
+        history is the catalogue's and public since 2026-09-22. The credential decides only who
+        may hold the answer. A credential that is offered and does not verify is still a 401.
+      security: []
       parameters:
         - { name: tcgId, in: path, required: true, schema: { type: string }, description: "TCGdex's card id, e.g. `swsh3-136`." }
         - name: language
@@ -1294,7 +1308,9 @@ paths:
       responses:
         "200":
           description: The points, oldest first.
-          headers: { Cache-Control: { $ref: "#/components/headers/Cache-Control-Private" } }
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
           content:
             application/json:
               schema:
