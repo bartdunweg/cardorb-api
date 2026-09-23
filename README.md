@@ -160,7 +160,7 @@ Env vars, matching what `lib/core/env.ts` checks at boot and `.env.example` docu
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | the collection's database; public by design, RLS is what stops a stranger, not secrecy |
 | `OWNER_EMAIL` | yes | the address the login checks against |
-| `SUPABASE_SERVICE_ROLE_KEY` | account-deletion path only | bypasses every policy, so it never reaches the browser |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes, for visitors | bypasses every policy, so it never reaches the browser. Deletes an account, and reads catalogue data for a caller who named nobody: a card's price line, the public profile, the printing pictures. Without it a visitor's price lines answer as failed |
 | `NEXT_PUBLIC_SITE_URL` | recommended | `https://cardorb.com` in production — the web app, where the links in auth emails land |
 | `ALLOWED_ORIGINS` | no | *other* sites allowed to post here; this app's own domain never needs to be in it |
 | `IMAGES_WRITE_SECRET` | no | lets the catalogue cron copy card pictures into our bucket; without it every address stays the source's |

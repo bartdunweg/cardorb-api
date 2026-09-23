@@ -216,18 +216,19 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
       const series = prices.get(priceKey(c))?.series;
       return series ? [{ id: c.id, tcgId: priceKey(c), language: priceLanguage, series }] : [];
     });
+    const wanted = priced.map(({ tcgId, language }) => ({ tcgId, language }));
     const lines = await timed(
       "set price changes",
       () =>
-        getCardPrices(
-          /* The lines are card_price_months, the catalogue's and the same for everybody: the
-             userId is the cache key and the tag a write drops, never a filter. A reader who
-             offered nothing shares one entry, under a name no account can be given. */
-          who?.userId ?? "catalogue",
-          priced.map(({ tcgId, language }) => ({ tcgId, language })),
-          bearer(req) ?? undefined,
-          from,
-        ),
+        who
+          ? getCardPrices(who.userId, wanted, bearer(req) ?? undefined, from)
+          : /* The lines are card_price_months, the catalogue's and the same for everybody: the
+               userId is the cache key and the tag a write drops, never a filter, so a reader who
+               offered nothing shares one entry under a name no account can be given. And "nobody"
+               is said rather than inferred: `anon` may not read the table, so this reader reads
+               through the service role inside this metered route (getCardPrices says why). Read
+               as `anon`, every visitor's page said priceChangesUnavailable from #584 on. */
+            getCardPrices("catalogue", wanted, undefined, from, "nobody"),
       `${priced.length} cards`,
     );
     changesFailed = lines.failed;

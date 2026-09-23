@@ -6,8 +6,15 @@ const defaultPriceLanguage = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
-  refused: (r: { status?: number }) => "status" in r,
-  readHeaders: () => ({}),
+  /* One mock behind both doors, as the catalogue routes' tests do it: every test written against
+     authorise() still says what it said, and null is a reader who offered no credential at all. */
+  authoriseOpen: (...a: unknown[]) => authorise(...a),
+  refused: (r: { status?: number } | null) => !!r && "status" in r,
+  /* Distinguishable on purpose, where both were `{}`: that is exactly what let a cacheable refusal
+     past review on the shelf route (#584). Capitalised as the route's own key, so neither set can
+     end up beside it as a second one (805764fd). */
+  readHeaders: () => ({ "Cache-Control": "private, no-store" }),
+  openReadHeaders: () => ({ "Cache-Control": "public, max-age=0, s-maxage=60" }),
 }));
 vi.mock("@/lib/api/viewer", () => ({
   bearer: (req: Request) => req.headers.get("authorization")?.replace(/^Bearer /, "") ?? null,
@@ -166,6 +173,88 @@ describe("GET /api/v1/cards/{tcgId}/prices", () => {
   it("refuses a caller the guard refuses", async () => {
     authorise.mockResolvedValue({ status: 401, error: "No.", headers: {} });
     expect((await get()).status).toBe(401);
+    expect(getCardPrices).not.toHaveBeenCalled();
+  });
+});
+
+/* A card's price history is card_price_months, the catalogue's and the same for everybody, and the
+   owner made catalogue prices public on 2026-09-22, history included. So the card sheet's line
+   draws for a visitor who has not signed in. */
+describe("without a credential", () => {
+  const stranger = (tcgId = "base1-4", query = "") =>
+    GET(new Request(`https://cardorb.com/api/v1/cards/${tcgId}/prices${query}`), {
+      params: Promise.resolve({ tcgId }),
+    });
+
+  beforeEach(() => {
+    authorise.mockResolvedValue(null);
+  });
+
+  it("answers the card's line to a reader who offered nothing", async () => {
+    const res = await stranger();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      points: [
+        { date: "2026-09-01", market: 120.5, holo: null },
+        { date: "2026-09-02", market: 121, holo: 300 },
+      ],
+    });
+  });
+
+  /* The userId is only the cache key and the tag a write drops, never a filter: a reader who
+     offered nothing shares one entry under a name no account can be given, as the set page's
+     lines do since #584. */
+  it("reads under the catalogue's own key and with no credential", async () => {
+    await stranger();
+    expect(getCardPrices).toHaveBeenCalledWith(
+      "catalogue",
+      [{ tcgId: "base1-4", language: "en" }],
+      undefined,
+      "2000-01-01",
+      "nobody",
+    );
+  });
+
+  /* `anon` has no grant on card_price_months: a stranger's read goes through the service role,
+     told so explicitly, and a named reader's never does. */
+  it("reads as nobody, through the service role, only for a reader who named nobody", async () => {
+    await stranger();
+    expect(getCardPrices.mock.calls.at(-1)![4]).toBe("nobody");
+    authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
+    await get();
+    expect(getCardPrices.mock.calls.at(-1)![4]).toBeUndefined();
+  });
+
+  it("answers with the open window, which a shared cache may hold", async () => {
+    const res = await stranger();
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+  });
+
+  it("keeps a named reader's line private", async () => {
+    authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
+    expect((await get()).headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  /* A refusal is nobody's to hold: sent with the open window, one bad minute would be stored by
+     the shared cache and handed to every signed-out visitor until it expired. */
+  it("sends the 400 for a language that is not a catalogue private, not with the open window", async () => {
+    const res = await stranger("base1-4", "?language=de");
+    expect(res.status).toBe(400);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("sends the 503 uncached when the line could not be read", async () => {
+    getCardPrices.mockResolvedValue({ points: [], failed: true });
+    const res = await stranger();
+    expect(res.status).toBe(503);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("sends a credential that does not verify its refusal, private", async () => {
+    authorise.mockResolvedValue({ status: 401, error: "No.", headers: {} });
+    const res = await stranger();
+    expect(res.status).toBe(401);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
     expect(getCardPrices).not.toHaveBeenCalled();
   });
 });

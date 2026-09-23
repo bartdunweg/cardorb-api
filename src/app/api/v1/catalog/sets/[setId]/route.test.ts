@@ -506,4 +506,24 @@ describe("without a credential", () => {
     await open();
     expect(getRows).not.toHaveBeenCalled();
   });
+
+  /* `anon` has no grant on card_price_months, so the page's price changes read as `anon` were
+     refused and every visitor saw priceChangesUnavailable. A stranger's lines go through the
+     service role, told so explicitly, and a named reader's never do. */
+  it("reads the price lines as nobody, through the service role, and a named reader's not", async () => {
+    tcgplayerPricesFor.mockResolvedValue(
+      new Map([
+        ["base1-4", { price: { market: 340 }, printing: "holo", series: "unlimited-holofoil" }],
+      ]),
+    );
+    getCardPrices.mockResolvedValue({ failed: false, points: [] });
+    const from = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    await open(`from=${from}`);
+    expect(getCardPrices.mock.calls.at(-1)![0]).toBe("catalogue");
+    expect(getCardPrices.mock.calls.at(-1)![4]).toBe("nobody");
+    authoriseOpen.mockResolvedValue(VIEWER);
+    await open(`from=${from}`);
+    expect(getCardPrices.mock.calls.at(-1)![0]).toBe("me-uuid");
+    expect(getCardPrices.mock.calls.at(-1)![4]).toBeUndefined();
+  });
 });

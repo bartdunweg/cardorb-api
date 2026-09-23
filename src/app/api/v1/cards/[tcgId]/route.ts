@@ -16,7 +16,7 @@ import { languagesOf } from "@/lib/core/catalogue/card-languages";
 import { foilPatternsOfSerie, patternPrintsFor } from "@/lib/core/catalogue/card-printings";
 import { serieOfSet } from "@/lib/core/catalogue/tcgdex-client";
 import { isBrowseLanguage } from "@/lib/core/catalogue/tcgdex-browse";
-import { authorise, readHeaders, refused } from "@/lib/api/guard";
+import { authoriseOpen, openReadHeaders, readHeaders, refused } from "@/lib/api/guard";
 import {
   editionPictures,
   withPrintPictures,
@@ -34,23 +34,32 @@ import { adminClient } from "@/lib/storage/supabase";
  * that never matched a catalogue has no detail to serve, which is a 404 rather
  * than an empty object: nothing is a different answer from nothing found.
  *
- * Behind the key, like every read here now. This one carries a price and the
- * product it came from, which is exactly what the public page
- * goes out of its way not to show; leaving it open would be an easier way to
- * ask than reading the page it was hidden from.
+ * Open to a reader who offers no credential, since 2026-09-23. It was closed
+ * because it carries a price and the product it came from, "exactly what the
+ * public page goes out of its way not to show". That reason was overtaken on
+ * 2026-09-22, when the owner decided that catalogue prices are public, the
+ * current price and its history both, knowing they can be harvested; every
+ * card's price was already open through /catalog/sets/{id} since #584. What
+ * the public profile protects is something else: that a stranger cannot total
+ * up what a person's collection is worth. One card's price does not do that,
+ * and nothing here says who holds the card. So a visitor opening a card from
+ * Browse is shown its sheet rather than a lock.
  */
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, { params }: { params: Promise<{ tcgId: string }> }) {
-  // Authorised but not personalised: a card's detail is a fact about the card,
-  // the same for everyone who asks. The check is here because this endpoint is
-  // behind the door, not because the answer depends on who opened it.
-  const who = await authorise(req);
-  if (refused(who)) {
+  // Not personalised: a card's detail is a fact about the card, the same for
+  // everyone who asks, so nobody is let through too. A credential that is
+  // offered still has to verify; what it changes is only who may hold the answer.
+  const who = await authoriseOpen(req);
+  if (who && refused(who)) {
     return apiError(who.status, who.error, undefined, {
       headers: { ...readHeaders(req), ...who.headers },
     });
   }
+  /* For the 200 alone. Every refusal below keeps readHeaders(): a 404 or a 503 sent with the open
+     window would be stored once by the shared cache and handed to every visitor (guard.ts). */
+  const headers = who ? readHeaders(req) : openReadHeaders(req);
 
   const tcgId = catalogueCardId((await params).tcgId);
   /* `?language=ja`: the Japanese catalogue rather than the English one, because its ids are
@@ -127,10 +136,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
     console.error(`The printings of ${tcgId} could not be read:`, err);
     return unavailable("That card could not be read. Try again in a moment.", readHeaders(req));
   }
-  // The hour of shared caching this used to carry is gone with the lock: a CDN
-  // holding one person's answer and handing it to the next asker without a key
-  // would undo the check above. getCardDetail memoises upstream, so what this
-  // costs is the round trip, not the walk.
+  // A named reader's answer is held nowhere, as every answer to a named reader
+  // is; nobody's answer is held a minute at the CDN, keyed on the credential,
+  // and never served stale, so the nightly price reaches a visitor within it.
+  // getCardDetail memoises upstream, so a miss costs the round trip, not the walk.
   return NextResponse.json(
     {
       ...card,
@@ -150,6 +159,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ tcgId: s
         ? { ...patternPrints, prints: withPrintPictures(patternPrints.prints, pictures) ?? [] }
         : patternPrints,
     },
-    { headers: readHeaders(req) },
+    { headers },
   );
 }

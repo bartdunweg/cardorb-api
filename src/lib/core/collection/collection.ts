@@ -107,7 +107,7 @@ import { dayTotals, earlyLine, folderSeries, holdingsSeries } from "./folder-his
 import { HISTORY_FROM, tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
-import { adminClient, serverClient, userClient } from "../../storage/supabase";
+import { adminClient, configured, serverClient, userClient } from "../../storage/supabase";
 
 export type { ValueSnapshot } from "./value-snapshot";
 export { valueHistoryTag } from "./value-snapshot";
@@ -1886,6 +1886,34 @@ export const defaultPriceLanguage = async (tcgId: string): Promise<PriceLanguage
   return languages.includes("ja") && !languages.includes("en") ? "ja" : "en";
 };
 
+/**
+ * Who a price line is read for. "named" is a caller the guard put a name to, by bearer or by
+ * cookie, and reads as themselves. "nobody" is a caller who offered no credential at all, on a
+ * route that answers one (authoriseOpen), and is said by the route that knows `who` is null.
+ *
+ * Said rather than inferred. Not from a missing token: a caller signed in by cookie has none and is
+ * still somebody. Not from the "catalogue" cache key either: that is a name for an entry, not a
+ * statement about who asked, and a key is the wrong thing for a client to be chosen by.
+ */
+export type PriceReader = "named" | "nobody";
+
+/**
+ * A card's price line, and the lines of several at once, from card_price_months.
+ *
+ * `reader: "nobody"` reads through the service role. `anon` has no grant on the table
+ * (20260920120000_least_privilege_grants.sql) and is refused, which is how every visitor's set
+ * page said priceChangesUnavailable from #584 on. The grant is kept off on purpose (2026-09-23):
+ * with it, anybody could read the table straight through PostgREST with the anon key every browser
+ * carries, past the API's openRead limiter, on a 500 MB free-plan database. Through the service
+ * role inside the API the same data is public and the only road to it stays metered, as
+ * getPublicCollection and defaultPriceLanguage already read for this kind of reader. The service
+ * role passes RLS by, which is safe here because the read is scoped by what it asks and nothing
+ * else: listCardPrices selects card_price_months for the ids in `cards` alone, and that table holds
+ * no user column at all. `userId` stays the cache key and the tag a write drops, never a filter.
+ *
+ * A string rather than an options object: `cache()` compares its arguments by identity, and an
+ * object built at every call would never be the same one twice.
+ */
 export const getCardPrices = cache(
   async (
     userId: string,
@@ -1894,10 +1922,17 @@ export const getCardPrices = cache(
     token?: string,
     /** The earliest date wanted, yyyy-mm-dd; the ninety-day window when left out. */
     from?: string,
+    reader: PriceReader = "named",
   ): Promise<CardPriceHistory> => {
     if (!cards.length) return { points: [], failed: false };
     try {
-      const db = token ? userClient(token) : await serverClient();
+      const db =
+        reader === "nobody" ? adminClient() : token ? userClient(token) : await serverClient();
+      // A deployment with a database but no service-role key cannot read for
+      // nobody. That is a failure and must say so: answered as an empty line it
+      // read as a card with no history, and the prices route hands a 200 to a
+      // shared cache, so every visitor would have been told the same thing.
+      if (!db && reader === "nobody" && configured()) return { points: [], failed: true };
       // No database at all is not an outage: it is a deployment without one,
       // and listRows answers it the same way.
       if (!db) return { points: [], failed: false };
