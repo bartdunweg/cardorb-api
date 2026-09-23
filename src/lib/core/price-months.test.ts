@@ -5,6 +5,7 @@ import {
   LEGACY,
   daysFromMonths,
   daysOfMonthRow,
+  holdRecoveredDips,
   priceJumps,
   legacyDays,
   monthOf,
@@ -14,6 +15,14 @@ import {
   runLinksOf,
   shadowlessKey,
 } from "./price-months.mjs";
+import lugiaRows from "./lugia-aquapolis.fixture.json";
+
+/**
+ * Lugia, Aquapolis (ecard2-149), holofoil, August and September 2026 as the live line read on
+ * 2026-09-23: about €3,880, then €1,213 for 14 to 16 September, then about €3,920 again, and the
+ * same kind of dip from 31 August to 3 September. The card never moved.
+ */
+const LUGIA = lugiaRows.map((r) => ({ ...r, language: "en" as const }));
 
 describe("monthsFromDays", () => {
   it("puts each day at its place in its card's printing's month, in cents", () => {
@@ -291,13 +300,14 @@ describe("daysFromMonths", () => {
   });
 
   // SVLN-004's normal read 4 cents where its neighbours read 5: five times, at that level, is one
-  // cent of TCGplayer's own conversion.
+  // cent of TCGplayer's own conversion. On the line's last day, so no dip rule can hold it either: a
+  // figure under a quarter that came back is held by that rule, as the web's chart holds it.
   it("judges nothing on a line under a quarter", () => {
-    const cents = Array.from({ length: 31 }, (_, i) => (i === 10 ? 1 : 20));
+    const cents = Array.from({ length: 31 }, (_, i) => (i === 30 ? 1 : 20));
     const days = daysFromMonths([
       { language: "en", tcg_id: "svlen-004", printing: "normal", month: "2026-07-01", cents },
     ]);
-    expect(days.find((d) => d.date === "2026-07-11")?.printings).toEqual({ normal: 0.01 });
+    expect(days.find((d) => d.date === "2026-07-31")?.printings).toEqual({ normal: 0.01 });
     expect(days.some((d) => d.held)).toBe(false);
   });
 
@@ -342,6 +352,162 @@ describe("daysFromMonths", () => {
       },
     ]);
     expect(daysFromMonths([month("normal", 1, 100)], "2026-02-02")).toEqual([]);
+  });
+});
+
+describe("holdRecoveredDips", () => {
+  const days = (values: [string, number][]) => values.map(([date, value]) => ({ date, value }));
+
+  // Base Set Charizard's Shadowless run: €1,869 on 30 August, €1,000 to €1,099 for eleven days, €1,948 again.
+  it("holds the level over a dip of forty percent or more that comes back within three weeks", () => {
+    const held = holdRecoveredDips(
+      days([
+        ["2026-08-30", 1869],
+        ["2026-08-31", 1099],
+        ["2026-09-05", 1043],
+        ["2026-09-10", 1002],
+        ["2026-09-11", 1948],
+        ["2026-09-12", 1921],
+      ]),
+    );
+    expect(held.map((p) => p.value)).toEqual([1869, 1869, 1869, 1869, 1948, 1921]);
+  });
+
+  it("holds a rise that falls back the same way, and stays back", () => {
+    const held = holdRecoveredDips(
+      days([
+        ["2026-01-01", 100],
+        ["2026-01-02", 300],
+        ["2026-01-03", 102],
+        ["2026-01-04", 101],
+      ]),
+    );
+    expect(held.map((p) => p.value)).toEqual([100, 100, 102, 101]);
+  });
+
+  // A fall from €100 to a steady €50 for forty days, with one sale at €85 on its fifteenth day and
+  // one at €80 on its thirtieth. Taken as came back on one figure, it read flat at €100 until the
+  // €85, then €85 until the €80, and the fall showed from its thirty-first day.
+  it("keeps a fall that one sale near the old level does not undo", () => {
+    const line = days(
+      Array.from({ length: 50 }, (_, i): [string, number] => [
+        new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+        i < 10 ? 100 : i === 24 ? 85 : i === 39 ? 80 : 50,
+      ]),
+    );
+    const held = holdRecoveredDips(line).map((p) => p.value);
+    // The fall shows from its first day. The one sale at €85 is a rise off €50 that fell straight
+    // back, and is held at €50; the €80 is under 1⅔ times €50 and stays as TCGplayer sent it.
+    expect(held.slice(10)).toEqual(Array.from({ length: 40 }, (_, i) => (i === 29 ? 80 : 50)));
+  });
+
+  it("does not hold a dip with only one figure back at the end of the line: it has not shown it", () => {
+    const one = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-03", 50],
+      ["2026-01-04", 100],
+    ]);
+    expect(holdRecoveredDips(one)).toBe(one);
+  });
+
+  it("keeps a fall that does not come back, or comes back too late, and the line's last days", () => {
+    const late = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-30", 100],
+    ]);
+    expect(holdRecoveredDips(late)).toEqual(late);
+    const open = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+    ]);
+    expect(holdRecoveredDips(open)).toEqual(open);
+    const lower = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-03", 70],
+    ]);
+    expect(holdRecoveredDips(lower)).toEqual(lower);
+  });
+
+  // Not idempotent, and not meant to be: it runs once, in daysFromMonths. The first dip here has
+  // one figure back before the next dip, so it is not held; the second is, and a second pass would
+  // then find the first one back for two figures and flatten the line.
+  it("holds only what one pass finds", () => {
+    const line = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-03", 100],
+      ["2026-01-04", 50],
+      ["2026-01-05", 100],
+      ["2026-01-06", 100],
+    ]);
+    expect(holdRecoveredDips(line).map((p) => p.value)).toEqual([100, 50, 100, 100, 100, 100]);
+  });
+});
+
+describe("daysFromMonths and a dip that came back", () => {
+  const holofoil = (days: { date: string; printings?: Record<string, number> }[]) =>
+    days.map((d) => [d.date, d.printings?.holofoil]);
+
+  it("holds Lugia's level over its three days at €1,213, and says what it held", () => {
+    const days = daysFromMonths(LUGIA);
+    const on = (date: string) => days.find((d) => d.date === date);
+    for (const date of ["2026-09-14", "2026-09-15", "2026-09-16"])
+      expect(on(date)?.printings).toEqual({ holofoil: 3881.97 });
+    expect(on("2026-09-16")?.held).toEqual({ holofoil: 1213.49 });
+    expect(on("2026-09-16")?.holo).toBe(3881.97);
+    // The dip from 31 August to 3 September is the same thing, and held the same way.
+    expect(on("2026-09-02")?.printings).toEqual({ holofoil: 3865.01 });
+    // The days either side keep what TCGplayer sent.
+    expect(on("2026-09-13")).not.toHaveProperty("held");
+    expect(on("2026-09-17")?.printings).toEqual({ holofoil: 3919.5 });
+  });
+
+  it("makes Lugia's week from 16 to 22 September a move of €43.70, not €2,712", () => {
+    const days = daysFromMonths(LUGIA, "2026-09-16");
+    const first = days[0]!.printings!.holofoil!;
+    const last = days.at(-1)!.printings!.holofoil!;
+    expect(days[0]!.date).toBe("2026-09-16");
+    expect(Math.round((last - first) * 100) / 100).toBe(43.7);
+  });
+
+  it("keeps a dip that has not come back by the end of the line: that is a move until it does", () => {
+    const rows = [
+      {
+        language: "en" as const,
+        tcg_id: "ecard2-149",
+        printing: "holofoil",
+        month: "2026-09-01",
+        cents: Array.from({ length: 31 }, (_, i) => (i < 20 ? 388000 : i < 23 ? 121300 : null)),
+      },
+    ];
+    expect(holofoil(daysFromMonths(rows)).slice(-4)).toEqual([
+      ["2026-09-20", 3880],
+      ["2026-09-21", 1213],
+      ["2026-09-22", 1213],
+      ["2026-09-23", 1213],
+    ]);
+  });
+
+  it("holds a rise that fell back, on each printing's own line", () => {
+    const month = (printing: string, cents: (day: number) => number) => ({
+      language: "en" as const,
+      tcg_id: "sv1-1",
+      printing,
+      month: "2026-09-01",
+      cents: Array.from({ length: 31 }, (_, i) => (i < 20 ? cents(i + 1) : null)),
+    });
+    const days = daysFromMonths([
+      month("holofoil", (day) => (day === 10 || day === 11 ? 3000 : 1000)),
+      month("reverse-holofoil", () => 400),
+    ]);
+    expect(days.find((d) => d.date === "2026-09-10")?.printings).toEqual({
+      holofoil: 10,
+      "reverse-holofoil": 4,
+    });
+    expect(days.find((d) => d.date === "2026-09-11")?.held).toEqual({ holofoil: 30 });
   });
 });
 

@@ -127,18 +127,19 @@ describe("getMarketMovers", () => {
     expect(out.down.map((m) => [m.tcgId, m.change])).toEqual([["sv1-2", -10]]);
   });
 
-  it("reads the candidates' lines far enough back for the stray rule to weigh the window's first day", async () => {
+  it("reads the candidates' lines from the window's first day, which the read reaches back from", async () => {
     await getMarketMovers();
     // Told the price day, so Postgres does not have to find it.
     expect(marketMoverCandidates).toHaveBeenCalledWith(ADMIN, "2026-09-22", 7, 200);
-    // The window opens 2026-09-15; thirty days of neighbours before it (STRAY_WINDOW_DAYS).
+    // The window opens 2026-09-15. listCardPrices reads the thirty days before it itself
+    // (lineReadFrom), as every line's read does, so asking for them here would read sixty.
     expect(listHistoryPrices).toHaveBeenCalledWith(
       ADMIN,
       [
         { tcgId: "sv1-1", language: "en" },
         { tcgId: "sv1-2", language: "en" },
       ],
-      "2026-08-16",
+      "2026-09-15",
     );
   });
 

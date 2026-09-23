@@ -1,4 +1,5 @@
 import { CARRY_DAYS, holdingsSeries } from "./folder-history";
+import { DIP_DAYS } from "../price-months.mjs";
 import type { CardItem } from "./items";
 import type { CardPricePoint } from "./movers";
 import type { ValueSnapshot } from "./value-snapshot";
@@ -50,11 +51,22 @@ export function needsHistoryRebuild(
   );
 }
 
-/** How far back the night reads the held cards' readings: past CARRY_DAYS, and past two Saturdays. */
-export const NIGHT_READ_DAYS = 30;
+/**
+ * How many days before tonight the night writes again, so a late or corrected reading still lands.
+ *
+ * A dip that came back is held at its level (holdRecoveredDips in price-months.mjs) only once it
+ * has come back, which can be up to DIP_DAYS after it began. A week's rewrite left a longer dip's
+ * first nights in collection_value_snapshots as the dip, for good, and Home's window could open on
+ * one. One night more than DIP_DAYS writes every night a dip can still turn out to have been held.
+ */
+export const NIGHT_WRITE_DAYS = DIP_DAYS + 1;
 
-/** How many days before tonight the night writes again, so a late or corrected reading still lands. */
-export const NIGHT_WRITE_DAYS = 7;
+/**
+ * How far back the night reads the held cards' readings: CARRY_DAYS before the first night it
+ * writes, so a card read last a fortnight before that night still prices it, as the whole history
+ * would price it that day.
+ */
+export const NIGHT_READ_DAYS = NIGHT_WRITE_DAYS + CARRY_DAYS;
 
 const daysBefore = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10);

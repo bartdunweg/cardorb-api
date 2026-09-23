@@ -646,7 +646,7 @@ components:
           type: [string, "null"]
           description: "Sent by GET /catalog/sets/{setId}, GET /catalog/search and GET /catalog/cards: which printing `price` is, keyed as the card sheet keys its printings, the finish and a foil pattern after a slash (`normal`, `reverse-holo`, `holo`, `poke-ball`, `reverse-holo/cosmos`). Null where the card has no price, and on the rare card priced at a printing its catalogue does not list."
         priceChange:
-          description: "Only sent by GET /catalog/sets/{setId}, and only with `from`: what `printing` did since then, its first and last reading in the window, in euros. Null without two readings of that printing in the window, or without a price."
+          description: "Only sent by GET /catalog/sets/{setId}, and only with `from`: what `printing` did since then, its first and last reading in the window, in euros, read from the line `GET /v1/cards/{tcgId}/prices` answers: a price that dipped and came back is no move. Null without two readings of that printing in the window, or without a price."
           oneOf:
             - { $ref: "#/components/schemas/HeadlinePriceChange" }
             - { type: "null" }
@@ -1314,6 +1314,12 @@ paths:
       description: |
         The nightly readings for a held card. A card with no readings answers an empty list, not a 404.
 
+        Filtered as every change the API reports is read: a figure one odd sale set is held at the
+        figure before it, and so, since 2026-09-23, is a dip of 40% or more (or a rise of 1⅔ times)
+        that came back within 20% of the level before it inside three weeks, for two figures in a
+        row. A dip at the end of the line, or with one figure back and nothing after it, has not
+        shown it came back and stays.
+
         Open: a caller who names nobody is answered with the same line, because a card's price
         history is the catalogue's and public since 2026-09-22. The credential decides only who
         may hold the answer. A credential that is offered and does not verify is still a 401.
@@ -1838,7 +1844,8 @@ paths:
       description: |
         Across the whole English catalogue, not a collection (`GET /v1/movers` is the caller's
         own). Each printing is compared between its first and last reading in the seven days to
-        the latest price day, after the same stray-sale filtering every price line gets, and
+        the latest price day, after the same filtering every price line gets (a stray sale's
+        figure, and a dip back for two figures within three weeks, held at the level before it), and
         ranked by what one copy moved in euros, never by percentage: a common that doubled is a
         bigger number and a smaller event than a Charizard that gained eight euros. A printing
         under a euro at either end of the window, with one reading in it, or that moved under ten

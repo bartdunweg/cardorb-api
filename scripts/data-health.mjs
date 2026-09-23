@@ -1939,7 +1939,8 @@ const SPIKE_MAX_CARDS = 400;
     { since },
   );
   /* The same lines as the app reads them: `since` left at the beginning, because daysFromMonths
-     weighs the days before the window and holds a figure with the last one before it.
+     weighs the days before the window, holds a stray figure with the last one before it, and holds
+     a dip that came back at the level it fell from.
 
      The printing lines only. A day with none carries the old `market` and `holo` series instead
      (dayPrices), and no such day has been written since 2026-09-13; only
@@ -1966,7 +1967,7 @@ const SPIKE_MAX_CARDS = 400;
   check(
     `Price jumps in ${SPIKE_DAYS} days (reported)`,
     true,
-    `${jumps.length} readings ${JUMP_RATIO}× the one before, at €${JUMP_FLOOR_CENTS / 100} or over, on ${cards} cards of the ${candidates.length} the net caught${candidates.length > asked.length ? ` (capped at ${SPIKE_MAX_CARDS}, so this is a floor)` : ""}; ${standing.length} still in the line after the stray rule, ${tonight} of them on ${day ?? "the last day"}${standing.length ? `: ${shown(standing)}` : ""}`,
+    `${jumps.length} readings ${JUMP_RATIO}× the one before, at €${JUMP_FLOOR_CENTS / 100} or over, on ${cards} cards of the ${candidates.length} the net caught${candidates.length > asked.length ? ` (capped at ${SPIKE_MAX_CARDS}, so this is a floor)` : ""}; ${standing.length} still in the line after the stray and dip rules, ${tonight} of them on ${day ?? "the last day"}${standing.length ? `: ${shown(standing)}` : ""}`,
   );
 }
 

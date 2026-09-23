@@ -25,6 +25,7 @@ import {
   type PriceLanguage,
   PRICE_LANGUAGES,
   daysFromMonths,
+  lineReadFrom,
   monthOf,
   monthsFromDays,
 } from "../core/price-months.mjs";
@@ -469,7 +470,8 @@ export async function listCardPrices(
         .select("language,tcg_id,printing,month,cents")
         .eq("language", language)
         .in("tcg_id", chunk)
-        .gte("month", monthOf(since));
+        // From before `since`: the days a line's first ones are judged against (lineReadFrom).
+        .gte("month", monthOf(lineReadFrom(since)));
       if (until) query = query.lte("month", monthOf(until));
       const { data, error } = await query
         .order("tcg_id", { ascending: true })
