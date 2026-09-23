@@ -1216,6 +1216,11 @@ paths:
         so no price and no price per pattern print. Every id asked is a key of `cards`; `null` is
         not "no such card" but "ask `GET /v1/cards/{tcgId}`": the copy does not hold the card, or
         holds it without everything that route would answer. A read, so it changes nothing.
+
+        Open: a caller who offers no credential is answered too, as `GET /v1/cards/{tcgId}` is. A
+        credential that is offered and does not verify is still a 401. Every answer is private and
+        uncached, the open one included, because a POST is never a shared cache's to hold.
+      security: []
       requestBody:
         required: true
         content:

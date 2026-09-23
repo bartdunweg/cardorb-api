@@ -7,9 +7,13 @@ import type { CatalogueCardSheet } from "@/lib/storage/postgres";
  * does not answer is a 503 rather than a page of nulls.
  */
 const authorise = vi.fn();
+const authoriseOpen = vi.fn();
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
-  refused: (r: { status?: number }) => "status" in r,
+  /* The route opened to a caller who names nobody; every existing test still goes through the
+     same function, so what it says of a named reader stands. */
+  authoriseOpen: (...a: unknown[]) => authoriseOpen(...a),
+  refused: (r: { status?: number } | null) => r !== null && "status" in r,
   readHeaders: () => ({ "Cache-Control": "private, no-store" }),
 }));
 const catalogueCardSheets = vi.fn();
@@ -66,6 +70,7 @@ const sheet = (
 
 beforeEach(() => {
   authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
+  authoriseOpen.mockImplementation((...a: unknown[]) => authorise(...a));
   catalogueCardSheets.mockResolvedValue(new Map());
   printPicturesOfCards.mockResolvedValue(new Map());
 });
@@ -179,5 +184,36 @@ describe("POST /api/v1/cards/facts", () => {
     catalogueCardSheets.mockRejectedValue(new Error("connection reset"));
     vi.spyOn(console, "error").mockImplementation(() => {});
     expect((await post({ ids: ["sv1-1"] })).status).toBe(503);
+  });
+});
+
+/**
+ * The page of tiles a visitor opens on Browse asks this for the facts of a whole set at once. The
+ * facts are the same for everyone and the route changes nothing, so it answers a caller who
+ * offered no credential, as its single-card twin GET /v1/cards/{tcgId} has since #586.
+ */
+describe("POST /api/v1/cards/facts, for a reader with no account", () => {
+  /* The two doors as they really differ for somebody with nothing to show: the old one refuses,
+     the open one lets them through as nobody. Mocked as one function, a route still on the old
+     door passed this test, which is how it was first written. */
+  const nobody = () => {
+    authorise.mockResolvedValue({ status: 401, error: "Sign in first." });
+    authoriseOpen.mockResolvedValue(null);
+  };
+
+  it("answers the facts to a caller who offered nothing", async () => {
+    nobody();
+    catalogueCardSheets.mockResolvedValue(new Map([["sv03.5-068", sheet("sv03.5-068")]]));
+    const res = await post({ ids: ["sv03.5-068"] });
+    expect(res.status).toBe(200);
+    const { cards } = await res.json();
+    expect(cards["sv03.5-068"]).toMatchObject({ id: "sv03.5-068", rarity: "Uncommon" });
+  });
+
+  it("keeps every answer private: a POST is never a shared cache's to hold", async () => {
+    nobody();
+    catalogueCardSheets.mockResolvedValue(new Map([["sv03.5-068", sheet("sv03.5-068")]]));
+    const res = await post({ ids: ["sv03.5-068"] });
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
   });
 });
