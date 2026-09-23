@@ -367,20 +367,48 @@ describe("holdRecoveredDips", () => {
         ["2026-09-05", 1043],
         ["2026-09-10", 1002],
         ["2026-09-11", 1948],
+        ["2026-09-12", 1921],
       ]),
     );
-    expect(held.map((p) => p.value)).toEqual([1869, 1869, 1869, 1869, 1948]);
+    expect(held.map((p) => p.value)).toEqual([1869, 1869, 1869, 1869, 1948, 1921]);
   });
 
-  it("holds a rise that falls back the same way", () => {
+  it("holds a rise that falls back the same way, and stays back", () => {
     const held = holdRecoveredDips(
       days([
         ["2026-01-01", 100],
         ["2026-01-02", 300],
         ["2026-01-03", 102],
+        ["2026-01-04", 101],
       ]),
     );
-    expect(held.map((p) => p.value)).toEqual([100, 100, 102]);
+    expect(held.map((p) => p.value)).toEqual([100, 100, 102, 101]);
+  });
+
+  // A fall from €100 to a steady €50 for forty days, with one sale at €85 on its fifteenth day and
+  // one at €80 on its thirtieth. Taken as came back on one figure, it read flat at €100 until the
+  // €85, then €85 until the €80, and the fall showed from its thirty-first day.
+  it("keeps a fall that one sale near the old level does not undo", () => {
+    const line = days(
+      Array.from({ length: 50 }, (_, i): [string, number] => [
+        new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
+        i < 10 ? 100 : i === 24 ? 85 : i === 39 ? 80 : 50,
+      ]),
+    );
+    const held = holdRecoveredDips(line).map((p) => p.value);
+    // The fall shows from its first day. The one sale at €85 is a rise off €50 that fell straight
+    // back, and is held at €50; the €80 is under 1⅔ times €50 and stays as TCGplayer sent it.
+    expect(held.slice(10)).toEqual(Array.from({ length: 40 }, (_, i) => (i === 29 ? 80 : 50)));
+  });
+
+  it("does not hold a dip with only one figure back at the end of the line: it has not shown it", () => {
+    const one = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-03", 50],
+      ["2026-01-04", 100],
+    ]);
+    expect(holdRecoveredDips(one)).toBe(one);
   });
 
   it("keeps a fall that does not come back, or comes back too late, and the line's last days", () => {
@@ -403,32 +431,19 @@ describe("holdRecoveredDips", () => {
     expect(holdRecoveredDips(lower)).toEqual(lower);
   });
 
-  // The web holds the same dips again on every chart line (cardorb-web price-change.ts): the API's
-  // line has to come out of that unchanged, or the chart and the change beside it disagree.
-  it("changes nothing the second time", () => {
-    const lines = [
-      days([
-        ["2026-01-01", 100],
-        ["2026-01-02", 40],
-        ["2026-01-03", 250],
-        ["2026-01-04", 99],
-        ["2026-01-05", 30],
-        ["2026-01-06", 31],
-        ["2026-01-07", 101],
-        ["2026-01-08", 20],
-      ]),
-      days(
-        Array.from({ length: 120 }, (_, i): [string, number] => [
-          new Date(Date.UTC(2026, 0, 1 + i)).toISOString().slice(0, 10),
-          // A line that wanders by three and a half times over a few weeks, and dips on some days.
-          Math.round(100 * (2 + Math.sin(i / 7) * 1.5) * (i % 11 === 3 ? 0.3 : 1)),
-        ]),
-      ),
-    ];
-    for (const line of lines) {
-      const once = holdRecoveredDips(line);
-      expect(holdRecoveredDips(once)).toEqual(once);
-    }
+  // Not idempotent, and not meant to be: it runs once, in daysFromMonths. The first dip here has
+  // one figure back before the next dip, so it is not held; the second is, and a second pass would
+  // then find the first one back for two figures and flatten the line.
+  it("holds only what one pass finds", () => {
+    const line = days([
+      ["2026-01-01", 100],
+      ["2026-01-02", 50],
+      ["2026-01-03", 100],
+      ["2026-01-04", 50],
+      ["2026-01-05", 100],
+      ["2026-01-06", 100],
+    ]);
+    expect(holdRecoveredDips(line).map((p) => p.value)).toEqual([100, 50, 100, 100, 100, 100]);
   });
 });
 
@@ -493,14 +508,6 @@ describe("daysFromMonths and a dip that came back", () => {
       "reverse-holofoil": 4,
     });
     expect(days.find((d) => d.date === "2026-09-11")?.held).toEqual({ holofoil: 30 });
-  });
-
-  it("answers a line the web's own pass leaves as it is", () => {
-    const line = daysFromMonths(LUGIA).map((d) => ({
-      date: d.date,
-      value: d.printings!.holofoil!,
-    }));
-    expect(holdRecoveredDips(line)).toBe(line);
   });
 });
 

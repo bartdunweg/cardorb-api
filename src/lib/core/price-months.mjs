@@ -467,13 +467,14 @@ function holdLastFigure(days, taken) {
 }
 
 /*
- * A dip that came back. The twin of holdRecoveredDips in cardorb-web's src/lib/price-change.ts,
- * which holds the same dips on every chart line the web draws: the three numbers and the rule must
- * stay in step with it, or a set page's change and the chart beside it disagree again.
+ * A dip that came back. Ported from holdRecoveredDips in cardorb-web's src/lib/price-change.ts,
+ * with its three numbers, and made stricter here (two figures back, not one), because here it
+ * decides movers, set-page changes and collection values and not only a chart. The web's own pass is
+ * being taken off the lines this answers, so the rule runs once, here, for the chart as well.
  */
 /** How far a figure falls (or rises by the inverse) from the level before it to count as a dip. */
 const DIP = 0.6;
-/** How near the level the figure after the dip must come back, either way. */
+/** How near the level the two figures after the dip must come back, either way. */
 const RECOVERED = 0.8;
 /** How long a dip may last, from its first figure to the figure that comes back. */
 export const DIP_DAYS = 21;
@@ -482,17 +483,24 @@ export const DIP_DAYS = 21;
  * A price line with a dip that comes back held flat over it.
  *
  * A figure 40% or more under the level before it (or 1⅔ times over it), for as long as the figures
- * stay that far off, and followed within DIP_DAYS by one back within 20% of that level, is one cheap
- * copy sold or one hopeful sale: the price did not go there. The stray rule cannot see it, because
+ * stay that far off, and followed within DIP_DAYS by two figures in a row back within 20% of that
+ * level, is one cheap copy sold or one hopeful sale: the price did not go there. The stray rule cannot see it, because
  * a third of the price is not five times off: Lugia, Aquapolis read about €3,880, then €1,213 for
  * 14 to 16 September 2026, then about €3,920, and a set page asked from the 16th answered +€2,712
  * for a card that never moved, as did both movers lists. The web had held that line flat on the
  * chart since 2026-09-15; this is the same rule at the source, so every change read from a line
  * agrees with the line drawn.
  *
- * A dip at the end of the line has nothing after it to come back to and stays: it may be the new
- * price, and is a move until it comes back. Applied twice it changes nothing the second time, which
- * matters because the web applies it again to what this answers.
+ * Two figures, because one is only a sale. A price that fell from €100 to a steady €50 for forty
+ * days, with single sales at €85 on its fifteenth day and €80 on its thirtieth, came back on one
+ * figure each time: it read €100, then €85, then €80, and the fall showed from its thirty-first day.
+ * A dip at the end of the line, or with one figure back and nothing after it, has not shown it came
+ * back and stays: it may be the new price, and is a move until it comes back.
+ *
+ * Meant to run exactly once, in daysFromMonths. It is not idempotent: [100, 50, 100, 50, 100, 100]
+ * holds only its second dip (the first has one figure back before the next dip), and a second pass
+ * would then find the first back for two figures and hold it too. Nothing downstream may apply it
+ * again, which is why the web's pass over these lines is being removed.
  *
  * Returns the line itself where nothing was held, and otherwise a copy with each held point a new
  * object, so a caller can tell which points changed.
@@ -508,6 +516,8 @@ export function holdRecoveredDips(line) {
   for (let i = 1; i < line.length; i++) {
     const level = (out ?? line)[i - 1].value;
     const off = (/** @type {number} */ v) => v < level * DIP || v * DIP > level;
+    const near = (/** @type {T | undefined} */ p) =>
+      !!p && p.value >= level * RECOVERED && p.value * RECOVERED <= level;
     if (!(level > 0) || !off(line[i].value)) continue;
     let j = i;
     while (j + 1 < line.length && off(line[j + 1].value)) j++;
@@ -516,7 +526,7 @@ export function holdRecoveredDips(line) {
       i = j;
       continue;
     }
-    if (back.value < level * RECOVERED || back.value * RECOVERED > level) {
+    if (!near(back) || !near(line[j + 2])) {
       i = j;
       continue;
     }
@@ -563,6 +573,12 @@ function holdDipsThatCameBack(days) {
  * neighbours, and it covers DIP_DAYS, the longest a dip can have been going when the window opens
  * inside it, with room for the day before it that says what level it fell from. Read from the day
  * wanted, a window that opened inside a dip held nothing, and its change was a rise from nowhere.
+ *
+ * A fixed thirty days, accepted as a limit: on a sparse line the level before a dip can be older.
+ * A printing TCGplayer gave no figure for a fortnight, whose last figure at the level is five weeks
+ * before a window that opens inside a dip, is read from inside the dip, and that first day is not
+ * held. Reaching back until each line has a figure would cost a read per line, for the few lines
+ * that thin.
  *
  * @param {string} since yyyy-mm-dd
  * @returns {string} yyyy-mm-dd

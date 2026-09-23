@@ -1316,8 +1316,9 @@ paths:
 
         Filtered as every change the API reports is read: a figure one odd sale set is held at the
         figure before it, and so, since 2026-09-23, is a dip of 40% or more (or a rise of 1⅔ times)
-        that came back within 20% of the level before it inside three weeks. A dip at the end of
-        the line has not come back and stays.
+        that came back within 20% of the level before it inside three weeks, for two figures in a
+        row. A dip at the end of the line, or with one figure back and nothing after it, has not
+        shown it came back and stays.
 
         Open: a caller who names nobody is answered with the same line, because a card's price
         history is the catalogue's and public since 2026-09-22. The credential decides only who
@@ -1844,7 +1845,7 @@ paths:
         Across the whole English catalogue, not a collection (`GET /v1/movers` is the caller's
         own). Each printing is compared between its first and last reading in the seven days to
         the latest price day, after the same filtering every price line gets (a stray sale's
-        figure, and a dip that came back within three weeks, held at the level before it), and
+        figure, and a dip back for two figures within three weeks, held at the level before it), and
         ranked by what one copy moved in euros, never by percentage: a common that doubled is a
         bigger number and a smaller event than a Charizard that gained eight euros. A printing
         under a euro at either end of the window, with one reading in it, or that moved under ten
