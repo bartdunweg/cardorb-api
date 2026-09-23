@@ -534,17 +534,19 @@ export async function listHistoryPrices(
 export type MarketMoverCandidate = { tcgId: string; printing: string; untilDay: string };
 
 /**
- * The English printings whose price moved most in euros over the `days` to the latest day any row
- * has, `limit` of them, biggest first (migration 20260923120000). Narrowed in Postgres so the lines
+ * The English printings whose price moved most in euros over the `days` to `until`, the latest price
+ * day, `limit` of them, biggest first (migration 20260923120000). Narrowed in Postgres so the lines
  * of the whole catalogue never come into the API; ranked on the figures as stored, before the stray
  * rule, so the caller asks for far more than it shows. Service role only: `db` is adminClient().
  */
 export async function marketMoverCandidates(
   db: SupabaseClient,
+  until: string,
   days: number,
   limit: number,
 ): Promise<MarketMoverCandidate[]> {
   const { data, error } = await db.rpc("market_mover_candidates", {
+    p_until: until,
     p_days: days,
     p_limit: limit,
   });

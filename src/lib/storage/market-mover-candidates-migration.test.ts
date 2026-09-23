@@ -10,8 +10,10 @@ import { MARKET_MOVER_FLOOR_CENTS } from "../core/collection/market-movers";
  * pulls the catalogue's lines into Node.
  *
  * Run against an in-process Postgres holding card_price_months as it is (the key since
- * 20260915161500), and asked as each role. What it cannot prove is how long the function takes on
- * the live table, which only the live table can say.
+ * 20260915161500), and asked as each role. The service role is made as Supabase makes it, with
+ * BYPASSRLS and its grant on the table, because the function runs as its caller (security invoker).
+ * What it cannot prove is how long the function takes on the live table, which only the live table
+ * can say.
  */
 const MIGRATION = readFileSync(
   join(__dirname, "../../../supabase/migrations/20260923120000_market_mover_candidates.sql"),
@@ -21,7 +23,7 @@ const MIGRATION = readFileSync(
 const SCHEMA = `
   create role anon;
   create role authenticated;
-  create role service_role;
+  create role service_role bypassrls;
   create table public.card_price_months (
     language text not null, tcg_id text not null, printing text not null,
     month date not null check (extract(day from month) = 1), cents integer[] not null,
@@ -29,7 +31,7 @@ const SCHEMA = `
     primary key (language, tcg_id, printing, month)
   );
   alter table public.card_price_months enable row level security;
-  grant select on public.card_price_months to authenticated;
+  grant select on public.card_price_months to authenticated, service_role;
   grant usage on schema public to anon, authenticated, service_role;
 `;
 
@@ -103,12 +105,15 @@ type Row = {
   until_day: string;
 };
 
-const candidates = async (days = 7, limit = 200) => {
+/** The day the API passes: the latest price day, which in these rows is 2026-09-03. */
+const LATEST = "2026-09-03";
+
+const candidates = async (until = LATEST, days = 7, limit = 200) => {
   await db.exec("reset role");
   await db.exec("set role service_role");
   const { rows } = await db.query<Row>(
-    "select tcg_id, printing, was_cents, now_cents, first_day::text, last_day::text, until_day::text from public.market_mover_candidates($1, $2)",
-    [days, limit],
+    "select tcg_id, printing, was_cents, now_cents, first_day::text, last_day::text, until_day::text from public.market_mover_candidates($1, $2, $3)",
+    [until, days, limit],
   );
   return rows;
 };
@@ -133,7 +138,58 @@ describe("market_mover_candidates", () => {
   });
 
   it("stops at the number asked for", async () => {
-    expect((await candidates(7, 1)).map((r) => r.tcg_id)).toEqual(["faller"]);
+    expect((await candidates(LATEST, 7, 1)).map((r) => r.tcg_id)).toEqual(["faller"]);
+  });
+
+  /* Told the day rather than finding it: counting down from the 31st cost a pass over the month
+     for every day after the last one written. */
+  it("ends the window on the day it is given", async () => {
+    // The week to 31 August is flat for every card: the moves are all in September.
+    expect(await candidates("2026-08-31")).toEqual([]);
+    expect((await candidates("2026-09-02")).map((r) => r.until_day)).toContain("2026-09-02");
+  });
+
+  it("holds the number of days to between one and thirty-one", async () => {
+    // Zero is read as one day: 2 to 3 September, where only the Charizard moved.
+    expect((await candidates(LATEST, 0)).map((r) => r.tcg_id)).toEqual(["charizard"]);
+    // A thousand is read as thirty-one: back to 3 August, where `earlier` jumped.
+    const month = await candidates(LATEST, 1000);
+    expect(month[0]).toMatchObject({ tcg_id: "earlier", first_day: "2026-08-03" });
+  });
+
+  it("holds the day to one no later than tomorrow, and a day before any reading to 2000-01-01", async () => {
+    await db.exec("reset role");
+    const { rows } = await db.query<{ today: string; tomorrow: string; first: string }>(
+      "select current_date::text as today, (current_date + 1)::text as tomorrow, date_trunc('month', current_date)::date::text as first",
+    );
+    const { today, tomorrow, first } = rows[0]!;
+    const day = Number(today.slice(8, 10));
+    // A card read yesterday and today; on the 1st, yesterday is the month before's last day.
+    const yesterday = new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000);
+    const before = `${yesterday.toISOString().slice(0, 8)}01`;
+    const rowsOf =
+      day > 1
+        ? [month("clock", "holofoil", first, { [day - 1]: 1000, [day]: 2000 })]
+        : [
+            month("clock", "holofoil", first, { 1: 2000 }),
+            month("clock", "holofoil", before, { [yesterday.getUTCDate()]: 1000 }),
+          ];
+    await db.exec(`insert into public.card_price_months (language, tcg_id, printing, month, cents)
+      values ${rowsOf.join(", ")}`);
+    const far = await candidates("2999-01-01");
+    expect(far.find((r) => r.tcg_id === "clock")).toMatchObject({ until_day: tomorrow });
+    // Before any reading: read as 2000-01-01, where nothing is, rather than as an error.
+    expect(await candidates("1990-01-01")).toEqual([]);
+  });
+
+  /* The only caller is the service role, which passes RLS by and keeps its grant on the table, so
+     running as the definer bought nothing and would turn a stray grant to anon into a road past RLS. */
+  it("runs as its caller, not as its owner", async () => {
+    await db.exec("reset role");
+    const { rows } = await db.query<{ prosecdef: boolean }>(
+      "select prosecdef from pg_proc where proname = 'market_mover_candidates'",
+    );
+    expect(rows).toEqual([{ prosecdef: false }]);
   });
 
   it("is refused to anon and to a signed-in caller: the service role reads it inside the API", async () => {
@@ -141,7 +197,7 @@ describe("market_mover_candidates", () => {
       await db.exec("reset role");
       await db.exec(`set role ${role}`);
       await expect(
-        db.query("select * from public.market_mover_candidates(7, 200)"),
+        db.query("select * from public.market_mover_candidates('2026-09-03', 7, 200)"),
       ).rejects.toThrow(/permission denied/);
     }
     await db.exec("reset role");
