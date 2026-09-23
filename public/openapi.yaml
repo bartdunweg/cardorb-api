@@ -903,6 +903,25 @@ components:
         from: { type: string, format: date }
         to: { type: string, format: date }
 
+    MarketMover:
+      type: object
+      description: One printing that moved across the whole catalogue, `GET /v1/catalog/movers`. Nothing in it is anybody's.
+      required: [tcgId, printing, name, setName, number, printedNumber, image, was, now, change, pct, from, to]
+      properties:
+        tcgId: { type: string, description: "TCGdex's card id, English catalogue." }
+        printing: { type: string, description: "TCGplayer's name for the printing that moved (`holofoil`, `reverse-holofoil`, `1st-edition-holofoil`, ...), as `CardPricePoint.printings` keys it. Two printings of one card are two movers." }
+        name: { type: string }
+        setName: { type: string, description: "The set's name as the catalogue spells it." }
+        number: { type: string, description: "The catalogue's number, which a card is matched by." }
+        printedNumber: { type: string, description: "The number as the card prints it (\"4/102\" for a Classic Collection card), for its label." }
+        image: { type: [string, "null"], description: "A file at https://images.cardorb.com, or null where there is none of ours yet." }
+        was: { type: number, description: "One copy at the printing's first reading in the window, euros." }
+        now: { type: number, description: "One copy at its last reading, euros." }
+        change: { type: number, description: "now minus was: what one copy moved, and what the list is ranked by." }
+        pct: { type: number, description: "change over was, a fraction (0.25 is 25 %)." }
+        from: { type: string, format: date, description: "The day of the first reading." }
+        to: { type: string, format: date, description: "The day of the last reading." }
+
     CardPricePoint:
       type: object
       required: [date, market, holo]
@@ -1810,6 +1829,46 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
         "503": { $ref: "#/components/responses/Unavailable" }
+
+  /v1/catalog/movers:
+    get:
+      tags: [Catalogue]
+      operationId: getMarketMovers
+      summary: The cards whose market price moved most over the last seven days
+      description: |
+        Across the whole English catalogue, not a collection (`GET /v1/movers` is the caller's
+        own). Each printing is compared between its first and last reading in the seven days to
+        the latest price day, after the same stray-sale filtering every price line gets, and
+        ranked by what one copy moved in euros, never by percentage: a common that doubled is a
+        bigger number and a smaller event than a Charizard that gained eight euros. A printing
+        under a euro at either end of the window, with one reading in it, or that moved under ten
+        cents is left out. `up` is the largest gain first, `down` the largest loss first, ten each
+        at most. Two empty lists mean nothing moved.
+
+        Open: nothing in it is anybody's, so a caller who names nobody and a named caller are
+        answered the same body, and every 200 may be held by a shared cache. A credential that is
+        offered and does not verify is still a 401.
+      security: []
+      responses:
+        "200":
+          description: The movers.
+          headers:
+            Cache-Control: { $ref: "#/components/headers/Cache-Control-Catalogue" }
+            Vary: { $ref: "#/components/headers/Vary-Catalogue" }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [up, down]
+                properties:
+                  up: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/MarketMover" } }
+                  down: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/MarketMover" } }
+        "401": { $ref: "#/components/responses/Unauthorised" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+        "503":
+          description: The prices could not be read, or no database is configured. Never an empty list.
+          content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
 
   /v1/collection/export:
     get:

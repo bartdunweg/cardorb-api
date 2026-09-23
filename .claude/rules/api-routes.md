@@ -35,6 +35,15 @@ paths:
     visitor with no account. `/catalog/index` has no holding field to leave out at all; on
     `/catalog/cards` the price stays where the marks go, because what a card trades at is a
     fact about the card.
+  - **`/api/v1/catalog/movers`**, since 2026-09-23: the cards whose market price moved most
+    over seven days across the whole English catalogue, which cardorb.com shows on Home to a
+    visitor in the place a signed-in reader sees their own movers (`/api/v1/movers`, which stays
+    behind `authorise()`). Nothing in it is anybody's: catalogue prices are public since
+    2026-09-22 and no collection is read, so a named reader and a stranger get the same body and
+    every 200 takes `openReadHeaders()`; every refusal and the 503 keep `readHeaders()`. It
+    reads through the service role, including the function `market_mover_candidates`
+    (migration 20260923120000), which is granted to `service_role` alone for the reason
+    `card_price_months` has no `anon` grant below.
   - **`POST /api/v1/cards/facts`**, the same facts as `/cards/<tcgId>` for a page of tiles at
     once, since 2026-09-23. A visitor on Browse asks it for a whole set, it reads the copy through
     the service role and changes nothing. It calls `authoriseOpen()` and keeps `readHeaders()` on
