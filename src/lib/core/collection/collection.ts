@@ -107,7 +107,7 @@ import { dayTotals, earlyLine, folderSeries, holdingsSeries } from "./folder-his
 import { HISTORY_FROM, tailReadFrom } from "./value-history";
 import { type CardItem, pricedCardsOf } from "./items";
 import type { PublicProfile } from "../../storage/postgres";
-import { adminClient, serverClient, userClient } from "../../storage/supabase";
+import { adminClient, configured, serverClient, userClient } from "../../storage/supabase";
 
 export type { ValueSnapshot } from "./value-snapshot";
 export { valueHistoryTag } from "./value-snapshot";
@@ -1928,6 +1928,11 @@ export const getCardPrices = cache(
     try {
       const db =
         reader === "nobody" ? adminClient() : token ? userClient(token) : await serverClient();
+      // A deployment with a database but no service-role key cannot read for
+      // nobody. That is a failure and must say so: answered as an empty line it
+      // read as a card with no history, and the prices route hands a 200 to a
+      // shared cache, so every visitor would have been told the same thing.
+      if (!db && reader === "nobody" && configured()) return { points: [], failed: true };
       // No database at all is not an outage: it is a deployment without one,
       // and listRows answers it the same way.
       if (!db) return { points: [], failed: false };

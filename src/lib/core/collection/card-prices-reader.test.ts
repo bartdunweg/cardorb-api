@@ -26,10 +26,13 @@ vi.mock("../../storage/postgres", () => ({
 const ADMIN = { role: "service" };
 const USER = { role: "bearer" };
 const SERVER = { role: "cookie" };
+/* Settable per test: a deployment can have a database and still lack the service-role key. */
+const store = { admin: ADMIN as typeof ADMIN | null, configured: true };
 vi.mock("../../storage/supabase", () => ({
-  adminClient: () => ADMIN,
+  adminClient: () => store.admin,
   userClient: () => USER,
   serverClient: async () => SERVER,
+  configured: () => store.configured,
 }));
 vi.mock("../../storage/collection", () => ({
   listRows: vi.fn(),
@@ -46,6 +49,8 @@ const dbOfLastRead = () => listCardPrices.mock.calls.at(-1)![0];
 beforeEach(() => {
   vi.clearAllMocks();
   listCardPrices.mockResolvedValue([]);
+  store.admin = ADMIN;
+  store.configured = true;
 });
 
 describe("getCardPrices, by reader", () => {
@@ -63,5 +68,21 @@ describe("getCardPrices, by reader", () => {
     /* A cookie-only caller has no token and is still somebody: no token is not "nobody". */
     await getCardPrices("me-uuid", CARDS, undefined, "2026-09-01");
     expect(dbOfLastRead()).toBe(SERVER);
+  });
+
+  it("says it failed, rather than that the card has no history, when there is no service role", async () => {
+    /* Answered as an empty line it read as a card with no history, and the prices route hands
+       a 200 to a shared cache: every visitor would have been told the same wrong thing. */
+    store.admin = null;
+    const out = await getCardPrices("catalogue", CARDS, undefined, "2026-09-01", "nobody");
+    expect(out.failed).toBe(true);
+    expect(listCardPrices).not.toHaveBeenCalled();
+  });
+
+  it("still answers a deployment with no database at all as nothing, not as a failure", async () => {
+    store.admin = null;
+    store.configured = false;
+    const out = await getCardPrices("catalogue", CARDS, undefined, "2026-09-01", "nobody");
+    expect(out.failed).toBe(false);
   });
 });
