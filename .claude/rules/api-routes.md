@@ -35,6 +35,10 @@ paths:
     visitor with no account. `/catalog/index` has no holding field to leave out at all; on
     `/catalog/cards` the price stays where the marks go, because what a card trades at is a
     fact about the card.
+  - **`POST /api/v1/cards/facts`**, the same facts as `/cards/<tcgId>` for a page of tiles at
+    once, since 2026-09-23. A visitor on Browse asks it for a whole set, it reads the copy through
+    the service role and changes nothing. It calls `authoriseOpen()` and keeps `readHeaders()` on
+    every answer: a POST is never a shared cache's to hold.
   - **Two under `/api/v1/cards/<tcgId>`**: the card itself and `/prices`, its price line, since
     2026-09-23. The card sheet opens from Browse, and a visitor saw its price line read "could
     not be loaded". Neither answer carries anything of the reader's, and the price that was the
