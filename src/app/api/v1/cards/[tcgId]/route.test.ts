@@ -10,8 +10,14 @@ const getCardDetail = vi.fn();
 
 vi.mock("@/lib/api/guard", () => ({
   authorise: (...a: unknown[]) => authorise(...a),
-  refused: (r: { status?: number }) => "status" in r,
+  /* One mock behind both doors, as the catalogue routes' tests do it: every test written against
+     authorise() still says what it said, and null is a reader who offered no credential at all. */
+  authoriseOpen: (...a: unknown[]) => authorise(...a),
+  refused: (r: { status?: number } | null) => !!r && "status" in r,
+  /* Distinguishable on purpose: the point of two header sets is which answer carries which, and
+     `{}` for both is what let a cacheable refusal past review on the shelf route (#584). */
   readHeaders: () => ({ "Cache-Control": "private, no-store" }),
+  openReadHeaders: () => ({ "Cache-Control": "public, max-age=0, s-maxage=60" }),
 }));
 vi.mock("@/lib/core/collection/cards", () => ({
   getCardDetail: (...a: unknown[]) => getCardDetail(...a),
@@ -30,7 +36,7 @@ vi.mock("@/lib/core/catalogue/card-sheet", async () => {
   };
 });
 /* The printings beside the card are five real TCGdex reads, three attempts each, when left
-   unmocked — which this test did, and the CI runner's 2026-09-11 15:39 run timed out on it at
+   unmocked, which this test did, and the CI runner's 2026-09-11 15:39 run timed out on it at
    5 s (main, #270's run), the only red thing in it. A unit test asks the network for nothing. */
 const languagesOf = vi.fn(async () => ["en", "de"]);
 vi.mock("@/lib/core/catalogue/card-languages", () => ({
@@ -255,5 +261,71 @@ describe("the price's currency", () => {
       languages: ["en", "de"],
       foilPatterns: [],
     });
+  });
+});
+
+/* A card's detail is a fact about the card, and its price is a catalogue price the owner made
+   public on 2026-09-22: the card sheet opens for a visitor who has not signed in. */
+describe("without a credential", () => {
+  beforeEach(() => {
+    authorise.mockResolvedValue(null);
+  });
+
+  it("answers the card, priced, to a reader who offered nothing", async () => {
+    detailPrice.mockImplementation(async (card: object) => ({
+      ...card,
+      price: { market: 340 },
+      tcgplayerId: 42382,
+    }));
+    const res = await get();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      id: "sv03-125",
+      name: "Charizard",
+      price: { market: 340 },
+      languages: ["en", "de"],
+    });
+  });
+
+  /* Nothing on the answer is the reader's, so the credential decides only who may hold it. */
+  it("answers exactly what a named reader is answered", async () => {
+    const stranger = await (await get()).json();
+    authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
+    expect(await (await get()).json()).toEqual(stranger);
+  });
+
+  it("answers with the open window, which a shared cache may hold", async () => {
+    const res = await get();
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=60");
+  });
+
+  it("keeps a named reader's answer private", async () => {
+    authorise.mockResolvedValue({ userId: "me-uuid", email: "me@example.com", username: "me" });
+    expect((await get()).headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  /* A refusal is nobody's to hold: sent with the open window, one bad minute would be stored by
+     the shared cache and handed to every signed-out visitor until it expired. */
+  it("sends the 404 private, not with the open window", async () => {
+    getCardDetail.mockResolvedValue(null);
+    const res = await get();
+    expect(res.status).toBe(404);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("sends the 400 for a language that is not a catalogue private too", async () => {
+    const res = await GET(new Request("https://api.cardorb.com/v1/cards/sv03-125?language=de"), {
+      params: Promise.resolve({ tcgId: "sv03-125" }),
+    });
+    expect(res.status).toBe(400);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
+
+  it("sends a credential that does not verify its refusal, private", async () => {
+    authorise.mockResolvedValue({ status: 401, error: "Sign in to see this." });
+    const res = await get();
+    expect(res.status).toBe(401);
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(getCardDetail).not.toHaveBeenCalled();
   });
 });
