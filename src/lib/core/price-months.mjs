@@ -241,7 +241,7 @@ export const legacyDays = (p) => [
 /** How far off its neighbours' median a figure may be, either way, before it is not read. */
 const STRAY_RATIO = 5;
 /** The neighbours: the same printing's figures this many days either side. */
-const STRAY_WINDOW_DAYS = 30;
+export const STRAY_WINDOW_DAYS = 30;
 /** Fewer figures than this in the window, the figure itself included, and nothing is judged. */
 const STRAY_MIN_FIGURES = 3;
 /**
