@@ -4,7 +4,11 @@ import { refuseCron } from "@/lib/api/cron";
 import { refuse } from "@/lib/api/respond";
 import { fetchUsdToEur } from "@/lib/core/catalogue/rates";
 import { TCGCSV_CATEGORY, shelfPrintings, type ShelfPrinting } from "@/lib/core/catalogue/tcgcsv";
-import { priceHistoryTag, usdToEurForRequest } from "@/lib/core/collection/collection";
+import {
+  getMarketMovers,
+  priceHistoryTag,
+  usdToEurForRequest,
+} from "@/lib/core/collection/collection";
 import { allFinishPrints, allPatternPrints } from "@/lib/core/catalogue/card-printings";
 import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/snapshot";
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
@@ -269,6 +273,18 @@ export async function GET(req: Request) {
         ok = false;
       }
     }
+  }
+
+  /* The market movers, filled once for the day just written. Their entry is keyed on the price day
+     and hangs on the tag dropped above, so without this the first visitors after the night would
+     all build it at once, at the moment every other price cache is empty too. Under `today`, the
+     day written, rather than this instance's memo of the day, which can still hold yesterday's.
+     Never fails the night: the prices stand, and the next visitor builds the entry instead. */
+  try {
+    const movers = await getMarketMovers(7, today);
+    if (movers.failed) console.error("[cron] the market movers could not be filled tonight");
+  } catch (err) {
+    console.error("[cron] filling the market movers failed:", err);
   }
 
   // Months entirely older than six months: before the first of the month six months back.

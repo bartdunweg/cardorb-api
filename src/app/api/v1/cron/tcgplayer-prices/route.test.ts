@@ -19,9 +19,11 @@ vi.mock("next/cache", () => ({
   revalidateTag: (...a: unknown[]) => revalidateTag(...a),
   unstable_cache: (fn: unknown) => fn,
 }));
+const getMarketMovers = vi.fn();
 vi.mock("@/lib/core/collection/collection", () => ({
   priceHistoryTag: "card-prices",
   usdToEurForRequest: () => usdToEurForRequest(),
+  getMarketMovers: (...a: unknown[]) => getMarketMovers(...a),
 }));
 vi.mock("@/lib/storage/postgres", () => ({
   writeTcgplayerPrices: (...a: unknown[]) => writeTcgplayerPrices(...a),
@@ -79,6 +81,7 @@ beforeEach(() => {
     return thin;
   });
   shelfPrintings.mockResolvedValue({ rows: CHARIZARD, groups: 10, answered: 10 });
+  getMarketMovers.mockResolvedValue({ up: [], down: [], failed: false });
 });
 
 afterEach(() => {
@@ -199,6 +202,46 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
       databaseBytes: 300 * MB,
     });
     expect(revalidateTag).toHaveBeenCalledWith("card-prices", { expire: 0 });
+  });
+
+  /* The market movers are keyed on the price day and hung on the tag just dropped, so the first
+     visitors after the night would all build them at once, while every other price cache is empty
+     too. Built here once, under the day just written, before anybody asks. */
+  it("fills the market movers once, after the night's prices and the tag's drop, under the day written", async () => {
+    monday();
+
+    await get("Bearer s3cret");
+
+    expect(getMarketMovers).toHaveBeenCalledTimes(1);
+    expect(getMarketMovers).toHaveBeenCalledWith(7, "2026-09-14");
+    const warmed = getMarketMovers.mock.invocationCallOrder[0]!;
+    expect(warmed).toBeGreaterThan(writeCardPrices.mock.invocationCallOrder[0]!);
+    expect(warmed).toBeGreaterThan(revalidateTag.mock.invocationCallOrder[0]!);
+    expect(warmed).toBeGreaterThan(writeTcgplayerPrices.mock.invocationCallOrder.at(-1)!);
+  });
+
+  it("does not fail the night when the movers cannot be filled", async () => {
+    monday();
+    getMarketMovers.mockRejectedValue(new Error("statement timeout"));
+
+    const res = await get("Bearer s3cret");
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true, history: { written: 3 } });
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("market movers"),
+      expect.anything(),
+    );
+  });
+
+  it("does not fail the night when the movers answer that they could not be read", async () => {
+    monday();
+    getMarketMovers.mockResolvedValue({ up: [], down: [], failed: true });
+
+    const res = await get("Bearer s3cret");
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ ok: true });
   });
 
   it("writes no history without a dollar rate, and still writes the latest prices", async () => {

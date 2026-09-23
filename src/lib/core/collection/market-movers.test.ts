@@ -120,13 +120,52 @@ describe("marketMoversOf", () => {
         { tcgId: "a", printing: "reverse-holofoil" },
       ],
       [
-        at("a", WINDOW.from, { holofoil: 20, "reverse-holofoil": 10 }),
+        at("a", WINDOW.from, { holofoil: 20, "reverse-holofoil": 40 }),
         at("a", WINDOW.to, { holofoil: 25, "reverse-holofoil": 7 }),
       ],
       WINDOW,
     );
-    expect(up.map((m) => [m.printing, m.change])).toEqual([["holofoil", 5]]);
-    expect(down.map((m) => [m.printing, m.change])).toEqual([["reverse-holofoil", -3]]);
+    // The reverse's own fall, not the card's plain line; and the card once, at its bigger move.
+    expect(up).toEqual([]);
+    expect(down.map((m) => [m.printing, m.change])).toEqual([["reverse-holofoil", -33]]);
+  });
+
+  /* Two printings of one card are one name and one picture: shown twice, the list reads as a
+     duplicate. The card's biggest move stands for it, named by its printing. */
+  it("keeps one move per card, its biggest, before cutting to ten", () => {
+    const others = Array.from({ length: 8 }, (_, i) => moved(`other${i}`, 10, 20 + i)).flat();
+    const { up, down } = marketMoversOf(
+      [
+        { tcgId: "base1-4", printing: "unlimited-holofoil" },
+        { tcgId: "base1-4", printing: "1st-edition-holofoil" },
+        { tcgId: "base1-4", printing: "shadowless-holofoil" },
+        ...Array.from({ length: 8 }, (_, i) => ({ tcgId: `other${i}`, printing: "holofoil" })),
+        { tcgId: "tenth", printing: "holofoil" },
+      ],
+      [
+        at("base1-4", WINDOW.from, {
+          "unlimited-holofoil": 400,
+          "1st-edition-holofoil": 9000,
+          "shadowless-holofoil": 2000,
+        }),
+        at("base1-4", WINDOW.to, {
+          "unlimited-holofoil": 440,
+          "1st-edition-holofoil": 9300,
+          "shadowless-holofoil": 1900,
+        }),
+        ...others,
+        ...moved("tenth", 10, 11),
+      ],
+      WINDOW,
+    );
+    expect(up.filter((m) => m.tcgId === "base1-4")).toEqual([
+      expect.objectContaining({ printing: "1st-edition-holofoil", change: 300 }),
+    ]);
+    /* Its smaller moves gave their places up: the tenth card is in, and the Shadowless run's fall
+       is not a second tile for the same card in the other list. */
+    expect(up).toHaveLength(10);
+    expect(up.map((m) => m.tcgId)).toContain("tenth");
+    expect(down).toEqual([]);
   });
 
   it("is not a mover on one reading, or on a move of a few cents", () => {

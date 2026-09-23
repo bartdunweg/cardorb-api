@@ -129,7 +129,8 @@ describe("getMarketMovers", () => {
 
   it("reads the candidates' lines far enough back for the stray rule to weigh the window's first day", async () => {
     await getMarketMovers();
-    expect(marketMoverCandidates).toHaveBeenCalledWith(ADMIN, 7, 200);
+    // Told the price day, so Postgres does not have to find it.
+    expect(marketMoverCandidates).toHaveBeenCalledWith(ADMIN, "2026-09-22", 7, 200);
     // The window opens 2026-09-15; thirty days of neighbours before it (STRAY_WINDOW_DAYS).
     expect(listHistoryPrices).toHaveBeenCalledWith(
       ADMIN,
@@ -171,6 +172,31 @@ describe("getMarketMovers", () => {
     const [key, opts] = cached.mock.calls.find(([k]) => k[0] === "market-movers")!;
     expect(key).toContain("2026-09-22");
     expect(opts).toMatchObject({ tags: [priceHistoryTag] });
+  });
+
+  /* The nightly cron fills the entry the moment it has written the day, and says which day it wrote
+     rather than asking a memo that may still hold yesterday's. */
+  it("reads and keeps under the day it is handed, where it is handed one", async () => {
+    await getMarketMovers(7, "2026-09-23");
+    expect(marketMoverCandidates).toHaveBeenCalledWith(ADMIN, "2026-09-23", 7, 200);
+    const [key] = cached.mock.calls.find(([k]) => k[0] === "market-movers")!;
+    expect(key).toContain("2026-09-23");
+    expect(key).not.toContain("2026-09-22");
+  });
+
+  it("keeps one tile per card, at its biggest move, and names the printing", async () => {
+    marketMoverCandidates.mockResolvedValue([
+      candidate("sv1-1"),
+      candidate("sv1-1", "reverse-holofoil"),
+    ]);
+    listHistoryPrices.mockResolvedValue([
+      ...line("sv1-1", 10, 12),
+      ...line("sv1-1", 10, 30, "reverse-holofoil"),
+    ]);
+    const out = await getMarketMovers();
+    expect(out.up.map((m) => [m.tcgId, m.printing, m.name])).toEqual([
+      ["sv1-1", "reverse-holofoil", "Sprigatito"],
+    ]);
   });
 
   it("answers an empty catalogue as nothing moved, which is what it is", async () => {

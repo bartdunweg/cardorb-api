@@ -2051,18 +2051,24 @@ const daysBefore = (day: string, days: number) =>
  * card_price_months or the function (getCardPrices says why it is kept off).
  *
  * Kept a day under the price day, as every price cache here is keyed (latestPriceDay), and hung on
- * priceHistoryTag, so the nightly write that brings a new day drops it the moment it lands.
+ * priceHistoryTag, so the nightly write that brings a new day drops it the moment it lands. That
+ * write fills it again at once (cron/tcgplayer-prices), passing `priceDay`, the day it has just
+ * written: this instance's memo of the day can be ten minutes behind, and would fill yesterday's
+ * entry. The same day is the window's last, passed to Postgres rather than found there. Where no
+ * price day can be read ("-", an empty store or one that did not answer), the window ends today,
+ * and an empty store answers that nothing moved.
  */
-export async function getMarketMovers(days = 7): Promise<MarketMovers> {
+export async function getMarketMovers(days = 7, priceDay?: string): Promise<MarketMovers> {
   const nothing = { up: [], down: [] };
   const db = adminClient();
   // Without the service role nothing can be read for this list, and an empty one reads as "nothing moved".
   if (!db) return { ...nothing, failed: true };
   try {
-    const priceDay = await latestPriceDay();
+    const known = priceDay ?? (await latestPriceDay());
+    const day = known === "-" ? new Date().toISOString().slice(0, 10) : known;
     const movers = await unstable_cache(
       async () => {
-        const candidates = await marketMoverCandidates(db, days, MARKET_CANDIDATES);
+        const candidates = await marketMoverCandidates(db, day, days, MARKET_CANDIDATES);
         const until = candidates[0]?.untilDay;
         if (!until) return nothing;
         const from = daysBefore(until, days);
@@ -2092,7 +2098,7 @@ export async function getMarketMovers(days = 7): Promise<MarketMovers> {
         };
         return { up: up.flatMap(tile), down: down.flatMap(tile) };
       },
-      ["market-movers", "v1", priceDay, String(days)],
+      ["market-movers", "v2", day, String(days)],
       { revalidate: DAY, tags: [priceHistoryTag] },
     )();
     return { ...movers, failed: false };

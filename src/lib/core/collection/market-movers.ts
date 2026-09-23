@@ -21,7 +21,10 @@ import { splitByMove, type CardPricePoint } from "./movers";
  * that one trade sent to two euros is exactly the figure it cannot see, and ranked by euros it would
  * top a quiet week. A euro at both ends keeps pennies out of the list, and costs only the moves into
  * or out of penny territory, which are not the story Home tells. The same number narrows the
- * candidates in the migration (20260923120000), so the two cannot disagree.
+ * candidates in the migration (20260923120000), on the figures as stored. The two agree but for one
+ * rare case: a real mover whose first day in the window is a stray sale under a euro is left out of
+ * the candidates before the stray rule here would have held that day with the figure before it. That
+ * costs the list at most a place, taken by the next mover.
  */
 export const MARKET_MOVER_FLOOR_CENTS = 100;
 
@@ -64,6 +67,11 @@ export type MarketMoversOptions = {
  * percentage, through the ranking the collection's movers use (splitByMove): a common that doubled
  * is a bigger number and a smaller event than a Charizard that gained eight euros. Where a
  * collection weighs a move by the copies held, the market has none, so one copy is the measure.
+ *
+ * One move per card. A card's printings are one name and one picture, and Charizard's holo and its
+ * 1st Edition side by side read as a duplicate; so each card keeps its biggest move in euros, up or
+ * down, before the lists are cut, and `printing` says which printing it was. A card whose runs went
+ * opposite ways is shown by the bigger of the two and not in both lists.
  */
 export function marketMoversOf(
   candidates: MarketCandidate[],
@@ -95,5 +103,10 @@ export function marketMoversOf(
       to: m.to,
     });
   }
-  return splitByMove(moves, (m) => m.change, top);
+  const biggest = new Map<string, MarketMove>();
+  for (const m of moves) {
+    const kept = biggest.get(m.tcgId);
+    if (!kept || Math.abs(m.change) > Math.abs(kept.change)) biggest.set(m.tcgId, m);
+  }
+  return splitByMove([...biggest.values()], (m) => m.change, top);
 }

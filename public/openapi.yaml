@@ -909,7 +909,7 @@ components:
       required: [tcgId, printing, name, setName, number, printedNumber, image, was, now, change, pct, from, to]
       properties:
         tcgId: { type: string, description: "TCGdex's card id, English catalogue." }
-        printing: { type: string, description: "TCGplayer's name for the printing that moved (`holofoil`, `reverse-holofoil`, `1st-edition-holofoil`, ...), as `CardPricePoint.printings` keys it. Two printings of one card are two movers." }
+        printing: { type: string, description: "TCGplayer's name for the printing that moved (`holofoil`, `reverse-holofoil`, `1st-edition-holofoil`, ...), as `CardPricePoint.printings` keys it. A card is one mover, at its printing's biggest move up or down, so it is never in both lists or in one twice." }
         name: { type: string }
         setName: { type: string, description: "The set's name as the catalogue spells it." }
         number: { type: string, description: "The catalogue's number, which a card is matched by." }
@@ -1842,7 +1842,8 @@ paths:
         ranked by what one copy moved in euros, never by percentage: a common that doubled is a
         bigger number and a smaller event than a Charizard that gained eight euros. A printing
         under a euro at either end of the window, with one reading in it, or that moved under ten
-        cents is left out. `up` is the largest gain first, `down` the largest loss first, ten each
+        cents is left out. A card appears once, at the printing that moved most, named in
+        `printing`. `up` is the largest gain first, `down` the largest loss first, ten each
         at most. Two empty lists mean nothing moved.
 
         Open: nothing in it is anybody's, so a caller who names nobody and a named caller are
