@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { MARKET_MOVER_FLOOR_CENTS, marketMoversOf } from "./market-movers";
 import type { CardPricePoint } from "./movers";
 import { daysFromMonths } from "../price-months.mjs";
+import lugiaRows from "../lugia-aquapolis.fixture.json";
 
 /** One day of one card, with the figures of the printings named. Euros. */
 const at = (tcgId: string, date: string, printings: Record<string, number>): CardPricePoint => ({
@@ -240,5 +241,33 @@ describe("a stray figure", () => {
     expect(marketMoversOf(candidates, lines, WINDOW).up.map((m) => [m.was, m.now])).toEqual([
       [2, 40],
     ]);
+  });
+});
+
+describe("a dip that came back", () => {
+  // Lugia, Aquapolis: €1,213 for 14 to 16 September 2026 between weeks at about €3,900. The market
+  // movers from the 16th ranked it the week's biggest riser, at +€2,712.18.
+  it("is no move: Lugia's week from 16 September is the €43.70 it moved", () => {
+    const lines = daysFromMonths(
+      lugiaRows.map((r) => ({ ...r, language: "en" as const })),
+      "2026-08-17",
+    );
+    const { up, down } = marketMoversOf(
+      [
+        { tcgId: "ecard2-149", printing: "holofoil" },
+        { tcgId: "sv1-1", printing: "holofoil" },
+      ],
+      [
+        ...lines,
+        at("sv1-1", "2026-09-16", { holofoil: 100 }),
+        at("sv1-1", "2026-09-22", { holofoil: 200 }),
+      ],
+      { from: "2026-09-16", to: "2026-09-22" },
+    );
+    expect(up.map((m) => [m.tcgId, m.change])).toEqual([
+      ["sv1-1", 100],
+      ["ecard2-149", 43.7],
+    ]);
+    expect(down).toEqual([]);
   });
 });

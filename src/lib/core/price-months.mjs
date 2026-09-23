@@ -466,6 +466,114 @@ function holdLastFigure(days, taken) {
   }
 }
 
+/*
+ * A dip that came back. The twin of holdRecoveredDips in cardorb-web's src/lib/price-change.ts,
+ * which holds the same dips on every chart line the web draws: the three numbers and the rule must
+ * stay in step with it, or a set page's change and the chart beside it disagree again.
+ */
+/** How far a figure falls (or rises by the inverse) from the level before it to count as a dip. */
+const DIP = 0.6;
+/** How near the level the figure after the dip must come back, either way. */
+const RECOVERED = 0.8;
+/** How long a dip may last, from its first figure to the figure that comes back. */
+export const DIP_DAYS = 21;
+
+/**
+ * A price line with a dip that comes back held flat over it.
+ *
+ * A figure 40% or more under the level before it (or 1⅔ times over it), for as long as the figures
+ * stay that far off, and followed within DIP_DAYS by one back within 20% of that level, is one cheap
+ * copy sold or one hopeful sale: the price did not go there. The stray rule cannot see it, because
+ * a third of the price is not five times off: Lugia, Aquapolis read about €3,880, then €1,213 for
+ * 14 to 16 September 2026, then about €3,920, and a set page asked from the 16th answered +€2,712
+ * for a card that never moved, as did both movers lists. The web had held that line flat on the
+ * chart since 2026-09-15; this is the same rule at the source, so every change read from a line
+ * agrees with the line drawn.
+ *
+ * A dip at the end of the line has nothing after it to come back to and stays: it may be the new
+ * price, and is a move until it comes back. Applied twice it changes nothing the second time, which
+ * matters because the web applies it again to what this answers.
+ *
+ * Returns the line itself where nothing was held, and otherwise a copy with each held point a new
+ * object, so a caller can tell which points changed.
+ *
+ * @template {{ date: string, value: number }} T
+ * @param {T[]} line oldest first
+ * @returns {T[]}
+ */
+export function holdRecoveredDips(line) {
+  const time = (/** @type {T} */ p) => Date.parse(`${p.date}T00:00:00Z`);
+  /** @type {T[] | null} */
+  let out = null;
+  for (let i = 1; i < line.length; i++) {
+    const level = (out ?? line)[i - 1].value;
+    const off = (/** @type {number} */ v) => v < level * DIP || v * DIP > level;
+    if (!(level > 0) || !off(line[i].value)) continue;
+    let j = i;
+    while (j + 1 < line.length && off(line[j + 1].value)) j++;
+    const back = line[j + 1];
+    if (!back || time(back) - time(line[i]) > DIP_DAYS * 86_400_000) {
+      i = j;
+      continue;
+    }
+    if (back.value < level * RECOVERED || back.value * RECOVERED > level) {
+      i = j;
+      continue;
+    }
+    out ??= [...line];
+    for (let k = i; k <= j; k++) out[k] = { ...line[k], value: level };
+    i = j;
+  }
+  return out ?? line;
+}
+
+/**
+ * Holds each printing's dips that came back (holdRecoveredDips), on the line the stray passes have
+ * left: a stray day already held is part of the level, not a dip of its own. Per printing, the old
+ * two series each a line of their own, as the web holds each printing's line. A held day says what
+ * it holds, as a stray one does; where the day was already a held stray figure, what it holds is
+ * still the figure TCGplayer sent.
+ *
+ * @param {{ card: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }[]} days
+ */
+function holdDipsThatCameBack(days) {
+  /** @type {Map<string, { date: string, value: number, figures: Record<string, number>, held: Record<string, number>, printing: string }[]>} */
+  const lines = new Map();
+  eachFigure(days, (d, figures, printing, value) => {
+    const key = `${d.card}|${printing}`;
+    const list = lines.get(key) ?? [];
+    list.push({ date: d.date, value, figures, held: d.held, printing });
+    lines.set(key, list);
+  });
+  for (const list of lines.values()) {
+    list.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+    const out = holdRecoveredDips(list);
+    if (out === list) continue;
+    out.forEach((p, k) => {
+      if (p === list[k]) return;
+      p.held[p.printing] ??= list[k].value;
+      p.figures[p.printing] = p.value;
+    });
+  }
+}
+
+/**
+ * How far before the first day wanted a line is read: the days the rules above weigh that first
+ * day against. STRAY_WINDOW_DAYS is how far either side the stray rule looks for a figure's
+ * neighbours, and it covers DIP_DAYS, the longest a dip can have been going when the window opens
+ * inside it, with room for the day before it that says what level it fell from. Read from the day
+ * wanted, a window that opened inside a dip held nothing, and its change was a rise from nowhere.
+ *
+ * @param {string} since yyyy-mm-dd
+ * @returns {string} yyyy-mm-dd
+ */
+export const lineReadFrom = (since) => {
+  const at = Date.parse(`${since}T00:00:00Z`);
+  return Number.isNaN(at)
+    ? since
+    : new Date(at - STRAY_WINDOW_DAYS * 86_400_000).toISOString().slice(0, 10);
+};
+
 /**
  * @typedef {{ language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }} MonthDay
  */
@@ -604,13 +712,15 @@ const byDateCardLanguage = (a, b) =>
 export function daysFromMonths(rows, since = "0000-00-00") {
   const days = layOutDays(rows);
   /* Judged on every day read, the days before `since` too: they are the neighbours the first days
-     after it are weighed against, and the last figure a stray one right after it holds. */
+     after it are weighed against, the last figure a stray one right after it holds, and the level a
+     dip it opens inside fell from. A reader asks from lineReadFrom(since) so those days are here. */
   /** @type {Taken[]} */
   const taken = [];
   const all = [...days.values()];
   dropScarcerRunsUnderTheirBase(all, taken);
   dropStrayFigures(all, taken);
   holdLastFigure(all, taken);
+  holdDipsThatCameBack(all);
   for (const [key, d] of days) {
     if (d.date < since || (!Object.keys(d.real).length && !Object.keys(d.legacy).length))
       days.delete(key);

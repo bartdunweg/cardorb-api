@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { endsOfLines, moversOf, priceOfCopy, type CardPricePoint } from "./movers";
 import type { CardSet, OwnedCard, Variant } from "./cards";
+import { daysFromMonths } from "../price-months.mjs";
+import lugiaRows from "../lugia-aquapolis.fixture.json";
 
 const variant = (over: Partial<Variant> = {}): Variant => ({
   id: "row-1",
@@ -185,6 +187,27 @@ describe("moversOf", () => {
 
   it("survives a card with no reading at all", () => {
     expect(moversOf([set([card({ tcgId: "a" })])], []).up).toEqual([]);
+  });
+});
+
+describe("moversOf over a dip that came back", () => {
+  // Lugia, Aquapolis, held as a holo: its line read €1,213 for 14 to 16 September 2026 between weeks
+  // at about €3,900, and a reader's Home named it the week's biggest riser at +€2,712.
+  it("does not rank Lugia's return from a three-day dip over a card that moved", () => {
+    const lines = daysFromMonths(
+      lugiaRows.map((r) => ({ ...r, language: "en" as const })),
+      "2026-09-16",
+    );
+    const lugia = card({ tcgId: "ecard2-149", variants: [variant({ finish: "holo" })] });
+    const riser = card({ tcgId: "b" });
+    const { up } = moversOf(
+      [set([lugia, riser])],
+      [...endsOfLines(lines), at("b", "2026-09-16", 100), at("b", "2026-09-22", 200)],
+    );
+    expect(up.map((m) => [m.card.tcgId, Math.round(m.change * 100) / 100])).toEqual([
+      ["b", 100],
+      ["ecard2-149", 43.7],
+    ]);
   });
 });
 

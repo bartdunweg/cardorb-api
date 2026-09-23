@@ -7,6 +7,8 @@ import {
   readFromDay,
 } from "./headline-printing";
 import type { CardPricePoint } from "./movers";
+import { daysFromMonths } from "../price-months.mjs";
+import lugiaRows from "../lugia-aquapolis.fixture.json";
 
 const p = (finish: Printing["finish"], foilPattern: Printing["foilPattern"] = null): Printing => ({
   finish,
@@ -148,6 +150,30 @@ describe("headlineChanges", () => {
       was: 4,
       now: 5,
       change: 1,
+    });
+  });
+});
+
+describe("headlineChanges over a dip that came back", () => {
+  // Lugia, Aquapolis: €1,213 for 14 to 16 September 2026 between weeks at about €3,900. The set page
+  // asked from the 16th answered +€2,712.18 for a card that never moved.
+  it("reads Lugia's week from 16 September as the €43.70 it moved, not +€2,712", () => {
+    const lines = daysFromMonths(
+      lugiaRows.map((r) => ({ ...r, language: "en" as const })),
+      "2026-09-16",
+    );
+    const lugia = {
+      id: "ecard2-149",
+      tcgId: "ecard2-149",
+      language: "en" as const,
+      series: "holofoil",
+    };
+    expect(headlineChanges([lugia], lines, "2026-09-16", "2026-09-22").get("ecard2-149")).toEqual({
+      was: 3881.97,
+      now: 3925.67,
+      change: 43.7,
+      from: "2026-09-16",
+      to: "2026-09-22",
     });
   });
 });

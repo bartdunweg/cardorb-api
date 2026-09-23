@@ -71,7 +71,6 @@ import {
   printProductKey,
   runKey,
   runLinksOf,
-  STRAY_WINDOW_DAYS,
 } from "../price-months.mjs";
 import type { Finish, FoilPattern } from "./collection-row";
 import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
@@ -1968,7 +1967,9 @@ export const getCardPrices = cache(
         // v12: a stray sale's figure left out of a printing's line (price-months.mjs dropStrayFigures).
         // v13: a stray figure holds the printing's last figure instead of leaving a gap.
         // v14: a week of a new level at the end of a line is its price; held days say what they hold.
-        ["card-prices", "v14", userId, since, idsKey(cards)],
+        // v15: a dip that came back is held at its level (holdRecoveredDips), and the read reaches
+        // back before `since` (lineReadFrom); a v14 entry answers Lugia's +€2,712 for its hour.
+        ["card-prices", "v15", userId, since, idsKey(cards)],
         { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
       )();
       return { points, failed: false };
@@ -2001,7 +2002,7 @@ export const getMoverPrices = cache(
       const points = await unstable_cache(
         async () => endsOfLines(await listHistoryPrices(db, cards, from)),
         // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
-        ["mover-prices", "v14", userId, from, idsKey(cards)],
+        ["mover-prices", "v15", userId, from, idsKey(cards)],
         { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag] },
       )();
       return { points, failed: false };
@@ -2040,10 +2041,10 @@ const daysBefore = (day: string, days: number) =>
  * Three reads. Postgres narrows the catalogue to MARKET_CANDIDATES printings on the figures as
  * stored (marketMoverCandidates), so no request pulls twenty thousand cards' lines into Node. Their
  * lines come through listHistoryPrices, the read the collection's movers and every chart use, laid
- * out by daysFromMonths: a figure one odd sale set is held over with the figure before it there, so
- * the market movers are protected by the same filtering as a person's, not a second one. The lines
- * reach STRAY_WINDOW_DAYS back before the window, because that is how far either side the rule looks
- * for a figure's neighbours, and a window's first day judged without them is not judged at all.
+ * out by daysFromMonths: a figure one odd sale set is held over with the figure before it there, and
+ * a dip that came back is held at its level, so the market movers are protected by the same
+ * filtering as a person's, not a second one. The read itself reaches back before the window
+ * (lineReadFrom), so the window's first day is judged against the days before it.
  * marketMoversOf compares and ranks. Then the names and pictures of the tiles, for the movers alone
  * and in one read (catalogueCardsById), since a candidate the rule held flat has no tile to name.
  *
@@ -2076,7 +2077,7 @@ export async function getMarketMovers(days = 7, priceDay?: string): Promise<Mark
           tcgId,
           language: "en" as const,
         }));
-        const lines = await listHistoryPrices(db, cards, daysBefore(from, STRAY_WINDOW_DAYS));
+        const lines = await listHistoryPrices(db, cards, from);
         const { up, down } = marketMoversOf(candidates, lines, { from, to: until });
         const ids = [...new Set([...up, ...down].map((m) => m.tcgId))];
         const facts = new Map((await catalogueCardsById(db, ids, "en")).map((r) => [r.id, r]));
@@ -2098,7 +2099,8 @@ export async function getMarketMovers(days = 7, priceDay?: string): Promise<Mark
         };
         return { up: up.flatMap(tile), down: down.flatMap(tile) };
       },
-      ["market-movers", "v2", day, String(days)],
+      // v3: a dip that came back is no move (holdRecoveredDips); a v2 entry ranks Lugia first for its day.
+      ["market-movers", "v3", day, String(days)],
       { revalidate: DAY, tags: [priceHistoryTag] },
     )();
     return { ...movers, failed: false };
@@ -2181,7 +2183,8 @@ export const getRecentValue = cache(
           // Versioned with getCardPrices: the same lines, so a change to how they are built is both.
           // v15: the stored points answer every day they cover, and this is the tail alone; a v14
           // entry under the same `since` is ninety days of line where one day is wanted.
-          ["recent-value", "v15", userId, since, holdingsKey(items)],
+          // v16: a dip that came back is held at its level in the lines summed (holdRecoveredDips).
+          ["recent-value", "v16", userId, since, holdingsKey(items)],
           { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag, cardsTag(userId)] },
         )(),
       );
@@ -2255,7 +2258,8 @@ export const getListValue = cache(
             return line;
           },
           // Versioned with getCardPrices: the same readings, so a change to how they are built is both.
-          ["list-value", "v14", userId, list, since, listKey(items)],
+          // v15: a dip that came back is held at its level in the lines summed (holdRecoveredDips).
+          ["list-value", "v15", userId, list, since, listKey(items)],
           { revalidate: 3600, tags: [cardPricesTag(userId), priceHistoryTag, cardsTag(userId)] },
         )(),
       );
@@ -2380,7 +2384,8 @@ async function readEarlyValue(
         },
         // v15: `until` may reach past the first stored point, to the last night of an import's dip.
         // v16: the line starts at the first card (`from`), its readings TAIL_READ_DAYS before it.
-        ["early-value", "v16", userId, from, until, listKey(held)],
+        // v17: a dip that came back is held at its level in the lines summed (holdRecoveredDips).
+        ["early-value", "v17", userId, from, until, listKey(held)],
         { revalidate: 86_400, tags: [cardPricesTag(userId)] },
       )();
       return new Map(days.map(([date, value, priced]) => [date, { value, priced }]));

@@ -13,6 +13,7 @@ import {
   writeCardPrices,
 } from "./postgres";
 import type { CardDraft } from "@/lib/core/collection/collection-row";
+import lugiaRows from "@/lib/core/lugia-aquapolis.fixture.json";
 
 /**
  * Whose rows, asked out loud.
@@ -646,6 +647,45 @@ describe("listCardPrices across catalogues", () => {
         printings: { holofoil: 9 },
       },
     ]);
+  });
+});
+
+describe("listCardPrices before its window", () => {
+  /** card_price_months holding Lugia's August and September 2026, answering `gte` on the month as PostgREST does. */
+  const store = () => {
+    const since: string[] = [];
+    const db = {
+      from: () => {
+        let gte = "";
+        const chain: Record<string, unknown> = {
+          select: () => chain,
+          order: () => chain,
+          range: () => chain,
+          eq: () => chain,
+          in: () => chain,
+          gte: (_column: string, value: string) => ((gte = value), since.push(value), chain),
+          then: (resolve: (v: unknown) => unknown) =>
+            resolve({ data: lugiaRows.filter((r) => r.month >= gte), error: null }),
+        };
+        return chain;
+      },
+    } as unknown as SupabaseClient;
+    return { db, since };
+  };
+
+  // Lugia, Aquapolis: €3,865 on 30 August 2026, €1,207 from 31 August to 3 September, €3,872 on the
+  // 4th. Asked from 2 September, the level before the dip is in August: read from September alone,
+  // the line opened inside the dip and the week's change was a €2,700 rise from nowhere.
+  it("reads far enough back to see the level a dip at its start fell from", async () => {
+    const { db, since } = store();
+    const points = await listCardPrices(
+      db,
+      [{ tcgId: "ecard2-149", language: "en" }],
+      "2026-09-02",
+    );
+    expect(since).toEqual(["2026-08-01"]);
+    expect(points[0]).toMatchObject({ date: "2026-09-02", printings: { holofoil: 3865.01 } });
+    expect(points.find((p) => p.date === "2026-09-04")?.printings).toEqual({ holofoil: 3871.98 });
   });
 });
 
