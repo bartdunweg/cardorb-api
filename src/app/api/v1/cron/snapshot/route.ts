@@ -46,8 +46,9 @@ const LINKS = {
 };
 
 /**
- * One value reading per account, once a night: since 2026-09-17 the last week before the night, summed
- * from the held cards' readings (nightlyPoints), so the stored points and the Home line agree.
+ * One value reading per account, once a night: since 2026-09-17 the last nights before the night
+ * (NIGHT_WRITE_DAYS, three weeks and a day since a dip that came back is held), summed from the held
+ * cards' readings (nightlyPoints), so the stored points and the Home line agree.
  *
  * It was once a week, which is why the chart on the dashboard had four points
  * in it eight months after the table shipped. Nightly is both the ceiling and
@@ -130,8 +131,8 @@ export async function GET(req: Request) {
       const sets = await assembleFor(userId, db);
       // Read before the night's points are written: whether the history was ever built, below.
       const stored = await listValueSnapshots(db, userId);
-      /* The last week before tonight, summed from the held cards' readings as the recent days of the
-         Home line are (nightlyPoints). A point from the collection as assembled at 04:00 was a day
+      /* The last NIGHT_WRITE_DAYS before tonight, summed from the held cards' readings as the
+         recent days of the Home line are (nightlyPoints). A point from the collection as assembled at 04:00 was a day
          behind that line and a few cents off, and stepped into view on its ninety-first day. */
       const items = flattenItems(sets);
       const readings = await listHistoryPrices(

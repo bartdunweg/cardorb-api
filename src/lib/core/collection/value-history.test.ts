@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { holdingsSeries } from "./folder-history";
+import { CARRY_DAYS, holdingsSeries } from "./folder-history";
+import { DIP_DAYS } from "../price-months.mjs";
 import type { CardItem } from "./items";
 import type { CardPricePoint } from "./movers";
 import {
@@ -72,11 +73,25 @@ describe("nightlyPoints", () => {
   }
   const tonight = day(59);
 
-  it("writes the last week before tonight, as the whole history draws those days", () => {
-    const window = readings.filter((r) => r.date >= nightReadFrom(tonight));
-    const points = nightlyPoints([pikachu, charizard], window, tonight);
-    expect(points.map((p) => p.date)).toEqual([52, 53, 54, 55, 56, 57, 58].map(day));
-    const whole = holdingsSeries([pikachu, charizard], readings).filter((p) =>
+  // A dip is held once it has come back, up to DIP_DAYS after it began: the nights it covered are
+  // written again with the level, or they stood in the table for good.
+  it("writes the nights a dip can still be held over, as the whole history draws those days", () => {
+    // Read on day 23 and not again until tonight: its day 23 figure still prices day 37, the first
+    // night written, CARRY_DAYS later.
+    const sparse = item({ id: "gym", tcgId: "gym1-2" });
+    const all = [
+      ...readings,
+      { language: "en" as const, tcgId: "gym1-2", date: day(23), market: 70, holo: null },
+      { language: "en" as const, tcgId: "gym1-2", date: day(58), market: 72, holo: null },
+    ];
+    const window = all.filter((r) => r.date >= nightReadFrom(tonight));
+    const points = nightlyPoints([pikachu, charizard, sparse], window, tonight);
+    expect(points.map((p) => p.date)).toEqual(
+      Array.from({ length: DIP_DAYS + 1 }, (_, i) => day(59 - DIP_DAYS - 1 + i)),
+    );
+    expect(59 - 37).toBe(DIP_DAYS + 1);
+    expect(37 - 23).toBe(CARRY_DAYS);
+    const whole = holdingsSeries([pikachu, charizard, sparse], all).filter((p) =>
       points.some((q) => q.date === p.date),
     );
     expect(points).toEqual(whole);
