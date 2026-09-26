@@ -24949,7 +24949,8 @@
   "dp6-90": {
     "productId": 84534,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "dp6-91": {
@@ -27360,7 +27361,8 @@
   "ecard1-94": {
     "productId": 84026,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "ecard1-95": {
@@ -28283,7 +28285,8 @@
   "ecard2-75": {
     "productId": 85080,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "ecard2-76": {
@@ -29153,7 +29156,8 @@
   "ecard3-27": {
     "productId": 88503,
     "variants": [
-      "normal"
+      "normal",
+      "reverse-holofoil"
     ]
   },
   "ecard3-28": {
@@ -29709,7 +29713,9 @@
   },
   "ecard3-H02": {
     "productId": 83574,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 1372
   },
   "ecard3-H03": {
@@ -30796,7 +30802,8 @@
   "ex10-15": {
     "productId": 89593,
     "variants": [
-      "holofoil"
+      "holofoil",
+      "reverse-holofoil"
     ]
   },
   "ex10-16": {
@@ -32893,7 +32900,9 @@
   },
   "ex12-91": {
     "productId": 88673,
-    "variants": [],
+    "variants": [
+      "holofoil"
+    ],
     "groupId": 1378
   },
   "ex12-92": {
@@ -38785,7 +38794,8 @@
     "productId": 88276,
     "variants": [
       "holofoil",
-      "reverse-holofoil"
+      "reverse-holofoil",
+      "normal"
     ]
   },
   "ex6-110": {
@@ -40415,7 +40425,8 @@
     "productId": 89289,
     "variants": [
       "holofoil",
-      "reverse-holofoil"
+      "reverse-holofoil",
+      "normal"
     ]
   },
   "ex8-16": {
@@ -41130,7 +41141,8 @@
   "ex9-107": {
     "productId": 85385,
     "variants": [
-      "holofoil"
+      "holofoil",
+      "normal"
     ]
   },
   "ex9-11": {
