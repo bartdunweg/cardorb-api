@@ -1,7 +1,7 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice } from "./cards";
-import { copyPriceOf, copyPricingOf } from "../price-basis.mjs";
+import { copyPriceOf, copyPricingOf, runOnlyOf } from "../price-basis.mjs";
 import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
@@ -232,12 +232,20 @@ function sourceOf(
   printingPrice?: Price | null;
 } {
   // A market figure anywhere on the chain first, a lowest listing only where none of it has one.
-  const { printing, price, runOnly } = copyPricingOf(v, card);
-  /* A print run read alone that found nothing: `printingPrice` is sent as null rather than left
-     out, so a reader takes the unknown as the answer and does not go on to the card's own figure
-     (cardorb-web's priceForCopy reads `printingPrice` first). */
-  if (runOnly)
-    return { priceSource: null, pricePrinting: null, tcgplayerId: null, printingPrice: null };
+  const { printing, price } = copyPricingOf(v, card);
+  /* A print run read alone (runOnlyOf) always sends its answer as `printingPrice`, a null one
+     included, so a reader takes it as final and does not go on to the card's own figure
+     (cardorb-web's priceForCopy reads `printingPrice` first). Also where the answer came from the
+     stamped run's figure and not a printing: a 1st Edition copy with no finish reads
+     `priceFirstEd`, which can be the holo's listing, and left out, the reader found the
+     Unlimited's market figure in `price`. */
+  if (runOnlyOf(v, card))
+    return {
+      priceSource: price ? "tcgplayer" : null,
+      pricePrinting: printing,
+      tcgplayerId: printing ? (card.printingIds?.[printing] ?? null) : null,
+      printingPrice: price,
+    };
   if (printing) {
     return {
       priceSource: "tcgplayer",
