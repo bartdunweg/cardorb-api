@@ -117,6 +117,50 @@ describe("getCollection during a TCGdex outage", () => {
     expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
   });
 
+  /* The call that trips the breaker. json() used to rethrow what fetch threw, a TypeError that is
+     neither name above, so that one read answered `failed` while every read in the twenty
+     seconds after it was served offline. In e2e, where outside hosts refuse, that was the read
+     right after a card was added (2026-09-28). The real json() here, only fetch stubbed. */
+  it("serves the rows when the request that trips the breaker could not reach TCGdex", async () => {
+    const { json } = await import("../catalogue/tcgdex-client");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw new TypeError("fetch failed");
+      }),
+    );
+    setCatalogue.mockImplementation(() =>
+      json("https://api.tcgdex.net/v2/en/cards/sv01-022", "card sv01-022"),
+    );
+    const out = await getCollection("me", "t.o.k.e.n");
+    expect(out).toMatchObject({ failed: false, catalogueUnavailable: true });
+    expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
+  }, 10_000);
+
+  /* The path the e2e run hit: the catalogue answers, the stored prices are not current, and the
+     prices fall back to TCGdex per card (storedPricesFor -> pricesFor -> json), which cannot be
+     reached. The real pricesFor() and json() here; only fetch and the set are stubbed. */
+  it("serves the rows when the prices fall back to TCGdex and it cannot be reached", async () => {
+    const fetchMock = vi.fn(async (_url: string | URL | Request): Promise<Response> => {
+      throw new TypeError("fetch failed");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    setCatalogue.mockResolvedValue({
+      byNumber: { "58": { id: "base1-58", localId: "58", name: "Pikachu", image: null } },
+      officialName: "Base Set",
+      code: null,
+      logo: null,
+      releaseDate: null,
+      total: 102,
+    });
+    const out = await getCollection("me", "t.o.k.e.n");
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toContain(
+      "https://api.tcgdex.net/v2/en/cards/base1-58",
+    );
+    expect(out).toMatchObject({ failed: false, catalogueUnavailable: true });
+    expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
+  }, 10_000);
+
   it("does the same for a public profile", async () => {
     setCatalogue.mockRejectedValue(outage());
     const out = await getPublicCollection("owner-1");

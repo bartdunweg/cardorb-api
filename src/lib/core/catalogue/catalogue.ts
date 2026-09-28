@@ -42,7 +42,7 @@
 
 import { DAY, mapLimit } from "../util";
 import { unstable_cache } from "next/cache";
-import { json, fetchSet } from "./tcgdex-client";
+import { CatalogueUnavailable, json, fetchSet } from "./tcgdex-client";
 import { resolveSetIds } from "./set-resolve";
 import { type CatalogueCard, indexByNumber } from "./set-index";
 import { copiedEnglishSets, englishSetFromCopy, mirrorSetCatalogue } from "./set-catalogue-mirror";
@@ -83,23 +83,6 @@ export type SetCatalogue = {
   total: number | null;
 };
 
-/**
- * TCGdex could not be reached, or would not answer for a set it lists: the
- * outage, told apart from every other failure so the collection can be served
- * from the rows alone rather than not at all. See getCollection() in
- * collection/collection.ts, which is what catches it.
- *
- * Matched by name there rather than by instanceof: the error crosses
- * unstable_cache and mapLimit on its way up, and a test that mocks this
- * module does not carry the class.
- */
-export class CatalogueUnavailable extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "CatalogueUnavailable";
-  }
-}
-
 /** The whole of the per-set work, on a cache miss. Exported for its test only. */
 export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // The copy first. It answers for every set the nightly run has been through, which is every
@@ -133,7 +116,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     sets = (await json("https://api.tcgdex.net/v2/en/sets", "sets index")) as TcgSet[];
   } catch (err) {
     throw new CatalogueUnavailable(
-      `No TCGdex set index, so no set can be resolved: ${String(err)}`,
+      `No TCGdex set index, so no set can be resolved: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
 

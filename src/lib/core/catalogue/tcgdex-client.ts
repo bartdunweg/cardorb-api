@@ -62,6 +62,24 @@ export class CatalogueNotFound extends Error {
 }
 
 /**
+ * TCGdex could not be reached, or would not answer for a set it lists: the
+ * outage, told apart from every other failure so the collection can be served
+ * from the rows alone rather than not at all. See getCollection() in
+ * collection/collection.ts, which is what catches it.
+ *
+ * Matched by name there rather than by instanceof: the error crosses
+ * unstable_cache and mapLimit on its way up, and a test that mocks this
+ * module does not carry the class. It lives here, beside json(), because
+ * json() throws it too; catalogue.ts throws it for a set TCGdex will not answer for.
+ */
+export class CatalogueUnavailable extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "CatalogueUnavailable";
+  }
+}
+
+/**
  * TCGdex is down and was not asked: the breaker below is open.
  *
  * Its own class so a caller can tell "not asked" from "asked and refused",
@@ -143,7 +161,13 @@ export async function json(
       }
       console.error(`TCGdex ${label} failed after 3 attempts:`, message);
       tripped();
-      throw err;
+      /* The outage by its name, not the raw error. The call that tripped the breaker used to
+         rethrow what fetch threw (a TypeError "fetch failed", or a status), which no caller reads
+         as an outage: getCollection() answered `failed` for that one request and served the rows
+         offline for every request in the twenty seconds after it (e2e, 2026-09-28). */
+      throw new CatalogueUnavailable(`TCGdex ${label} failed after 3 attempts: ${message}`, {
+        cause: err,
+      });
     }
   }
 }
