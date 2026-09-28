@@ -232,7 +232,12 @@ function sourceOf(
   printingPrice?: Price | null;
 } {
   // A market figure anywhere on the chain first, a lowest listing only where none of it has one.
-  const { printing, price } = copyPricingOf(v, card);
+  const { printing, price, runOnly } = copyPricingOf(v, card);
+  /* A print run read alone that found nothing: `printingPrice` is sent as null rather than left
+     out, so a reader takes the unknown as the answer and does not go on to the card's own figure
+     (cardorb-web's priceForCopy reads `printingPrice` first). */
+  if (runOnly)
+    return { priceSource: null, pricePrinting: null, tcgplayerId: null, printingPrice: null };
   if (printing) {
     return {
       priceSource: "tcgplayer",
@@ -455,12 +460,19 @@ export type Order = "asc" | "desc";
  * printing it chose as `printingPrice` rather than every printing, so that is read first here.
  * Without it, a reverse holo item sorted and totalled at the plain card's price.
  */
-export const copyPrice = (it: CardItem): number | null =>
-  shownPrice(it.printingPrice ?? copyPriceOf(it, it));
+export const copyPrice = (it: CardItem): number | null => shownPrice(chosenPrice(it));
+
+/**
+ * The price the item says this copy has: `printingPrice` where it was sent, a null one included
+ * (a print run read alone that found nothing, sourceOf), and the rule over the card's own fields
+ * only where it was left out.
+ */
+const chosenPrice = (it: CardItem): Price | null =>
+  it.printingPrice !== undefined ? it.printingPrice : copyPriceOf(it, it);
 
 /** Whether a copy with no market figure is shown at its lowest listing, which no total counts. */
 export const listedOnly = (it: CardItem): boolean => {
-  const p = it.printingPrice ?? copyPriceOf(it, it);
+  const p = chosenPrice(it);
   return p?.market == null && p?.basis === "lowest-listing";
 };
 
@@ -470,7 +482,7 @@ export const listedOnly = (it: CardItem): boolean => {
  */
 export const copyListing = (it: CardItem): number | null => {
   if (copyPrice(it) != null || !listedOnly(it)) return null;
-  return (it.printingPrice ?? copyPriceOf(it, it))?.lowestListing ?? null;
+  return chosenPrice(it)?.lowestListing ?? null;
 };
 
 /**

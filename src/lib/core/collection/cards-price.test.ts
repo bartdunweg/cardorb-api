@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import { shownPrice } from "./cards";
 import {
   copyPriceOf,
+  copyPricingOf,
   displayedPrice,
   pointFromTcgplayer,
   priceFromUsd,
@@ -449,5 +450,57 @@ describe("usdOf and usdPrintingsOf with a lowest listing", () => {
   it("never carry a listing beside a market figure", () => {
     const tp = { normal: { marketPrice: 2, lowPrice: 1, productId: 3 } };
     expect(usdPrintingsOf(tp)).toEqual({ normal: { market: 2, productId: 3 } });
+  });
+});
+
+describe("a print run's copy reads its own run alone", () => {
+  // Team Rocket's Dark Charizard, 2026-09-28, in euros: the 1st Edition holo is priced at its
+  // listing (market not believed), the Unlimited holo at its market figure. Ids invented.
+  const market = (n: number) => ({ market: n, basis: "market" as const });
+  const listed = (n: number) => ({
+    market: null,
+    lowestListing: n,
+    basis: "lowest-listing" as const,
+  });
+  const firstEd = { edition: "1st-edition", finish: "holo" };
+
+  it("carries the run's listing, never the Unlimited's market figure", () => {
+    const card = {
+      price: market(343.52),
+      priceFirstEd: listed(882),
+      pricePrintings: { "1st-edition-holofoil": listed(882), "unlimited-holofoil": market(343.52) },
+    };
+    expect(copyPriceOf(firstEd, card)).toEqual(listed(882));
+    expect(copyPricingOf(firstEd, card)).toMatchObject({ printing: "1st-edition-holofoil" });
+  });
+
+  it("has no price where the run has none, and says it stopped there", () => {
+    // Neo Genesis Lugia: the 1st Edition holo withheld (placeholder listing), the Unlimited priced.
+    const card = {
+      price: market(478.25),
+      pricePrintings: { "unlimited-holofoil": market(478.25) },
+    };
+    expect(copyPriceOf(firstEd, card)).toBeNull();
+    expect(copyPricingOf(firstEd, card)).toEqual({ printing: null, price: null, runOnly: true });
+    const shadowless = { edition: "shadowless", finish: "holo" };
+    const base = {
+      price: market(300),
+      pricePrintings: { holofoil: market(300), "1st-edition-holofoil": market(9000) },
+    };
+    expect(copyPriceOf(shadowless, base)).toBeNull();
+  });
+
+  it("still reads the card's own figure where TCGplayer does not price the card by run", () => {
+    const card = { price: market(12), pricePrintings: { holofoil: market(12) } };
+    expect(copyPriceOf(firstEd, card)).toEqual(market(12));
+    expect(copyPricingOf(firstEd, card)).not.toHaveProperty("runOnly");
+  });
+
+  it("leaves an Unlimited copy as it was", () => {
+    const card = {
+      price: market(343.52),
+      pricePrintings: { "1st-edition-holofoil": listed(882), "unlimited-holofoil": market(343.52) },
+    };
+    expect(copyPriceOf({ edition: null, finish: "holo" }, card)).toEqual(market(343.52));
   });
 });

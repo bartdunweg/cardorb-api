@@ -277,13 +277,37 @@ export const pricedPrintingOf = (copy, printings) => {
  * the card's figure carried a market price, was shown and counted at nothing (the printing's
  * listing has no market) where the collection view priced the same copy at the market figure.
  *
+ * `runOnly` says the copy is a print run that read its own run alone (runOnlyOf) and found no
+ * figure: its price is unknown, and a reader must not look further along its own chain.
+ *
  * @param {{ finish?: string | null, edition?: string | null }} copy
  * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
- * @returns {{ printing: string | null, price: Price | null }}
+ * @returns {{ printing: string | null, price: Price | null, runOnly?: true }}
  */
 export const copyPricingOf = (copy, card) =>
   copyChain(copy, card, withMarket) ??
-  copyChain(copy, card, anyFigure) ?? { printing: null, price: null };
+  copyChain(copy, card, anyFigure) ??
+  (runOnlyOf(copy, card)
+    ? { printing: null, price: null, runOnly: true }
+    : { printing: null, price: null });
+
+/** TCGplayer's names for a card's runs: where any of them is priced, TCGplayer prices the card by run. */
+const RUN_PRINTING = /^(1st-edition|unlimited|shadowless)/;
+
+/**
+ * Whether a copy reads its own print run and nothing else: a 1st Edition or Shadowless copy of a
+ * card TCGplayer prices by run. Its run's figure, a lowest listing where the market figure is not
+ * believed (judgedFigure), or no price: never the Unlimited's or the card's headline figure (the
+ * owner, 2026-09-14: "a missing price shows as unknown, never as another printing's"; for the runs
+ * 2026-09-28). A card TCGplayer does not split by run still falls back to its plain figure, since
+ * that figure is the only one there is for any copy of it.
+ *
+ * @param {{ edition?: string | null }} copy
+ * @param {{ pricePrintings?: Record<string, Price | null> | null }} card
+ */
+export const runOnlyOf = (copy, card) =>
+  (copy.edition === "1st-edition" || copy.edition === "shadowless") &&
+  Object.keys(card.pricePrintings ?? {}).some((key) => RUN_PRINTING.test(key));
 
 /**
  * What one copy is worth: a market figure wherever the chain below finds one, and only where
@@ -304,7 +328,11 @@ export const copyPriceOf = (copy, card) => copyPricingOf(copy, card).price;
  * @returns {{ printing: string | null, price: Price | null } | null}
  */
 const copyChain = (copy, card, accept) => {
-  for (const key of printingKeysOf(copy)) {
+  const runOnly = runOnlyOf(copy, card);
+  const keys = printingKeysOf(copy).filter(
+    (key) => !runOnly || key.startsWith(/** @type {string} */ (copy.edition)),
+  );
+  for (const key of keys) {
     const p = accept(card.pricePrintings?.[key]);
     if (p) return { printing: key, price: p };
   }
@@ -328,6 +356,8 @@ const copyChain = (copy, card, accept) => {
     const p = accept(card.priceFirstEd);
     if (p) return { printing: null, price: p };
   }
+  // A run read alone stops at its run (runOnlyOf).
+  if (runOnly) return null;
   const p = accept(card.price);
   return p ? { printing: null, price: p } : null;
 };

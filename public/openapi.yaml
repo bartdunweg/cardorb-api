@@ -298,7 +298,9 @@ components:
           description: |
             What the stamped first run trades at, where anything prices that run apart: TCGplayer
             does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Null
-            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`. On a
+            card TCGplayer prices by run, a 1st Edition or Shadowless copy reads its own run alone
+            (since 2026-09-28): its figure, its lowest listing, or no price, never `price`.
         tcgId: { type: [string, "null"], description: "TCGdex's card id, for `GET /v1/cards/{tcgId}`." }
 
     CardSet:
@@ -700,7 +702,9 @@ components:
           description: |
             What the stamped first run trades at, where anything prices that run apart: TCGplayer
             does for Jungle, Fossil, Team Rocket, Gym and Neo, converted to euros. Null
-            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`.
+            everywhere else, and a copy whose `edition` is `1st-edition` then reads `price`. On a
+            card TCGplayer prices by run, a 1st Edition or Shadowless copy reads its own run alone
+            (since 2026-09-28): its figure, its lowest listing, or no price, never `price`.
 
     PublicItem:
       type: object
