@@ -14,6 +14,7 @@ import { cardPricesFromShelf, type TcgplayerLink } from "@/lib/core/collection/s
 import TCGPLAYER_IDS from "@/lib/core/tcgplayer-ids.generated.json";
 import TCGPLAYER_IDS_JA from "@/lib/core/tcgplayer-ids.ja.generated.json";
 import {
+  deleteTcgplayerPrices,
   listCatalogueProducts,
   printProductsOfCards,
   writeCardPrices,
@@ -58,6 +59,29 @@ const storedRow = (r: ShelfPrinting, day: string) => ({
   listing: r.market == null ? (r.listing ?? null) : null,
   updated_on: day,
 });
+
+/**
+ * A print run with no believable figure tonight (judgedFigure in price-basis.mjs: a market figure
+ * under half its own listing, and that listing a placeholder over ten times it). Not written: its
+ * row is removed, so an earlier night's figure does not stand as its price.
+ */
+const withheld = (r: ShelfPrinting) => r.market == null && r.listing == null;
+
+/** Tonight's shelf into tcgplayer_prices: every judged figure written, every withheld printing's row removed. */
+async function storeShelf(
+  db: NonNullable<ReturnType<typeof adminClient>>,
+  rows: ShelfPrinting[],
+  day: string,
+) {
+  await writeTcgplayerPrices(
+    db,
+    rows.filter((r) => !withheld(r)).map((r) => storedRow(r, day)),
+  );
+  await deleteTcgplayerPrices(
+    db,
+    rows.filter(withheld).map((r) => ({ product_id: r.productId, printing: r.printing })),
+  );
+}
 
 /** The UTC day tcgcsv last published its files, from its last-updated.txt. */
 async function publishedDay(): Promise<string> {
@@ -136,10 +160,7 @@ export async function GET(req: Request) {
       );
       return NextResponse.json({ ok: false, groups, answered, written: 0 }, { status: 502 });
     }
-    await writeTcgplayerPrices(
-      db,
-      shelf.rows.map((r) => storedRow(r, today)),
-    );
+    await storeShelf(db, shelf.rows, today);
   } catch (err) {
     console.error("[cron] copying TCGplayer's prices failed:", err);
     return refuse("catalogue");
@@ -168,13 +189,10 @@ export async function GET(req: Request) {
     if (!ja.groups || ja.answered < ja.groups * 0.9) {
       japanese.skipped = "too few groups answered";
     } else {
-      await writeTcgplayerPrices(
-        db,
-        ja.rows.map((r) => storedRow(r, today)),
-      );
+      await storeShelf(db, ja.rows, today);
       japaneseRows = ja.rows;
       japanese.written = ja.rows.length;
-      japanese.listed = ja.rows.filter((r) => r.market == null).length;
+      japanese.listed = ja.rows.filter((r) => r.market == null && r.listing != null).length;
     }
   } catch (err) {
     console.error("[cron] copying TCGplayer's Japanese prices failed:", err);
@@ -315,7 +333,9 @@ export async function GET(req: Request) {
     answered,
     written: rows.length,
     // Of those, the printings with no market figure, written at their lowest listing.
-    listed: rows.filter((r) => r.market == null).length,
+    listed: rows.filter((r) => r.market == null && r.listing != null).length,
+    // And the print runs with no believable figure, whose rows were removed.
+    withheld: rows.filter(withheld).length,
     japanese,
     rate: usdEur,
     history,

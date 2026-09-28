@@ -108,8 +108,8 @@ export type TcgplayerLink = {
  * `language` is the catalogue the links' ids are from, and every point carries it: an English and a
  * Japanese card can share an id (neo4-106), and each is its own line.
  *
- * A market figure the rule does not believe (under half the printing's own lowest listing,
- * believedMarket in price-basis.mjs; ShelfPrinting.disbelieved) is written for the card's own
+ * A print run's market figure the rule does not believe (under half the printing's own lowest
+ * listing, judgedFigure in price-basis.mjs; ShelfPrinting.disbelieved) is written for the card's own
  * product only, with that listing beside it, so the reader takes it out and holds the line with the
  * last figure it believes (price-months.mjs). A run or a print of its own writes no point for one:
  * it keeps none of the listings, and a figure the reader cannot judge must not be stored.
@@ -143,9 +143,9 @@ export function cardPricesFromShelf(
     if (r.market != null) {
       put(shelf, r, r.market);
       put(ownShelf, r, r.market);
-    } else if (r.disbelieved != null && r.listing != null) {
-      put(ownShelf, r, r.disbelieved);
-      listingOf.set(`${r.productId}|${r.printing}`, r.listing);
+    } else if (r.disbelieved) {
+      put(ownShelf, r, r.disbelieved.market);
+      listingOf.set(`${r.productId}|${r.printing}`, r.disbelieved.listing);
     }
   }
   const products: Record<string, number | null> = {};

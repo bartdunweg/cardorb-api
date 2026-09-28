@@ -373,58 +373,108 @@ export function priceFromUsd(usd, rate) {
 }
 
 /**
- * How far under the printing's own cheapest listing its market figure may sit and still be believed:
- * half of it.
+ * How far under the printing's own cheapest listing a print run's market figure may sit and still be
+ * believed: half of it.
  *
- * TCGplayer's market figure is drawn from past sales, and for a card that hardly sells it can be one
- * old or odd sale that nothing on offer today comes near. Team Rocket's Dark Charizard, 2026-09-28:
- * its 1st Edition holo at a market of $121.94 while the cheapest copy for sale was $980, and Home
- * showed a visitor a fall to that figure as the week's biggest. The same on all nine 1st Edition
- * holos that read under their own Unlimited that day (Neo Genesis Lugia $164.80 against a cheapest
- * $2,999.99, Neo Destiny Dark Porygon2 $39.21 against $6,999.99). Our links were right: TCGplayer
- * files both runs as subtypes of one product, and these are its own figures.
+ * TCGplayer's market figure is drawn from past sales, and a thinly traded print run can go months
+ * without one, so its figure can be an old or odd sale nothing on offer comes near. Team Rocket's
+ * Dark Charizard, 2026-09-28: its 1st Edition holo at a market of $121.94 while the cheapest copy for
+ * sale was $980, and Home showed a visitor a fall to that figure as the week's biggest. Our links
+ * were right: TCGplayer files both runs as subtypes of one product, and these are its own figures.
  *
- * Under half, the market figure is not believed and the printing is read as one with no market
- * figure: priced at its lowest listing, labelled as one (`basis: "lowest-listing"`), shown as
- * "From" and never summed, and no point in the price history (the owner, 2026-09-28: prevent it,
- * do not cure it). Half, not a closer ratio: a listing is an asking price, and a market figure a
- * little under the cheapest copy is the ordinary state of a card whose last sales were cheaper.
+ * Only the runs (isPrintRun). TCGplayer's free data carries no count of sales and no date of the
+ * last one, so where market and listing disagree nothing says which is right; the rule is kept to
+ * the printings where the market figure is stale by the way they trade. Applied to every printing
+ * it took 957 figures that day, 461 of them reverse holos whose market figure is probably right, and
+ * would have flipped prices from day to day (the owner, 2026-09-28). A paid source with real sales
+ * is to replace it.
  */
 export const MARKET_UNDER_LISTING_RATIO = 0.5;
 
 /**
- * A printing's market figure where it is believed: above zero, and not under half the printing's own
- * lowest listing (MARKET_UNDER_LISTING_RATIO). Null otherwise. With no listing to hold it against,
- * a market figure stands.
+ * How far over a disbelieved market figure the listing may be and still be shown: ten times. Past
+ * it the listing is a placeholder ask ($100,000 against a market of $10,000), neither figure is
+ * believed, and the printing has no price at all.
+ */
+export const PLACEHOLDER_LISTING_RATIO = 10;
+
+/**
+ * A thinly traded print run, by TCGplayer's printing name: a 1st Edition or a Shadowless run
+ * ("1st-edition-holofoil", "1st-edition", "shadowless-holofoil"). A Shadowless product's own
+ * printings are named "unlimited-..." on the shelf; the shelf reader says so by product
+ * (tcgcsv.ts), since the name cannot.
+ *
+ * @param {string | null | undefined} printing
+ */
+export const isPrintRun = (printing) => /^(1st-edition|shadowless)/.test(printing ?? "");
+
+/**
+ * Whether a market figure is under half the printing's own lowest listing. False where either is
+ * missing: with nothing to hold it against, a market figure stands.
  *
  * @param {number | null | undefined} market
- * @param {number | null | undefined} listing the printing's lowest current listing
- * @returns {number | null}
+ * @param {number | null | undefined} listing
  */
-export function believedMarket(market, listing) {
-  if (typeof market !== "number" || !(market > 0)) return null;
-  if (typeof listing === "number" && listing > 0 && market < listing * MARKET_UNDER_LISTING_RATIO)
-    return null;
-  return market;
+export const marketUnderListing = (market, listing) =>
+  typeof market === "number" &&
+  market > 0 &&
+  typeof listing === "number" &&
+  listing > 0 &&
+  market < listing * MARKET_UNDER_LISTING_RATIO;
+
+/**
+ * @typedef {{ market: number, listing: null }
+ *   | { market: null, listing: number, disbelieved?: { market: number, listing: number } }
+ *   | { market: null, listing: null, disbelieved: { market: number, listing: number } }} JudgedFigure
+ */
+
+/**
+ * One printing's figures as a reader may see them, in the currency they came in.
+ *
+ * - A market figure stands, except on a print run (`run`) where it is under half the printing's own
+ *   lowest listing (marketUnderListing).
+ * - Such a figure is not believed. Where the listing is at most PLACEHOLDER_LISTING_RATIO times it,
+ *   the printing is priced at that listing (`basis: "lowest-listing"`, shown as "From", never
+ *   summed); past that, neither figure is believed and `market` and `listing` are both null. Either
+ *   way `disbelieved` keeps the two figures, for the price history (snapshot.ts).
+ * - With no market figure, the lowest listing (Bart, 2026-09-18).
+ * - Null where there is neither.
+ *
+ * @param {number | null | undefined} market
+ * @param {number | null | undefined} listing
+ * @param {boolean} run whether the printing is a print run (isPrintRun)
+ * @returns {JudgedFigure | null}
+ */
+export function judgedFigure(market, listing, run) {
+  const m = typeof market === "number" && market > 0 ? market : null;
+  const l = typeof listing === "number" && listing > 0 ? listing : null;
+  if (m !== null && l !== null && run && marketUnderListing(m, l)) {
+    const disbelieved = { market: m, listing: l };
+    return l <= m * PLACEHOLDER_LISTING_RATIO
+      ? { market: null, listing: l, disbelieved }
+      : { market: null, listing: null, disbelieved };
+  }
+  if (m !== null) return { market: m, listing: null };
+  if (l !== null) return { market: null, listing: l };
+  return null;
 }
 
 /**
- * A tcgcsv price row's figure as tcgplayer_prices keeps it: the market figure, or, where TCGplayer
- * publishes none or one that is not believed (believedMarket), the lowest listing (Bart,
- * 2026-09-18). Never both. Null where there is neither, and the row is left out.
+ * A tcgcsv price row's figure as tcgplayer_prices keeps it (judgedFigure): the market figure, or
+ * the lowest listing where there is none or a print run's is not believed. Never both. Null where
+ * there is neither, and the row is left out; both null where a print run has no believable figure,
+ * and the price job deletes the row.
  *
  * Here, in plain JavaScript, for the reason at the top of this file: the price job (tcgcsv.ts)
  * writes by it and the morning check (scripts/data-health.mjs) holds the store to it.
  *
  * @param {{ marketPrice?: number | null, lowPrice?: number | null }} r
- * @returns {{ market: number, listing: null } | { market: null, listing: number } | null}
+ * @param {boolean} [run] whether the row's printing is a print run: its name (isPrintRun), or a
+ *   Shadowless product
+ * @returns {JudgedFigure | null}
  */
-export function shelfFigureOf(r) {
-  const market = believedMarket(r.marketPrice, r.lowPrice);
-  if (market !== null) return { market, listing: null };
-  if (typeof r.lowPrice === "number" && r.lowPrice > 0)
-    return { market: null, listing: r.lowPrice };
-  return null;
+export function shelfFigureOf(r, run = false) {
+  return judgedFigure(r.marketPrice, r.lowPrice, run);
 }
 
 /**

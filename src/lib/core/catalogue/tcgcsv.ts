@@ -1,4 +1,5 @@
-import { shelfFigureOf } from "../price-basis.mjs";
+import { isPrintRun, shelfFigureOf } from "../price-basis.mjs";
+import TCGPLAYER_IDS from "../tcgplayer-ids.generated.json";
 import { catalogueTimeout, mapLimit } from "../util";
 
 /**
@@ -22,6 +23,21 @@ export const TCGCSV_CATEGORY = { en: 3, ja: 85 } as const;
 export type ShelfPrices = Map<number, Map<string, number>>;
 
 const BASE = "https://tcgcsv.com/tcgplayer";
+
+/**
+ * Base Set's Shadowless products, as tcgplayer-links.mjs linked them: TCGplayer files the run as a
+ * group of its own whose printings are named "1st Edition" and "Unlimited", so a Shadowless
+ * figure is known by its product and not its name.
+ */
+const SHADOWLESS_PRODUCTS = new Set(
+  Object.values(TCGPLAYER_IDS as Record<string, { shadowless?: { productId: number } } | null>)
+    .map((link) => link?.shadowless?.productId)
+    .filter((id): id is number => typeof id === "number"),
+);
+
+/** Whether a shelf row is a thinly traded print run, whose market figure the rule judges (isPrintRun). */
+export const isRunRow = (r: { productId: number; subTypeName: string }) =>
+  SHADOWLESS_PRODUCTS.has(r.productId) || isPrintRun(printingName(r.subTypeName));
 
 async function read<T>(url: string): Promise<T> {
   // tcgcsv answers 401 to a request that does not say who is asking.
@@ -57,8 +73,8 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
     }
     answered++;
     for (const r of rows) {
-      // A market figure under half the printing's own cheapest listing is none (believedMarket).
-      const market = shelfFigureOf(r)?.market;
+      // A print run's market figure under half its own cheapest listing is none (judgedFigure).
+      const market = shelfFigureOf(r, isRunRow(r))?.market;
       if (market == null) continue;
       const printings = out.get(r.productId) ?? new Map<string, number>();
       printings.set(r.subTypeName, market);
@@ -79,15 +95,16 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
 export type ShelfPrinting = {
   productId: number;
   printing: string;
+  /** Null with `listing` null too where a print run has no believable figure: the row is deleted. */
   market: number | null;
   listing?: number | null;
   /**
-   * The market figure TCGplayer published and the rule did not believe (under half `listing`,
-   * believedMarket in price-basis.mjs), beside that listing. Never stored as today's price; the
-   * history keeps it with the listing, so its reader can take it out and hold the line
-   * (price-months.mjs). Absent on every other row.
+   * A print run's market figure the rule did not believe (under half its own lowest listing,
+   * judgedFigure in price-basis.mjs) and that listing. Never stored as today's price; the history
+   * keeps both, so its reader can take the figure out and hold the line (price-months.mjs). Absent
+   * on every other row.
    */
-  disbelieved?: number;
+  disbelieved?: { market: number; listing: number };
 };
 
 /** A shelf row as tcgcsv publishes it: the figures this app reads. */
@@ -128,18 +145,9 @@ export async function shelfPrintings(
     }
     answered++;
     for (const r of results) {
-      const figure = shelfFigureOf(r);
+      const figure = shelfFigureOf(r, isRunRow(r));
       if (!figure) continue;
-      const disbelieved =
-        figure.market == null && typeof r.marketPrice === "number" && r.marketPrice > 0
-          ? { disbelieved: r.marketPrice }
-          : {};
-      rows.push({
-        productId: r.productId,
-        printing: printingName(r.subTypeName),
-        ...figure,
-        ...disbelieved,
-      });
+      rows.push({ productId: r.productId, printing: printingName(r.subTypeName), ...figure });
     }
   });
   return { rows, groups: groups.length, answered };
@@ -162,8 +170,9 @@ export async function groupPrintings(
   );
   const out = new Map<number, Record<string, GroupPrinting>>();
   for (const r of results) {
-    const figure = shelfFigureOf(r);
-    if (!figure) continue;
+    const figure = shelfFigureOf(r, isRunRow(r));
+    // A print run with no believable figure has no price here either.
+    if (!figure || (figure.market == null && figure.listing == null)) continue;
     const printings = out.get(r.productId) ?? {};
     printings[printingName(r.subTypeName)] = {
       marketPrice: figure.market,

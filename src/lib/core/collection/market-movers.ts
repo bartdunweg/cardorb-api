@@ -75,8 +75,8 @@ export type MarketMoversOptions = {
  *
  * A printing whose figure on the window's last day is held is no mover: its move would end on an
  * earlier figure standing in for today's, not on a sale. The line holds a figure the stray rule
- * takes out, and since 2026-09-28 a market figure under half the printing's own cheapest listing
- * (believedMarket in price-basis.mjs, held in price-months.mjs). Team Rocket's Dark Charizard
+ * takes out, and since 2026-09-28 a print run's market figure under half its own cheapest listing
+ * (judgedFigure in price-basis.mjs, held in price-months.mjs). Team Rocket's Dark Charizard
  * showed why: a 1st Edition holo "fell" EUR 125 to a market of $121.94 while the cheapest copy on
  * offer was $980, and Home showed it as the week's biggest fall. The days before the listing was
  * kept carry that fall as TCGplayer sent it, so for a week the held figure is the fallen one; left

@@ -9,7 +9,7 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit, catalogueTimeout } from "../util";
-import { believedMarket } from "../price-basis.mjs";
+import { isPrintRun, judgedFigure } from "../price-basis.mjs";
 
 /** TCGplayer's market figure for one printing, in dollars, as TCGdex relays it. */
 export type UsdPrice = {
@@ -268,10 +268,14 @@ export type PrintingFigures = {
 };
 
 /**
- * One printing's dollars: its market figure, or, where TCGplayer has none or one under half the
- * printing's own lowest listing (believedMarket, price-basis.mjs), its lowest listing (Bart,
- * 2026-09-18 and 2026-09-28). A listing never sits beside a market figure: market is the price
- * wherever it is believed. Null where the printing has neither.
+ * One printing's dollars: its market figure, or, where TCGplayer has none, its lowest listing (Bart,
+ * 2026-09-18). A listing never sits beside a market figure: market is the price wherever it is
+ * believed. Null where the printing has neither.
+ *
+ * `printing` is TCGplayer's name for it. On a print run (isPrintRun: 1st Edition, Shadowless) a
+ * market figure under half the printing's own lowest listing is not believed (judgedFigure,
+ * price-basis.mjs, 2026-09-28): the listing where it is at most ten times that figure, and no price
+ * at all where it is more. Left out, the figure is judged as no run's.
  *
  * The one reader of figures that come in live: TCGdex's relay and tcgcsv's group files (which
  * shelfFigureOf has already judged). A stored row carries a listing only where it has no market
@@ -279,17 +283,15 @@ export type PrintingFigures = {
  */
 export function usdFigureOf(
   v: PrintingFigures | null | undefined,
+  printing?: string,
 ): (UsdPrice & { productId: number | null }) | null {
   if (!v) return null;
   const productId = typeof v.productId === "number" ? v.productId : null;
-  const disbelieved =
-    typeof v.marketPrice === "number" &&
-    v.marketPrice > 0 &&
-    believedMarket(v.marketPrice, v.lowPrice) === null;
-  if (typeof v.marketPrice === "number" && !disbelieved)
-    return { market: v.marketPrice, productId };
-  if (typeof v.lowPrice === "number" && v.lowPrice > 0)
-    return { market: null, listing: v.lowPrice, productId };
+  // A market figure of zero is read as it always was: a figure, not a missing one.
+  if (v.marketPrice === 0) return { market: 0, productId };
+  const figure = judgedFigure(v.marketPrice, v.lowPrice, isPrintRun(printing));
+  if (figure?.market != null) return { market: figure.market, productId };
+  if (figure?.listing != null) return { market: null, listing: figure.listing, productId };
   return null;
 }
 
@@ -302,7 +304,7 @@ function firstWithMarket(
   printings: string[],
 ): UsdPrice | null {
   if (!tp) return null;
-  const figures = printings.map((p) => usdFigureOf(tp[p]));
+  const figures = printings.map((p) => usdFigureOf(tp[p], p));
   return figures.find((f) => f?.market != null) ?? figures.find((f) => f != null) ?? null;
 }
 
@@ -340,7 +342,7 @@ export const usdPrintingsOf = (
 ): Record<string, UsdPrice & { productId: number | null }> => {
   const out: Record<string, UsdPrice & { productId: number | null }> = {};
   for (const [printing, v] of Object.entries(tp ?? {})) {
-    const figure = usdFigureOf(v);
+    const figure = usdFigureOf(v, printing);
     if (figure) out[printing] = figure;
   }
   return out;

@@ -70,7 +70,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { believedMarket, pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
+import { isPrintRun, judgedFigure, pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
   finishPrintingKey,
   historyKey,
@@ -285,9 +285,14 @@ function tcgcsvDay(date, category = CATEGORY_EN) {
     if (!existsSync(file)) continue;
     const { results } = JSON.parse(readFileSync(file, "utf8"));
     for (const r of results) {
-      // The night's rule: a market figure under half the printing's own lowest listing is none.
-      const market = believedMarket(r.marketPrice, r.lowPrice);
-      if (market === null) continue;
+      /* The night's rule: a print run's market figure under half its own lowest listing is none
+         (judgedFigure). By name only here; a Shadowless product's rows are named "Unlimited". */
+      const market = judgedFigure(
+        r.marketPrice,
+        r.lowPrice,
+        isPrintRun(r.subTypeName.toLowerCase().replace(/\s+/g, "-")),
+      )?.market;
+      if (market == null) continue;
       const m = byProduct.get(r.productId) ?? new Map();
       m.set(r.subTypeName, market);
       byProduct.set(r.productId, m);

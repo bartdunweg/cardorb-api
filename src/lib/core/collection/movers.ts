@@ -62,7 +62,7 @@ export type PrintingDay = {
   price: number | null;
   /**
    * The printing's lowest listing that day, in euros, only where its market figure `price` is under
-   * half of it and so not believed (believedMarket). Stored beside the figure so the reader can
+   * half of it on a print run and so not believed (judgedFigure). Stored beside the figure so the reader can
    * take the figure out (price-months.mjs); absent on every other day.
    */
   listing?: number;

@@ -19,7 +19,7 @@
  * Plain JavaScript, like price-basis.mjs, because scripts/backfill-card-prices.mjs writes the same
  * rows the API does and a script cannot import TypeScript.
  */
-import { believedMarket } from "./price-basis.mjs";
+import { marketUnderListing } from "./price-basis.mjs";
 
 /**
  * The catalogues a card id can be from, and so the first half of a price row's key.
@@ -161,7 +161,7 @@ export const runLinksOf = (link) =>
  * @property {string} month yyyy-mm-01
  * @property {(number | null)[]} cents index 0 is the 1st
  * @property {(number | null)[]} [listing_cents] the lowest listing, index 0 is the 1st, only on the
- *   days whose market figure in `cents` is not believed (believedMarket); absent on a row with none
+ *   days whose market figure in `cents` is not believed (judgedFigure); absent on a row with none
  * @property {string} source
  */
 
@@ -328,8 +328,10 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
 }
 
 /**
- * Takes out a market figure stored beside a lowest listing it is under half of (believedMarket in
- * price-basis.mjs), for holdLastFigure to hold with the printing's last figure before it.
+ * Takes out a market figure stored beside a lowest listing it is under half of (marketUnderListing in
+ * price-basis.mjs), for holdLastFigure to hold with the printing's last figure before it. The night
+ * stores a listing only beside a print run's figure the rule did not believe (judgedFigure), so the
+ * runs are the only lines this reaches.
  *
  * TCGplayer's market figure for a card that hardly sells can be one old or odd sale nothing on offer
  * comes near: Team Rocket's Dark Charizard 1st Edition holo read $121.94 with the cheapest copy at
@@ -344,7 +346,7 @@ function dropDisbelievedMarkets(days, taken) {
   for (const { card, date, real, held, listing } of days) {
     for (const [printing, low] of Object.entries(listing)) {
       const value = real[printing];
-      if (value == null || believedMarket(value, low) !== null) continue;
+      if (value == null || !marketUnderListing(value, low)) continue;
       taken.push({ card, date, figures: real, held, printing, value, disbelieved: true });
       delete real[printing];
     }

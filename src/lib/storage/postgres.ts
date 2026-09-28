@@ -674,6 +674,30 @@ export async function writeTcgplayerPrices(
 }
 
 /**
+ * Removes these printings' rows: a print run with no believable figure tonight (judgedFigure in
+ * price-basis.mjs), whose row from an earlier night would otherwise stand as its price. By printing,
+ * then chunked over the product ids, as PostgREST takes a list in the URL.
+ */
+export async function deleteTcgplayerPrices(
+  db: SupabaseClient,
+  rows: { product_id: number; printing: string }[],
+): Promise<void> {
+  const byPrinting = new Map<string, number[]>();
+  for (const r of rows)
+    byPrinting.set(r.printing, [...(byPrinting.get(r.printing) ?? []), r.product_id]);
+  for (const [printing, ids] of byPrinting) {
+    for (let i = 0; i < ids.length; i += 400) {
+      const { error } = await db
+        .from("tcgplayer_prices")
+        .delete()
+        .eq("printing", printing)
+        .in("product_id", ids.slice(i, i + 400));
+      if (error) throw new Error(`Removing withheld TCGplayer prices failed: ${error.message}`);
+    }
+  }
+}
+
+/**
  * The day's dollar rate (euros per dollar), written over what that day holds. The nightly price
  * cron writes it; requests read the latest day through readLatestUsdEurRate().
  */
