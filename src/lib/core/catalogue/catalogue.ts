@@ -83,9 +83,6 @@ export type SetCatalogue = {
   total: number | null;
 };
 
-/** The outage, thrown here and by json(); defined in tcgdex-client.ts, where json() lives. */
-export { CatalogueUnavailable } from "./tcgdex-client";
-
 /** The whole of the per-set work, on a cache miss. Exported for its test only. */
 export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
   // The copy first. It answers for every set the nightly run has been through, which is every
@@ -119,7 +116,8 @@ export async function loadSetCatalogue(setName: string): Promise<SetCatalogue> {
     sets = (await json("https://api.tcgdex.net/v2/en/sets", "sets index")) as TcgSet[];
   } catch (err) {
     throw new CatalogueUnavailable(
-      `No TCGdex set index, so no set can be resolved: ${String(err)}`,
+      `No TCGdex set index, so no set can be resolved: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
 

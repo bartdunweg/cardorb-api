@@ -137,6 +137,30 @@ describe("getCollection during a TCGdex outage", () => {
     expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
   }, 10_000);
 
+  /* The path the e2e run hit: the catalogue answers, the stored prices are not current, and the
+     prices fall back to TCGdex per card (storedPricesFor -> pricesFor -> json), which cannot be
+     reached. The real pricesFor() and json() here; only fetch and the set are stubbed. */
+  it("serves the rows when the prices fall back to TCGdex and it cannot be reached", async () => {
+    const fetchMock = vi.fn(async (_url: string | URL | Request): Promise<Response> => {
+      throw new TypeError("fetch failed");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    setCatalogue.mockResolvedValue({
+      byNumber: { "58": { id: "base1-58", localId: "58", name: "Pikachu", image: null } },
+      officialName: "Base Set",
+      code: null,
+      logo: null,
+      releaseDate: null,
+      total: 102,
+    });
+    const out = await getCollection("me", "t.o.k.e.n");
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).toContain(
+      "https://api.tcgdex.net/v2/en/cards/base1-58",
+    );
+    expect(out).toMatchObject({ failed: false, catalogueUnavailable: true });
+    expect(out.sets[0]?.cards[0]?.name).toBe("Pikachu");
+  }, 10_000);
+
   it("does the same for a public profile", async () => {
     setCatalogue.mockRejectedValue(outage());
     const out = await getPublicCollection("owner-1");

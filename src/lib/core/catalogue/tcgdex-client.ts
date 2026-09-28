@@ -70,7 +70,7 @@ export class CatalogueNotFound extends Error {
  * Matched by name there rather than by instanceof: the error crosses
  * unstable_cache and mapLimit on its way up, and a test that mocks this
  * module does not carry the class. It lives here, beside json(), because
- * json() throws it too (catalogue.ts re-exports it).
+ * json() throws it too; catalogue.ts throws it for a set TCGdex will not answer for.
  */
 export class CatalogueUnavailable extends Error {
   constructor(message: string, options?: { cause?: unknown }) {
