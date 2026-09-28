@@ -319,11 +319,20 @@ describe("a 1st Edition below its own Unlimited", () => {
 
   it("is left out when it read below on one day of the window only", () => {
     const { down } = marketMoversOf(
-      [{ tcgId: "neo4-4", printing: "1st-edition-holofoil" }],
+      [{ tcgId: "inverted-one-day", printing: "1st-edition-holofoil" }],
       [
-        at("neo4-4", "2026-09-15", { "1st-edition-holofoil": 900, "unlimited-holofoil": 500 }),
-        at("neo4-4", "2026-09-18", { "1st-edition-holofoil": 400, "unlimited-holofoil": 500 }),
-        at("neo4-4", "2026-09-22", { "1st-edition-holofoil": 800, "unlimited-holofoil": 500 }),
+        at("inverted-one-day", "2026-09-15", {
+          "1st-edition-holofoil": 900,
+          "unlimited-holofoil": 500,
+        }),
+        at("inverted-one-day", "2026-09-18", {
+          "1st-edition-holofoil": 400,
+          "unlimited-holofoil": 500,
+        }),
+        at("inverted-one-day", "2026-09-22", {
+          "1st-edition-holofoil": 800,
+          "unlimited-holofoil": 500,
+        }),
       ],
       WINDOW,
     );
@@ -333,19 +342,19 @@ describe("a 1st Edition below its own Unlimited", () => {
   it("still moves when it reads above its Unlimited, or where the Unlimited has no figure", () => {
     const { down } = marketMoversOf(
       [
-        { tcgId: "neo1-9", printing: "1st-edition-holofoil" },
-        { tcgId: "gym1-2", printing: "1st-edition" },
+        { tcgId: "first-above", printing: "1st-edition-holofoil" },
+        { tcgId: "first-alone", printing: "1st-edition" },
       ],
       [
-        at("neo1-9", "2026-09-15", { "1st-edition-holofoil": 900, "unlimited-holofoil": 400 }),
-        at("neo1-9", "2026-09-22", { "1st-edition-holofoil": 850, "unlimited-holofoil": 400 }),
-        ...moved("gym1-2", 30, 20, "1st-edition"),
+        at("first-above", "2026-09-15", { "1st-edition-holofoil": 900, "unlimited-holofoil": 400 }),
+        at("first-above", "2026-09-22", { "1st-edition-holofoil": 850, "unlimited-holofoil": 400 }),
+        ...moved("first-alone", 30, 20, "1st-edition"),
       ],
       WINDOW,
     );
     expect(down.map((m) => [m.tcgId, m.change])).toEqual([
-      ["neo1-9", -50],
-      ["gym1-2", -10],
+      ["first-above", -50],
+      ["first-alone", -10],
     ]);
   });
 });

@@ -2057,7 +2057,8 @@ const INVERTED_RUNS_ACCEPTED = new Map();
   const rows = await query(
     `select m.tcg_id, m.printing, m.month::text as month,
             (select c from unnest(m.cents) with ordinality t(c, i)
-             where c is not null order by i desc limit 1) as last_c
+             where c is not null and m.month + (i::int - 1) >= current_date - 40
+             order by i desc limit 1) as last_c
      from card_price_months m
      where m.language = 'en' and m.month >= date_trunc('month', current_date - 40)::date
        and (m.printing like '1st-edition%' or m.printing like 'unlimited%')`,
