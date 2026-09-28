@@ -19,6 +19,7 @@
  * Plain JavaScript, like price-basis.mjs, because scripts/backfill-card-prices.mjs writes the same
  * rows the API does and a script cannot import TypeScript.
  */
+import { marketUnderListing } from "./price-basis.mjs";
 
 /**
  * The catalogues a card id can be from, and so the first half of a price row's key.
@@ -148,6 +149,7 @@ export const runLinksOf = (link) =>
  * @property {string} printing
  * @property {string} date yyyy-mm-dd
  * @property {number | null} price euros
+ * @property {number} [listing] euros: the lowest listing, only beside a market figure not believed
  * @property {string} [source]
  */
 
@@ -158,6 +160,8 @@ export const runLinksOf = (link) =>
  * @property {string} printing
  * @property {string} month yyyy-mm-01
  * @property {(number | null)[]} cents index 0 is the 1st
+ * @property {(number | null)[]} [listing_cents] the lowest listing, index 0 is the 1st, only on the
+ *   days whose market figure in `cents` is not believed (judgedFigure); absent on a row with none
  * @property {string} source
  */
 
@@ -190,6 +194,10 @@ export function monthsFromDays(days) {
       months.set(key, row);
     }
     row.cents[Number(d.date.slice(8, 10)) - 1] = Math.round(d.price * 100);
+    if (typeof d.listing === "number") {
+      row.listing_cents ??= Array(DAYS).fill(null);
+      row.listing_cents[Number(d.date.slice(8, 10)) - 1] = Math.round(d.listing * 100);
+    }
     if (d.source) row.source = d.source;
   }
   return [...months.values()];
@@ -320,6 +328,32 @@ function dropScarcerRunsUnderTheirBase(days, taken) {
 }
 
 /**
+ * Takes out a market figure stored beside a lowest listing it is under half of (marketUnderListing in
+ * price-basis.mjs), for holdLastFigure to hold with the printing's last figure before it. The night
+ * stores a listing only beside a print run's figure the rule did not believe (judgedFigure), so the
+ * runs are the only lines this reaches.
+ *
+ * TCGplayer's market figure for a card that hardly sells can be one old or odd sale nothing on offer
+ * comes near: Team Rocket's Dark Charizard 1st Edition holo read $121.94 with the cheapest copy at
+ * $980 (2026-09-28), and its line fell to it. The night stores such a figure only beside its listing
+ * (snapshot.ts cardPricesFromShelf), so this is the whole rule on the line; a day stored before the
+ * listing was kept (before 2026-09-28) carries none and is read as it always was.
+ *
+ * @param {{ card: string, date: string, real: Record<string, number>, held: Record<string, number>, listing: Record<string, number> }[]} days
+ * @param {Taken[]} taken the figures taken out, added to
+ */
+function dropDisbelievedMarkets(days, taken) {
+  for (const { card, date, real, held, listing } of days) {
+    for (const [printing, low] of Object.entries(listing)) {
+      const value = real[printing];
+      if (value == null || !marketUnderListing(value, low)) continue;
+      taken.push({ card, date, figures: real, held, printing, value, disbelieved: true });
+      delete real[printing];
+    }
+  }
+}
+
+/**
  * Every figure of every day, the TCGplayer printings and the old series alike, with the record it
  * sits in: the passes below take a figure out of that record and put one back into it.
  *
@@ -422,6 +456,8 @@ function dropStrayFigures(days, taken) {
  * @property {Record<string, number>} held the day's held figures, the stray ones they stand in for
  * @property {string} printing
  * @property {number} value the figure taken out
+ * @property {boolean} [disbelieved] taken out for being under half its own listing, not for being
+ *   stray: held with the figure before it even where that figure is near it, never put back
  */
 
 /**
@@ -456,8 +492,9 @@ function holdLastFigure(days, taken) {
     if (before == null) continue;
     /* Nothing to hold with: an earlier figure at the stray one's own level says the median moved,
        not that the day was wrong. The figure taken out goes back as TCGplayer sent it, unmarked,
-       rather than being replaced by a figure a reader could not tell from it. */
-    if (before < t.value * HOLD_MIN_RATIO && t.value < before * HOLD_MIN_RATIO) {
+       rather than being replaced by a figure a reader could not tell from it. Not a figure the
+       listing beside it says is wrong: that one is never put back. */
+    if (!t.disbelieved && before < t.value * HOLD_MIN_RATIO && t.value < before * HOLD_MIN_RATIO) {
       t.figures[t.printing] = t.value;
       continue;
     }
@@ -591,14 +628,15 @@ export const lineReadFrom = (since) => {
 };
 
 /**
- * @typedef {{ language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number> }} MonthDay
+ * @typedef {{ language: PriceLanguage, card: string, tcgId: string, date: string, real: Record<string, number>, legacy: Record<string, number>, held: Record<string, number>, listing: Record<string, number> }} MonthDay
  */
 
 /**
  * The rows' figures as days, one per card per date with a figure: the TCGplayer printings in `real`,
- * the old two series in `legacy`, and `held` empty for the passes to fill.
+ * the old two series in `legacy`, the lowest listing beside a figure not believed in `listing`, and
+ * `held` empty for the passes to fill.
  *
- * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
+ * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null, listing_cents?: (number | null)[] | null }[]} rows
  * @returns {Map<string, MonthDay>} by card and date
  */
 function layOutDays(rows) {
@@ -620,9 +658,20 @@ function layOutDays(rows) {
       if (!day)
         days.set(
           key,
-          (day = { language, card, tcgId: row.tcg_id, date, real: {}, legacy: {}, held: {} }),
+          (day = {
+            language,
+            card,
+            tcgId: row.tcg_id,
+            date,
+            real: {},
+            legacy: {},
+            held: {},
+            listing: {},
+          }),
         );
       (isLegacy ? day.legacy : day.real)[row.printing] = c / 100;
+      const listing = row.listing_cents?.[i];
+      if (listing != null && !isLegacy) day.listing[row.printing] = listing / 100;
     }
   }
   return days;
@@ -721,7 +770,7 @@ const byDateCardLanguage = (a, b) =>
  * plain run before the foil, and `holo`, the foil), in the order pointFromTcgplayer takes them. A
  * day with only the old series has those and no printings.
  *
- * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null }[]} rows
+ * @param {{ language: PriceLanguage, tcg_id: string, printing: string, month: string, cents: (number | null)[] | null, listing_cents?: (number | null)[] | null }[]} rows
  * @param {string} [since] yyyy-mm-dd
  * @returns {DayPrices[]}
  */
@@ -733,6 +782,7 @@ export function daysFromMonths(rows, since = "0000-00-00") {
   /** @type {Taken[]} */
   const taken = [];
   const all = [...days.values()];
+  dropDisbelievedMarkets(all, taken);
   dropScarcerRunsUnderTheirBase(all, taken);
   dropStrayFigures(all, taken);
   holdLastFigure(all, taken);

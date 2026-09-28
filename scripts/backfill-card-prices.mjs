@@ -70,7 +70,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
+import { isPrintRun, judgedFigure, pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
   finishPrintingKey,
   historyKey,
@@ -259,6 +259,20 @@ const cents = (usd, rate) => (usd == null || !(usd > 0) ? null : Math.round(usd 
 
 // ── tcgcsv: TCGplayer's market price, a day at a time ────────────────────────
 
+/**
+ * Base Set's Shadowless products, as tcgplayer-links.mjs linked them: a print run by product, since
+ * TCGplayer names their printings "1st Edition" and "Unlimited" (the nightly job's isRunRow).
+ */
+let shadowlessProducts;
+const isShadowlessProduct = (productId) => {
+  shadowlessProducts ??= new Set(
+    Object.values(existsSync(IDS) ? JSON.parse(readFileSync(IDS, "utf8")) : {})
+      .map((link) => link?.shadowless?.productId)
+      .filter((id) => typeof id === "number"),
+  );
+  return shadowlessProducts.has(productId);
+};
+
 /** productId → { subTypeName → marketPrice } for one day, from the archive's files of one category. */
 function tcgcsvDay(date, category = CATEGORY_EN) {
   mkdirSync(CACHE, { recursive: true });
@@ -285,9 +299,17 @@ function tcgcsvDay(date, category = CATEGORY_EN) {
     if (!existsSync(file)) continue;
     const { results } = JSON.parse(readFileSync(file, "utf8"));
     for (const r of results) {
-      if (!(r.marketPrice > 0)) continue;
+      /* The night's rule: a print run's market figure under half its own lowest listing is none
+         (judgedFigure). A run by its name, or by its product for Base Set's Shadowless run. */
+      const market = judgedFigure(
+        r.marketPrice,
+        r.lowPrice,
+        (category === CATEGORY_EN && isShadowlessProduct(r.productId)) ||
+          isPrintRun(r.subTypeName.toLowerCase().replace(/\s+/g, "-")),
+      )?.market;
+      if (market == null) continue;
       const m = byProduct.get(r.productId) ?? new Map();
-      m.set(r.subTypeName, r.marketPrice);
+      m.set(r.subTypeName, market);
       byProduct.set(r.productId, m);
     }
   }

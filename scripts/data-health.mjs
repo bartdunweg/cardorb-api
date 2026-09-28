@@ -23,6 +23,7 @@ import {
   priceFromUsd,
   printingKeysOf,
   shelfFigureOf,
+  isPrintRun,
 } from "../src/lib/core/price-basis.mjs";
 import {
   JUMP_FLOOR_CENTS,
@@ -590,7 +591,12 @@ const jaLinks = JSON.parse(
 
 /**
  * A printing TCGplayer lists and has no market figure for is priced at its lowest listing, and
- * labelled so (Bart, 2026-09-18; R-DATA-004).
+ * labelled so (Bart, 2026-09-18; R-DATA-004). So is a print run (1st Edition, Shadowless) whose
+ * market figure is under half its own lowest listing (judgedFigure in price-basis.mjs, 2026-09-28):
+ * a thinly traded run's market can be one old sale nothing on offer comes near, which put Team
+ * Rocket's Dark Charizard 1st Edition at $121.94 beside a cheapest copy of $980 and on Home as the
+ * week's biggest fall. Where that listing is over ten times the figure, neither is believed and the
+ * row is not stored at all. The detail says how many printings are there for that reason.
  *
  * The rule is shelfFigureOf() in tcgcsv.ts, which the price job writes tcgplayer_prices with, and
  * priceFromUsd() in price-basis.mjs, which every answer's price is made by. This holds the store to
@@ -608,12 +614,22 @@ if (day) {
   /** category to the groups of every linked product, and the linked products themselves. */
   const wanted = { 3: new Set(), 85: new Set() };
   const linkedProducts = new Set();
-  for (const v of Object.values(links))
+  /** Base Set's Shadowless products: a print run by product, its printings named "Unlimited". */
+  const shadowlessProducts = new Set();
+  for (const v of Object.values(links)) {
     if (v?.productId) {
       linkedProducts.add(v.productId);
       const g = v.groupId ?? groupsOf["3"]?.[String(v.productId)];
       if (g != null) wanted[3].add(g);
     }
+    const run = v?.shadowless?.productId;
+    if (run) {
+      linkedProducts.add(run);
+      shadowlessProducts.add(run);
+      const g = v.shadowless.groupId ?? groupsOf["3"]?.[String(run)];
+      if (g != null) wanted[3].add(g);
+    }
+  }
   for (const pid of Object.values(jaLinks))
     if (pid) {
       linkedProducts.add(pid);
@@ -621,6 +637,10 @@ if (day) {
       if (g != null) wanted[85].add(g);
     }
   const shelf = new Map();
+  /** The print runs whose market figure tcgcsv publishes and the rule does not believe. */
+  const disbelieved = new Set();
+  /** Of those, the ones with no believable figure at all (a placeholder listing): no row is stored. */
+  const withheld = new Set();
   let unread = 0;
   const pending = Object.entries(wanted).flatMap(([cat, gs]) => [...gs].map((g) => [cat, g]));
   await Promise.all(
@@ -636,7 +656,13 @@ if (day) {
         }
         for (const r of (await res.json()).results ?? []) {
           if (!linkedProducts.has(r.productId)) continue;
-          shelf.set(`${r.productId}|${printingName(r.subTypeName)}`, shelfFigureOf(r));
+          const key = `${r.productId}|${printingName(r.subTypeName)}`;
+          const run =
+            shadowlessProducts.has(r.productId) || isPrintRun(printingName(r.subTypeName));
+          const figure = shelfFigureOf(r, run);
+          shelf.set(key, figure);
+          if (figure?.disbelieved) disbelieved.add(key);
+          if (figure?.disbelieved && figure.listing == null) withheld.add(key);
         }
       }
     }),
@@ -672,6 +698,47 @@ if (day) {
     if (price?.basis !== "lowest-listing" || price.market != null || !(price.lowestListing > 0))
       unlabelled.push(key);
   }
+  /* The rule of 2026-09-28 on its own line, since it is the one a reader would see: a print run's
+     market figure TCGplayer publishes under half its own lowest listing, still stored as a market
+     figure, is a card priced, summed and charted at a sale nothing on offer comes near; one with a
+     placeholder listing still stored at all is a price where there is none. */
+  /* A withheld row is removed, so an earlier night's row is the one that could stand: asked for on
+     any day, not the price day alone. */
+  const withheldStored = withheld.size
+    ? new Set(
+        (
+          await query(
+            `select product_id, printing from tcgplayer_prices where (product_id, printing) in (${[
+              ...withheld,
+            ]
+              .map((key) => {
+                const [pid, printing] = key.split("|");
+                return `(${Number(pid)}, '${printing.replaceAll("'", "''")}')`;
+              })
+              .join(", ")})`,
+          )
+        ).map((r) => `${r.product_id}|${r.printing}`),
+      )
+    : new Set();
+  const disbelievedStored = [...disbelieved].filter(
+    (key) => stored.get(key)?.market != null || withheldStored.has(key),
+  );
+  check(
+    "No stored print-run figure is one the listing rule does not believe",
+    unread <= (wanted[3].size + wanted[85].size) * 0.1 && disbelievedStored.length === 0,
+    `${disbelieved.size} linked print-run printings on ${day} whose market figure is under half their own lowest listing (judgedFigure): ${disbelieved.size - withheld.size} priced at that listing, ${withheld.size} with no price (listing over ten times the figure); ${disbelievedStored.length} still stored as they were${
+      disbelievedStored.length
+        ? `: ${disbelievedStored
+            .slice(0, 10)
+            .map((key) =>
+              withheldStored.has(key)
+                ? `${key} stored with no believable figure`
+                : `${key} market ${stored.get(key)?.market}`,
+            )
+            .join("; ")}`
+        : ""
+    }`,
+  );
   /* A group tcgcsv did not answer this morning leaves its printings unread, not wrong: named, and
      a failure only when most of the shelf is missing. */
   const readEnough = unread <= (wanted[3].size + wanted[85].size) * 0.1;
@@ -679,7 +746,7 @@ if (day) {
   check(
     "A printing with no market figure is priced at its lowest listing",
     readEnough && listedOnShelf > 0 && worst.length === 0,
-    `${listedOnShelf} linked printings with a listing and no market figure on ${day}; ${unlisted.length} not stored at their listing, ${wrongListing.length} stored at another figure, ${listingBesideMarket.length} holding a listing beside a market figure, ${unlabelled.length} of ${[...stored.values()].filter((r) => r.listing != null).length} stored listings not labelled as one${
+    `${listedOnShelf} linked printings with a listing and no market figure on ${day} (${disbelieved.size - withheld.size} of them a print run's market figure under half that listing); ${unlisted.length} not stored at their listing, ${wrongListing.length} stored at another figure, ${listingBesideMarket.length} holding a listing beside a market figure, ${unlabelled.length} of ${[...stored.values()].filter((r) => r.listing != null).length} stored listings not labelled as one${
       worst.length ? `: ${worst.slice(0, 10).join("; ")}` : ""
     }; ${unread} of ${wanted[3].size + wanted[85].size} tcgcsv groups did not answer`,
   );
@@ -1913,7 +1980,11 @@ const SPIKE_MAX_CARDS = 400;
   const asked = candidates.slice(0, SPIKE_MAX_CARDS);
   const rows = asked.length
     ? await query(
-        `select r.language, r.tcg_id, r.printing, r.month::text as month, r.cents
+        /* The listing beside a figure not believed as well, so `standing` is the line a reader
+           sees (daysFromMonths holds that figure). Through to_jsonb, which answers null for a column
+           a database does not have yet (migration 20260928120000). */
+        `select r.language, r.tcg_id, r.printing, r.month::text as month, r.cents,
+                to_jsonb(r) -> 'listing_cents' as listing_cents
          from card_price_months r
          where r.month >= date_trunc('month', current_date - 140)::date
            and (r.language, r.tcg_id) in (${asked

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const shelfPrintings = vi.fn();
 const writeTcgplayerPrices = vi.fn();
+const deleteTcgplayerPrices = vi.fn();
 const writeCardPrices = vi.fn();
 const usdToEurForRequest = vi.fn();
 const fetchUsdToEur = vi.fn();
@@ -27,6 +28,7 @@ vi.mock("@/lib/core/collection/collection", () => ({
 }));
 vi.mock("@/lib/storage/postgres", () => ({
   writeTcgplayerPrices: (...a: unknown[]) => writeTcgplayerPrices(...a),
+  deleteTcgplayerPrices: (...a: unknown[]) => deleteTcgplayerPrices(...a),
   writeCardPrices: (...a: unknown[]) => writeCardPrices(...a),
   writeUsdEurRate: (...a: unknown[]) => writeUsdEurRate(...a),
   listCatalogueProducts: (...a: unknown[]) => listCatalogueProducts(...a),
@@ -69,6 +71,7 @@ beforeEach(() => {
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.spyOn(console, "error").mockImplementation(() => {});
   writeTcgplayerPrices.mockResolvedValue(undefined);
+  deleteTcgplayerPrices.mockResolvedValue(undefined);
   writeCardPrices.mockResolvedValue(undefined);
   usdToEurForRequest.mockResolvedValue(0.8);
   fetchUsdToEur.mockResolvedValue(0.9);
@@ -150,6 +153,45 @@ describe("GET /api/v1/cron/tcgplayer-prices", () => {
     const points = writeCardPrices.mock.calls[0]?.[1] as { tcgId: string }[];
     expect(points.length).toBeGreaterThan(0);
     expect(points.some((p) => p.tcgId === "30th-R")).toBe(false);
+  });
+
+  /* The owner, 2026-09-28: a print run whose market figure is under half its own listing, with that
+     listing a placeholder over ten times it, has no price. Neo Genesis Lugia's 1st Edition holo
+     (neo1-9, product 86903): market $164.80, cheapest copy $2,999.99. */
+  it("removes a print run with no believable figure, and keeps both figures in the history", async () => {
+    monday();
+    shelfPrintings.mockResolvedValue({
+      rows: [
+        ...CHARIZARD,
+        {
+          productId: 86903,
+          printing: "1st-edition-holofoil",
+          market: null,
+          listing: null,
+          disbelieved: { market: 164.8, listing: 2999.99 },
+        },
+      ],
+      groups: 10,
+      answered: 10,
+    });
+
+    const res = await get("Bearer s3cret");
+
+    const written = writeTcgplayerPrices.mock.calls[0]?.[1] as { product_id: number }[];
+    expect(written.some((r) => r.product_id === 86903)).toBe(false);
+    expect(deleteTcgplayerPrices).toHaveBeenCalledWith(expect.anything(), [
+      { product_id: 86903, printing: "1st-edition-holofoil" },
+    ]);
+    expect(await res.json()).toMatchObject({ ok: true, withheld: 1, listed: 0 });
+    const points = writeCardPrices.mock.calls[0]?.[1] as {
+      tcgId: string;
+      printing: string;
+      listing?: number;
+    }[];
+    expect(points.find((p) => p.tcgId === "neo1-9")).toMatchObject({
+      printing: "1st-edition-holofoil",
+      listing: expect.any(Number),
+    });
   });
 
   it("writes nothing at all when most of the shelf did not answer, so yesterday's figures stand", async () => {

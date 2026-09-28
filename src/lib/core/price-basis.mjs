@@ -277,13 +277,37 @@ export const pricedPrintingOf = (copy, printings) => {
  * the card's figure carried a market price, was shown and counted at nothing (the printing's
  * listing has no market) where the collection view priced the same copy at the market figure.
  *
+ * `runOnly` says the copy is a print run that read its own run alone (runOnlyOf) and found no
+ * figure: its price is unknown, and a reader must not look further along its own chain.
+ *
  * @param {{ finish?: string | null, edition?: string | null }} copy
  * @param {{ price?: Price | null, priceFirstEd?: Price | null, pricePrintings?: Record<string, Price | null> | null }} card
- * @returns {{ printing: string | null, price: Price | null }}
+ * @returns {{ printing: string | null, price: Price | null, runOnly?: true }}
  */
 export const copyPricingOf = (copy, card) =>
   copyChain(copy, card, withMarket) ??
-  copyChain(copy, card, anyFigure) ?? { printing: null, price: null };
+  copyChain(copy, card, anyFigure) ??
+  (runOnlyOf(copy, card)
+    ? { printing: null, price: null, runOnly: true }
+    : { printing: null, price: null });
+
+/** TCGplayer's names for a card's runs: where any of them is priced, TCGplayer prices the card by run. */
+const RUN_PRINTING = /^(1st-edition|unlimited|shadowless)/;
+
+/**
+ * Whether a copy reads its own print run and nothing else: a 1st Edition or Shadowless copy of a
+ * card TCGplayer prices by run. Its run's figure, a lowest listing where the market figure is not
+ * believed (judgedFigure), or no price: never the Unlimited's or the card's headline figure (the
+ * owner, 2026-09-14: "a missing price shows as unknown, never as another printing's"; for the runs
+ * 2026-09-28). A card TCGplayer does not split by run still falls back to its plain figure, since
+ * that figure is the only one there is for any copy of it.
+ *
+ * @param {{ edition?: string | null }} copy
+ * @param {{ pricePrintings?: Record<string, Price | null> | null }} card
+ */
+export const runOnlyOf = (copy, card) =>
+  (copy.edition === "1st-edition" || copy.edition === "shadowless") &&
+  Object.keys(card.pricePrintings ?? {}).some((key) => RUN_PRINTING.test(key));
 
 /**
  * What one copy is worth: a market figure wherever the chain below finds one, and only where
@@ -304,7 +328,11 @@ export const copyPriceOf = (copy, card) => copyPricingOf(copy, card).price;
  * @returns {{ printing: string | null, price: Price | null } | null}
  */
 const copyChain = (copy, card, accept) => {
-  for (const key of printingKeysOf(copy)) {
+  const runOnly = runOnlyOf(copy, card);
+  const keys = printingKeysOf(copy).filter(
+    (key) => !runOnly || key.startsWith(/** @type {string} */ (copy.edition)),
+  );
+  for (const key of keys) {
     const p = accept(card.pricePrintings?.[key]);
     if (p) return { printing: key, price: p };
   }
@@ -328,6 +356,8 @@ const copyChain = (copy, card, accept) => {
     const p = accept(card.priceFirstEd);
     if (p) return { printing: null, price: p };
   }
+  // A run read alone stops at its run (runOnlyOf).
+  if (runOnly) return null;
   const p = accept(card.price);
   return p ? { printing: null, price: p } : null;
 };
@@ -373,22 +403,108 @@ export function priceFromUsd(usd, rate) {
 }
 
 /**
- * A tcgcsv price row's figure as tcgplayer_prices keeps it: the market figure, or, where TCGplayer
- * publishes none, the lowest listing (Bart, 2026-09-18). Never both. Null where it publishes
- * neither, and the row is left out.
+ * How far under the printing's own cheapest listing a print run's market figure may sit and still be
+ * believed: half of it.
+ *
+ * TCGplayer's market figure is drawn from past sales, and a thinly traded print run can go months
+ * without one, so its figure can be an old or odd sale nothing on offer comes near. Team Rocket's
+ * Dark Charizard, 2026-09-28: its 1st Edition holo at a market of $121.94 while the cheapest copy for
+ * sale was $980, and Home showed a visitor a fall to that figure as the week's biggest. Our links
+ * were right: TCGplayer files both runs as subtypes of one product, and these are its own figures.
+ *
+ * Only the runs (isPrintRun). TCGplayer's free data carries no count of sales and no date of the
+ * last one, so where market and listing disagree nothing says which is right; the rule is kept to
+ * the printings where the market figure is stale by the way they trade. Applied to every printing
+ * it took 957 figures that day, 461 of them reverse holos whose market figure is probably right, and
+ * would have flipped prices from day to day (the owner, 2026-09-28). A paid source with real sales
+ * is to replace it.
+ */
+export const MARKET_UNDER_LISTING_RATIO = 0.5;
+
+/**
+ * How far over a disbelieved market figure the listing may be and still be shown: ten times. Past
+ * it the listing is a placeholder ask ($100,000 against a market of $10,000), neither figure is
+ * believed, and the printing has no price at all.
+ */
+export const PLACEHOLDER_LISTING_RATIO = 10;
+
+/**
+ * A thinly traded print run, by TCGplayer's printing name: a 1st Edition or a Shadowless run
+ * ("1st-edition-holofoil", "1st-edition", "shadowless-holofoil"). A Shadowless product's own
+ * printings are named "unlimited-..." on the shelf; the shelf reader says so by product
+ * (tcgcsv.ts), since the name cannot.
+ *
+ * @param {string | null | undefined} printing
+ */
+export const isPrintRun = (printing) => /^(1st-edition|shadowless)/.test(printing ?? "");
+
+/**
+ * Whether a market figure is under half the printing's own lowest listing. False where either is
+ * missing: with nothing to hold it against, a market figure stands.
+ *
+ * @param {number | null | undefined} market
+ * @param {number | null | undefined} listing
+ */
+export const marketUnderListing = (market, listing) =>
+  typeof market === "number" &&
+  market > 0 &&
+  typeof listing === "number" &&
+  listing > 0 &&
+  market < listing * MARKET_UNDER_LISTING_RATIO;
+
+/**
+ * @typedef {{ market: number, listing: null }
+ *   | { market: null, listing: number, disbelieved?: { market: number, listing: number } }
+ *   | { market: null, listing: null, disbelieved: { market: number, listing: number } }} JudgedFigure
+ */
+
+/**
+ * One printing's figures as a reader may see them, in the currency they came in.
+ *
+ * - A market figure stands, except on a print run (`run`) where it is under half the printing's own
+ *   lowest listing (marketUnderListing).
+ * - Such a figure is not believed. Where the listing is at most PLACEHOLDER_LISTING_RATIO times it,
+ *   the printing is priced at that listing (`basis: "lowest-listing"`, shown as "From", never
+ *   summed); past that, neither figure is believed and `market` and `listing` are both null. Either
+ *   way `disbelieved` keeps the two figures, for the price history (snapshot.ts).
+ * - With no market figure, the lowest listing (Bart, 2026-09-18).
+ * - Null where there is neither.
+ *
+ * @param {number | null | undefined} market
+ * @param {number | null | undefined} listing
+ * @param {boolean} run whether the printing is a print run (isPrintRun)
+ * @returns {JudgedFigure | null}
+ */
+export function judgedFigure(market, listing, run) {
+  const m = typeof market === "number" && market > 0 ? market : null;
+  const l = typeof listing === "number" && listing > 0 ? listing : null;
+  if (m !== null && l !== null && run && marketUnderListing(m, l)) {
+    const disbelieved = { market: m, listing: l };
+    return l <= m * PLACEHOLDER_LISTING_RATIO
+      ? { market: null, listing: l, disbelieved }
+      : { market: null, listing: null, disbelieved };
+  }
+  if (m !== null) return { market: m, listing: null };
+  if (l !== null) return { market: null, listing: l };
+  return null;
+}
+
+/**
+ * A tcgcsv price row's figure as tcgplayer_prices keeps it (judgedFigure): the market figure, or
+ * the lowest listing where there is none or a print run's is not believed. Never both. Null where
+ * there is neither, and the row is left out; both null where a print run has no believable figure,
+ * and the price job deletes the row.
  *
  * Here, in plain JavaScript, for the reason at the top of this file: the price job (tcgcsv.ts)
  * writes by it and the morning check (scripts/data-health.mjs) holds the store to it.
  *
  * @param {{ marketPrice?: number | null, lowPrice?: number | null }} r
- * @returns {{ market: number, listing: null } | { market: null, listing: number } | null}
+ * @param {boolean} [run] whether the row's printing is a print run: its name (isPrintRun), or a
+ *   Shadowless product
+ * @returns {JudgedFigure | null}
  */
-export function shelfFigureOf(r) {
-  if (typeof r.marketPrice === "number" && r.marketPrice > 0)
-    return { market: r.marketPrice, listing: null };
-  if (typeof r.lowPrice === "number" && r.lowPrice > 0)
-    return { market: null, listing: r.lowPrice };
-  return null;
+export function shelfFigureOf(r, run = false) {
+  return judgedFigure(r.marketPrice, r.lowPrice, run);
 }
 
 /**

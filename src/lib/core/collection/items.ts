@@ -1,7 +1,7 @@
 import { ruleMatcher, type FolderRule } from "./folders";
 import type { CardSet, OwnedCard, Price, Variant } from "./cards";
 import { shownPrice } from "./cards";
-import { copyPriceOf, copyPricingOf } from "../price-basis.mjs";
+import { copyPriceOf, copyPricingOf, runOnlyOf } from "../price-basis.mjs";
 import { copyUnpriced, heldValue } from "./cards-stats";
 import type { Edition, Finish, FoilPattern } from "./collection-row";
 import { FINISHES, UUID } from "./collection-row";
@@ -233,6 +233,19 @@ function sourceOf(
 } {
   // A market figure anywhere on the chain first, a lowest listing only where none of it has one.
   const { printing, price } = copyPricingOf(v, card);
+  /* A print run read alone (runOnlyOf) always sends its answer as `printingPrice`, a null one
+     included, so a reader takes it as final and does not go on to the card's own figure
+     (cardorb-web's priceForCopy reads `printingPrice` first). Also where the answer came from the
+     stamped run's figure and not a printing: a 1st Edition copy with no finish reads
+     `priceFirstEd`, which can be the holo's listing, and left out, the reader found the
+     Unlimited's market figure in `price`. */
+  if (runOnlyOf(v, card))
+    return {
+      priceSource: price ? "tcgplayer" : null,
+      pricePrinting: printing,
+      tcgplayerId: printing ? (card.printingIds?.[printing] ?? null) : null,
+      printingPrice: price,
+    };
   if (printing) {
     return {
       priceSource: "tcgplayer",
@@ -455,12 +468,19 @@ export type Order = "asc" | "desc";
  * printing it chose as `printingPrice` rather than every printing, so that is read first here.
  * Without it, a reverse holo item sorted and totalled at the plain card's price.
  */
-export const copyPrice = (it: CardItem): number | null =>
-  shownPrice(it.printingPrice ?? copyPriceOf(it, it));
+export const copyPrice = (it: CardItem): number | null => shownPrice(chosenPrice(it));
+
+/**
+ * The price the item says this copy has: `printingPrice` where it was sent, a null one included
+ * (a print run read alone that found nothing, sourceOf), and the rule over the card's own fields
+ * only where it was left out.
+ */
+const chosenPrice = (it: CardItem): Price | null =>
+  it.printingPrice !== undefined ? it.printingPrice : copyPriceOf(it, it);
 
 /** Whether a copy with no market figure is shown at its lowest listing, which no total counts. */
 export const listedOnly = (it: CardItem): boolean => {
-  const p = it.printingPrice ?? copyPriceOf(it, it);
+  const p = chosenPrice(it);
   return p?.market == null && p?.basis === "lowest-listing";
 };
 
@@ -470,7 +490,7 @@ export const listedOnly = (it: CardItem): boolean => {
  */
 export const copyListing = (it: CardItem): number | null => {
   if (copyPrice(it) != null || !listedOnly(it)) return null;
-  return (it.printingPrice ?? copyPriceOf(it, it))?.lowestListing ?? null;
+  return chosenPrice(it)?.lowestListing ?? null;
 };
 
 /**

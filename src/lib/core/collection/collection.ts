@@ -2099,8 +2099,9 @@ export async function getMarketMovers(days = 7, priceDay?: string): Promise<Mark
         };
         return { up: up.flatMap(tile), down: down.flatMap(tile) };
       },
+      // v4: a figure held on the last day is no move (judgedFigure); a v3 entry shows Dark Charizard.
       // v3: a dip that came back is no move (holdRecoveredDips); a v2 entry ranks Lugia first for its day.
-      ["market-movers", "v3", day, String(days)],
+      ["market-movers", "v4", day, String(days)],
       { revalidate: DAY, tags: [priceHistoryTag] },
     )();
     return { ...movers, failed: false };

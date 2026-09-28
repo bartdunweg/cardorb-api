@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import { shownPrice } from "./cards";
 import {
   copyPriceOf,
+  copyPricingOf,
   displayedPrice,
   pointFromTcgplayer,
   priceFromUsd,
@@ -19,8 +20,12 @@ import {
   printingKeysOf,
   printingPriceOf,
   shelfFigureOf,
+  isPrintRun,
+  judgedFigure,
+  MARKET_UNDER_LISTING_RATIO,
+  PLACEHOLDER_LISTING_RATIO,
 } from "../price-basis.mjs";
-import { usdFirstEdOf, usdOf, usdPrintingsOf } from "../catalogue/tcgdex-client";
+import { usdFigureOf, usdFirstEdOf, usdOf, usdPrintingsOf } from "../catalogue/tcgdex-client";
 
 describe("shownPrice", () => {
   it("is the market figure", () => {
@@ -79,6 +84,93 @@ describe("shelfFigureOf", () => {
   it("leaves out a row with neither", () => {
     expect(shelfFigureOf({ marketPrice: null, lowPrice: null })).toBeNull();
     expect(shelfFigureOf({ marketPrice: 0, lowPrice: 0 })).toBeNull();
+  });
+});
+
+/* TCGplayer's figures for 2026-09-28, tcgcsv group files: the market figure against the printing's
+   own cheapest listing. Ids invented; the numbers are real. */
+const TEAM_ROCKET_DARK_CHARIZARD_1ST = { marketPrice: 121.94, lowPrice: 980 };
+const TEAM_ROCKET_DARK_CHARIZARD_UNLIMITED = { marketPrice: 381.69, lowPrice: 274.99 };
+const NEO_GENESIS_LUGIA_1ST = { marketPrice: 164.8, lowPrice: 2999.99 };
+const NEO_DESTINY_DARK_PORYGON2_1ST = { marketPrice: 39.21, lowPrice: 6999.99 };
+const NEO_DESTINY_DARK_AMPHAROS_1ST = { marketPrice: 120, lowPrice: 249.98 };
+// A plain holo on the same day, market far under its cheapest copy: not a run, so believed.
+const EX_POWER_KEEPERS_HOLO = { marketPrice: 1399.95, lowPrice: 99999.98 };
+
+describe("a print run's market figure under half its own cheapest listing", () => {
+  it("is judged on the runs alone: 1st Edition and Shadowless", () => {
+    expect(isPrintRun("1st-edition-holofoil")).toBe(true);
+    expect(isPrintRun("1st-edition")).toBe(true);
+    expect(isPrintRun("shadowless-holofoil")).toBe(true);
+    for (const printing of ["unlimited-holofoil", "holofoil", "reverse-holofoil", "normal"])
+      expect(isPrintRun(printing)).toBe(false);
+    expect(MARKET_UNDER_LISTING_RATIO).toBe(0.5);
+    expect(PLACEHOLDER_LISTING_RATIO).toBe(10);
+  });
+
+  it("is priced at the listing where the listing is at most ten times it", () => {
+    expect(shelfFigureOf(TEAM_ROCKET_DARK_CHARIZARD_1ST, true)).toEqual({
+      market: null,
+      listing: 980,
+      disbelieved: { market: 121.94, listing: 980 },
+    });
+    expect(judgedFigure(120, 249.98, true)).toMatchObject({ market: null, listing: 249.98 });
+    expect(judgedFigure(100, 1000, true)).toMatchObject({ market: null, listing: 1000 });
+  });
+
+  it("has no price at all where the listing is more than ten times it", () => {
+    expect(shelfFigureOf(NEO_GENESIS_LUGIA_1ST, true)).toEqual({
+      market: null,
+      listing: null,
+      disbelieved: { market: 164.8, listing: 2999.99 },
+    });
+    expect(shelfFigureOf(NEO_DESTINY_DARK_PORYGON2_1ST, true)).toMatchObject({
+      market: null,
+      listing: null,
+    });
+  });
+
+  it("is believed at half the listing or over, and with no listing to hold it against", () => {
+    expect(judgedFigure(50, 100, true)).toEqual({ market: 50, listing: null });
+    expect(judgedFigure(49.99, 100, true)).toMatchObject({ market: null, listing: 100 });
+    expect(judgedFigure(12, null, true)).toEqual({ market: 12, listing: null });
+  });
+
+  it("leaves every other printing's market figure as it was", () => {
+    expect(shelfFigureOf(EX_POWER_KEEPERS_HOLO)).toEqual({ market: 1399.95, listing: null });
+    expect(shelfFigureOf(TEAM_ROCKET_DARK_CHARIZARD_UNLIMITED)).toEqual({
+      market: 381.69,
+      listing: null,
+    });
+    expect(shelfFigureOf(TEAM_ROCKET_DARK_CHARIZARD_1ST)).toEqual({
+      market: 121.94,
+      listing: null,
+    });
+  });
+
+  it("is read the same when it comes in live, from TCGdex's relay or a group file", () => {
+    const tp = {
+      "1st-edition-holofoil": { ...TEAM_ROCKET_DARK_CHARIZARD_1ST, productId: 2 },
+      "unlimited-holofoil": { ...TEAM_ROCKET_DARK_CHARIZARD_UNLIMITED, productId: 2 },
+    };
+    expect(usdFirstEdOf(tp)).toEqual({ market: null, listing: 980, productId: 2 });
+    expect(usdPrintingsOf(tp)["1st-edition-holofoil"]).toEqual({
+      market: null,
+      listing: 980,
+      productId: 2,
+    });
+    expect(usdOf(tp)).toEqual({ market: 381.69, productId: 2 });
+    const lugia = { "1st-edition-holofoil": { ...NEO_GENESIS_LUGIA_1ST, productId: 3 } };
+    expect(usdFirstEdOf(lugia)).toBeNull();
+    expect(usdPrintingsOf(lugia)).toEqual({});
+    expect(usdFigureOf({ ...NEO_DESTINY_DARK_AMPHAROS_1ST, productId: 4 }, "holofoil")).toEqual({
+      market: 120,
+      productId: 4,
+    });
+  });
+
+  it("leaves a zero market figure as it always read", () => {
+    expect(usdFigureOf({ marketPrice: 0, lowPrice: 5 })).toEqual({ market: 0, productId: null });
   });
 });
 
@@ -358,5 +450,57 @@ describe("usdOf and usdPrintingsOf with a lowest listing", () => {
   it("never carry a listing beside a market figure", () => {
     const tp = { normal: { marketPrice: 2, lowPrice: 1, productId: 3 } };
     expect(usdPrintingsOf(tp)).toEqual({ normal: { market: 2, productId: 3 } });
+  });
+});
+
+describe("a print run's copy reads its own run alone", () => {
+  // Team Rocket's Dark Charizard, 2026-09-28, in euros: the 1st Edition holo is priced at its
+  // listing (market not believed), the Unlimited holo at its market figure. Ids invented.
+  const market = (n: number) => ({ market: n, basis: "market" as const });
+  const listed = (n: number) => ({
+    market: null,
+    lowestListing: n,
+    basis: "lowest-listing" as const,
+  });
+  const firstEd = { edition: "1st-edition", finish: "holo" };
+
+  it("carries the run's listing, never the Unlimited's market figure", () => {
+    const card = {
+      price: market(343.52),
+      priceFirstEd: listed(882),
+      pricePrintings: { "1st-edition-holofoil": listed(882), "unlimited-holofoil": market(343.52) },
+    };
+    expect(copyPriceOf(firstEd, card)).toEqual(listed(882));
+    expect(copyPricingOf(firstEd, card)).toMatchObject({ printing: "1st-edition-holofoil" });
+  });
+
+  it("has no price where the run has none, and says it stopped there", () => {
+    // Neo Genesis Lugia: the 1st Edition holo withheld (placeholder listing), the Unlimited priced.
+    const card = {
+      price: market(478.25),
+      pricePrintings: { "unlimited-holofoil": market(478.25) },
+    };
+    expect(copyPriceOf(firstEd, card)).toBeNull();
+    expect(copyPricingOf(firstEd, card)).toEqual({ printing: null, price: null, runOnly: true });
+    const shadowless = { edition: "shadowless", finish: "holo" };
+    const base = {
+      price: market(300),
+      pricePrintings: { holofoil: market(300), "1st-edition-holofoil": market(9000) },
+    };
+    expect(copyPriceOf(shadowless, base)).toBeNull();
+  });
+
+  it("still reads the card's own figure where TCGplayer does not price the card by run", () => {
+    const card = { price: market(12), pricePrintings: { holofoil: market(12) } };
+    expect(copyPriceOf(firstEd, card)).toEqual(market(12));
+    expect(copyPricingOf(firstEd, card)).not.toHaveProperty("runOnly");
+  });
+
+  it("leaves an Unlimited copy as it was", () => {
+    const card = {
+      price: market(343.52),
+      pricePrintings: { "1st-edition-holofoil": listed(882), "unlimited-holofoil": market(343.52) },
+    };
+    expect(copyPriceOf({ edition: null, finish: "holo" }, card)).toEqual(market(343.52));
   });
 });

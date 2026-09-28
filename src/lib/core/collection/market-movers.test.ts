@@ -271,3 +271,55 @@ describe("a dip that came back", () => {
     expect(down).toEqual([]);
   });
 });
+
+describe("a figure held on the window's last day", () => {
+  // Team Rocket's Dark Charizard, 2026-09-21: the 1st Edition holo's market fell from $231.96 to
+  // $121.94 and stayed, with the cheapest copy on offer at $980. Home showed it as the week's
+  // biggest fall. From the night the listing is kept beside such a figure, the line holds it.
+  const lines = daysFromMonths(
+    [
+      {
+        language: "en",
+        tcg_id: "rocket-4",
+        printing: "1st-edition-holofoil",
+        month: "2026-09-01",
+        cents: Array.from({ length: 31 }, (_, i) =>
+          i + 1 < 21 ? 23196 : i + 1 <= 22 ? 12194 : null,
+        ),
+        listing_cents: Array.from({ length: 31 }, (_, i) => (i + 1 === 22 ? 98000 : null)),
+      },
+    ],
+    "2026-09-01",
+  );
+
+  it("is held: the day with a listing four times the market figure reads the day before", () => {
+    const last = lines.find((d) => d.date === "2026-09-22");
+    expect(last?.printings?.["1st-edition-holofoil"]).toBe(121.94);
+    expect(last?.held?.["1st-edition-holofoil"]).toBe(121.94);
+  });
+
+  it("is no mover, and a real fall stays", () => {
+    const { up, down } = marketMoversOf(
+      [
+        { tcgId: "rocket-4", printing: "1st-edition-holofoil" },
+        { tcgId: "sv1-1", printing: "holofoil" },
+      ],
+      [...lines, ...moved("sv1-1", 50, 40)],
+      WINDOW,
+    );
+    expect(down.map((m) => [m.tcgId, m.change])).toEqual([["sv1-1", -10]]);
+    expect(up).toEqual([]);
+  });
+
+  it("still moves when the last day's figure is its own", () => {
+    const { down } = marketMoversOf(
+      [{ tcgId: "rocket-4", printing: "1st-edition-holofoil" }],
+      [
+        at("rocket-4", "2026-09-15", { "1st-edition-holofoil": 900 }),
+        at("rocket-4", "2026-09-22", { "1st-edition-holofoil": 850 }),
+      ],
+      WINDOW,
+    );
+    expect(down.map((m) => [m.tcgId, m.change])).toEqual([["rocket-4", -50]]);
+  });
+});

@@ -72,6 +72,15 @@ export type MarketMoversOptions = {
  * 1st Edition side by side read as a duplicate; so each card keeps its biggest move in euros, up or
  * down, before the lists are cut, and `printing` says which printing it was. A card whose runs went
  * opposite ways is shown by the bigger of the two and not in both lists.
+ *
+ * A printing whose figure on the window's last day is held is no mover: its move would end on an
+ * earlier figure standing in for today's, not on a sale. The line holds a figure the stray rule
+ * takes out, and since 2026-09-28 a print run's market figure under half its own cheapest listing
+ * (judgedFigure in price-basis.mjs, held in price-months.mjs). Team Rocket's Dark Charizard
+ * showed why: a 1st Edition holo "fell" EUR 125 to a market of $121.94 while the cheapest copy on
+ * offer was $980, and Home showed it as the week's biggest fall. The days before the listing was
+ * kept carry that fall as TCGplayer sent it, so for a week the held figure is the fallen one; left
+ * out, the move is not shown at all.
  */
 export function marketMoversOf(
   candidates: MarketCandidate[],
@@ -85,12 +94,17 @@ export function marketMoversOf(
     from,
     to,
   );
+  const heldToday = new Set<string>();
+  for (const p of points)
+    if (p.date === to)
+      for (const printing of Object.keys(p.held ?? {})) heldToday.add(`${p.tcgId}|${printing}`);
   const floor = MARKET_MOVER_FLOOR_CENTS / 100;
   const moves: MarketMove[] = [];
   for (const c of candidates) {
     const m = changes.get(keyOf(c));
     /* The floor again, on the figures as the lines hold them: the store narrowed on what TCGplayer
        sent, and a stray figure held over can bring a printing under it. */
+    if (heldToday.has(keyOf(c))) continue;
     if (!m || m.was < floor || m.now < floor || Math.abs(m.change) < minChange) continue;
     moves.push({
       tcgId: c.tcgId,

@@ -884,6 +884,65 @@ describe("sumValue", () => {
   });
 });
 
+describe("a print run's copy with no price of its own", () => {
+  /* The owner, 2026-09-28: a held 1st Edition copy whose run is not priced (the market figure not
+     believed, the listing a placeholder) has no price, never the Unlimited's. Sent as a null
+     `printingPrice`, so a reader that reads that field first stops there. Neo Genesis Lugia. */
+  it("sends a null printingPrice and counts the copy as unpriced", () => {
+    const price = (market: number): Price => ({ market, basis: "market" });
+    const items = flattenItems([
+      set("Neo Genesis", [
+        card("Lugia", [variant({ id: "l", edition: "1st-edition", finish: "holo" })], {
+          price: price(478.25),
+          pricePrintings: { "unlimited-holofoil": price(478.25) },
+        }),
+      ]),
+    ]);
+    const lugia = items.find((it) => it.id === "l")!;
+    expect(lugia).toHaveProperty("printingPrice", null);
+    expect(lugia.pricePrinting).toBeNull();
+    expect(sumValue(items)).toEqual({ value: 0, unpriced: 1, listed: 0, copies: 1 });
+  });
+});
+
+describe("a 1st Edition copy with no finish, of a card whose 1st Edition holo is not believed", () => {
+  /* Review of api#591: most rows say no finish, so the copy reads `priceFirstEd`, the holo's figure,
+     and left without `printingPrice` the web found the Unlimited's market figure in `price`. Team
+     Rocket's Dark Charizard, 2026-09-28, in euros. */
+  const market = (n: number): Price => ({ market: n, basis: "market" });
+  const listing: Price = { market: null, lowestListing: 882, basis: "lowest-listing" };
+
+  it("sends the run's listing as printingPrice, never the Unlimited's figure", () => {
+    const items = flattenItems([
+      set("Team Rocket", [
+        card("Dark Charizard", [variant({ id: "d", edition: "1st-edition", finish: null })], {
+          price: market(343.52),
+          priceFirstEd: listing,
+          pricePrintings: { "1st-edition-holofoil": listing, "unlimited-holofoil": market(343.52) },
+        }),
+      ]),
+    ]);
+    const copy = items.find((it) => it.id === "d")!;
+    expect(copy.printingPrice).toEqual(listing);
+    expect(sumValue(items)).toEqual({ value: 0, unpriced: 1, listed: 1, copies: 1 });
+  });
+
+  it("sends a null printingPrice where the run has no figure at all", () => {
+    const items = flattenItems([
+      set("Team Rocket", [
+        card("Dark Charizard", [variant({ id: "d", edition: "1st-edition", finish: null })], {
+          price: market(343.52),
+          priceFirstEd: null,
+          pricePrintings: { "unlimited-holofoil": market(343.52) },
+        }),
+      ]),
+    ]);
+    const copy = items.find((it) => it.id === "d")!;
+    expect(copy).toHaveProperty("printingPrice", null);
+    expect(sumValue(items)).toEqual({ value: 0, unpriced: 1, listed: 0, copies: 1 });
+  });
+});
+
 describe("sortItems by dex", () => {
   it("runs the national order with the numberless last", () => {
     const items = flattenItems([
