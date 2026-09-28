@@ -62,6 +62,21 @@ describe("json", () => {
     expect(failed).not.toBeInstanceOf(CatalogueNotFound);
     expect(fetch).toHaveBeenCalledTimes(3);
   }, 10_000);
+
+  it("names a host it could not reach, after its retries, as the outage", async () => {
+    const fetch = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+    globalThis.fetch = fetch as unknown as typeof globalThis.fetch;
+
+    const failed = await json("https://api.tcgdex.net/v2/en/cards/sv01-022", "card").catch(
+      (e) => e,
+    );
+    expect(failed).toBeInstanceOf(Error);
+    expect((failed as Error).name).toBe("CatalogueUnavailable");
+    expect((failed as Error).cause).toBeInstanceOf(TypeError);
+    expect(fetch).toHaveBeenCalledTimes(3);
+  }, 10_000);
 });
 
 /**

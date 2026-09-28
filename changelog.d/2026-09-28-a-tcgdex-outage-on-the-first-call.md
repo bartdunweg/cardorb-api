@@ -1,0 +1,1 @@
+- The collection no longer answers "could not load" on the one read that finds TCGdex unreachable. When the catalogue could not be reached after its retries, that first request failed outright while every request in the twenty seconds after it was served from your own rows; now the first one is served from your rows too, flagged as without the catalogue.

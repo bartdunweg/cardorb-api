@@ -1598,7 +1598,7 @@ export type Collection = {
  *
  * Both names, because there are two and they mean the same thing to this
  * caller: `CatalogueUnavailable` is TCGdex asked and refusing
- * (catalogue.ts), `CatalogueDown` is TCGdex not asked at all because the
+ * (catalogue.ts, and json() after its retries), `CatalogueDown` is TCGdex not asked at all because the
  * breaker is open (tcgdex-client.ts). Only the first was matched here, and on
  * the evening of 2026-09-12 TCGdex went down for half an hour: the first call
  * tripped the breaker and every call after it threw the *other* name, which
