@@ -48,6 +48,7 @@ import {
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 import { PRINT_RUN_NAMES, UNMAPPED_SUBTYPES, runsOfSubtypes } from "../src/lib/core/print-runs.mjs";
+import { invertedRunPrintings, unlimitedTwinOf } from "../src/lib/core/run-prices.mjs";
 import { NEVER_FILLS, SAYS_MORE } from "../src/lib/core/japanese-rarity-rules.mjs";
 import {
   disjointFinishesBySet,
@@ -2035,6 +2036,65 @@ const FLIP_ACCEPTED = new Map([
             .join("; ")}`
         : ""
     }${accepted ? `; ${accepted} accepted (FLIP_ACCEPTED)` : ""}`,
+  );
+}
+
+/**
+ * A 1st Edition that TCGplayer prices below the same card's Unlimited in the same finish. The first
+ * run is the scarce one and never trades under its reprint, so one of the two figures is filed on the
+ * wrong product or is a stray sale that stuck (run-prices.mjs). Bart, 2026-09-28: Team Rocket's Dark
+ * Charizard (base5-4) read its 1st Edition holo at EUR 106 beside an Unlimited holo at EUR 335 after
+ * falling from EUR 232 on 2026-09-21, and Home showed a visitor that fall as the week's biggest. The
+ * market movers leave such a 1st Edition out since then; this lists every card whose stored figures
+ * break the rule, each printing at its latest reading in the last 40 days, every English card and
+ * not only held ones, because the movers read the whole catalogue.
+ *
+ * INVERTED_RUNS_ACCEPTED holds the pairs looked at and found to be the market, each with its reason,
+ * as `tcgId|1st Edition printing`. Nobody has looked yet, so it is empty and the check says how many.
+ */
+const INVERTED_RUNS_ACCEPTED = new Map();
+{
+  const rows = await query(
+    `select m.tcg_id, m.printing, m.month::text as month,
+            (select c from unnest(m.cents) with ordinality t(c, i)
+             where c is not null order by i desc limit 1) as last_c
+     from card_price_months m
+     where m.language = 'en' and m.month >= date_trunc('month', current_date - 40)::date
+       and (m.printing like '1st-edition%' or m.printing like 'unlimited%')`,
+  );
+  /** Per card, each printing's latest figure: the rows come a month at a time, the latest wins. */
+  const latest = new Map();
+  for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
+    if (r.last_c == null) continue;
+    const card = latest.get(r.tcg_id) ?? {};
+    card[r.printing] = r.last_c;
+    latest.set(r.tcg_id, card);
+  }
+  const inverted = [...latest].flatMap(([tcgId, printings]) =>
+    invertedRunPrintings(printings).map((printing) => ({
+      key: `${tcgId}|${printing}`,
+      first: printings[printing],
+      unlimited: printings[unlimitedTwinOf(printing)],
+    })),
+  );
+  const open = inverted
+    .filter((i) => !INVERTED_RUNS_ACCEPTED.has(i.key))
+    .sort((a, b) => b.unlimited - b.first - (a.unlimited - a.first));
+  const accepted = inverted.length - open.length;
+  const euros = (cents) => `€${(cents / 100).toFixed(2)}`;
+  check(
+    "No 1st Edition is priced below its own Unlimited",
+    open.length === 0,
+    `${open.length} English printings read below the Unlimited of the same card and finish${
+      open.length
+        ? `: ${open
+            .slice(0, 20)
+            .map(
+              (i) => `${i.key.replace("|", " ")} ${euros(i.first)} against ${euros(i.unlimited)}`,
+            )
+            .join("; ")}${open.length > 20 ? `; and ${open.length - 20} more` : ""}`
+        : ""
+    }${accepted ? `; ${accepted} accepted (INVERTED_RUNS_ACCEPTED)` : ""}`,
   );
 }
 

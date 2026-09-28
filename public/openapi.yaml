@@ -1849,7 +1849,8 @@ paths:
         ranked by what one copy moved in euros, never by percentage: a common that doubled is a
         bigger number and a smaller event than a Charizard that gained eight euros. A printing
         under a euro at either end of the window, with one reading in it, or that moved under ten
-        cents is left out. A card appears once, at the printing that moved most, named in
+        cents is left out, and so is a 1st Edition printing that reads below the same card's
+        Unlimited in the same finish on any day of the window, a figure filed on the wrong product. A card appears once, at the printing that moved most, named in
         `printing`. `up` is the largest gain first, `down` the largest loss first, ten each
         at most. Two empty lists mean nothing moved.
 
