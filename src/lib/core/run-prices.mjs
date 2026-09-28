@@ -17,6 +17,14 @@
 const FIRST_EDITION = /^1st-edition/;
 
 /**
+ * How far under its Unlimited a 1st Edition must read before it is disbelieved: below four fifths.
+ * A few cents under, on a common or an energy that trades once a week, is a thin market and not a
+ * wrong product (eight such on 2026-09-28, a cent or a euro apart); the owner wants the mislinks,
+ * which read a third or a half of their twin (Dark Charizard EUR 107 beside 335).
+ */
+export const INVERTED_RATIO = 0.8;
+
+/**
  * The Unlimited printing a 1st Edition printing is the first run of, by TCGplayer's names:
  * "1st-edition-holofoil" to "unlimited-holofoil", "1st-edition" to "unlimited". Null for any other
  * printing, a Shadowless run included: Shadowless sits between the two and is not the pair.
@@ -28,7 +36,8 @@ export const unlimitedTwinOf = (printing) =>
   FIRST_EDITION.test(printing) ? printing.replace(FIRST_EDITION, "unlimited") : null;
 
 /**
- * The 1st Edition printings in one day's figures that read below their Unlimited twin. A printing
+ * The 1st Edition printings in one day's figures that read well below their Unlimited twin (under
+ * INVERTED_RATIO of it). A printing
  * whose twin has no figure that day is not judged: there is nothing to hold it against.
  *
  * @param {Record<string, number | null | undefined> | null | undefined} printings one day, any unit
@@ -39,7 +48,7 @@ export function invertedRunPrintings(printings) {
   for (const [printing, figure] of Object.entries(printings ?? {})) {
     const twin = unlimitedTwinOf(printing);
     const unlimited = twin ? printings?.[twin] : null;
-    if (typeof figure === "number" && typeof unlimited === "number" && figure < unlimited)
+    if (typeof figure === "number" && typeof unlimited === "number" && figure < unlimited * INVERTED_RATIO)
       out.push(printing);
   }
   return out;

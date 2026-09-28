@@ -2084,7 +2084,7 @@ const INVERTED_RUNS_ACCEPTED = new Map();
   const accepted = inverted.length - open.length;
   const euros = (cents) => `€${(cents / 100).toFixed(2)}`;
   check(
-    "No 1st Edition is priced below its own Unlimited",
+    "No 1st Edition is priced under four fifths of its own Unlimited",
     open.length === 0,
     `${open.length} English printings read below the Unlimited of the same card and finish${
       open.length

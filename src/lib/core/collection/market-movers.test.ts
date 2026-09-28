@@ -326,7 +326,7 @@ describe("a 1st Edition below its own Unlimited", () => {
           "unlimited-holofoil": 500,
         }),
         at("inverted-one-day", "2026-09-18", {
-          "1st-edition-holofoil": 400,
+          "1st-edition-holofoil": 300,
           "unlimited-holofoil": 500,
         }),
         at("inverted-one-day", "2026-09-22", {

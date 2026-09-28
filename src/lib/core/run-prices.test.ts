@@ -32,6 +32,13 @@ describe("a 1st Edition below its Unlimited", () => {
     expect(invertedRunPrintings({ "1st-edition": 200, "unlimited-holofoil": 400 })).toEqual([]);
   });
 
+  it("leaves a thin market's few cents under alone, and names one under four fifths", () => {
+    // A 1st Edition Water Energy two cents under its Unlimited (2026-09-28): noise, not a mislink.
+    expect(invertedRunPrintings({ "1st-edition": 24, unlimited: 26 })).toEqual([]);
+    expect(invertedRunPrintings({ "1st-edition": 80, unlimited: 100 })).toEqual([]);
+    expect(invertedRunPrintings({ "1st-edition": 79, unlimited: 100 })).toEqual(["1st-edition"]);
+  });
+
   it("leaves a 1st Edition equal to its Unlimited, or with no Unlimited figure, alone", () => {
     expect(invertedRunPrintings({ "1st-edition": 300, unlimited: 300 })).toEqual([]);
     expect(invertedRunPrintings({ "1st-edition": 300, unlimited: null })).toEqual([]);
