@@ -2099,7 +2099,7 @@ export async function getMarketMovers(days = 7, priceDay?: string): Promise<Mark
         };
         return { up: up.flatMap(tile), down: down.flatMap(tile) };
       },
-      // v4: a 1st Edition below its Unlimited is no move (run-prices.mjs); a v3 entry shows Dark Charizard.
+      // v4: a figure held on the last day is no move (believedMarket); a v3 entry shows Dark Charizard.
       // v3: a dip that came back is no move (holdRecoveredDips); a v2 entry ranks Lugia first for its day.
       ["market-movers", "v4", day, String(days)],
       { revalidate: DAY, tags: [priceHistoryTag] },

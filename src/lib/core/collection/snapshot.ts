@@ -107,6 +107,12 @@ export type TcgplayerLink = {
  *
  * `language` is the catalogue the links' ids are from, and every point carries it: an English and a
  * Japanese card can share an id (neo4-106), and each is its own line.
+ *
+ * A market figure the rule does not believe (under half the printing's own lowest listing,
+ * believedMarket in price-basis.mjs; ShelfPrinting.disbelieved) is written for the card's own
+ * product only, with that listing beside it, so the reader takes it out and holds the line with the
+ * last figure it believes (price-months.mjs). A run or a print of its own writes no point for one:
+ * it keeps none of the listings, and a figure the reader cannot judge must not be stored.
  */
 export function cardPricesFromShelf(
   language: PriceLanguage,
@@ -124,12 +130,23 @@ export function cardPricesFromShelf(
   > = {},
 ): PrintingDay[] {
   const shelf: ShelfPrices = new Map();
+  /** The card's own products: the believed figures, and the disbelieved ones beside their listing. */
+  const ownShelf: ShelfPrices = new Map();
+  const listingOf = new Map<string, number>();
+  const put = (into: ShelfPrices, r: ShelfPrinting, usd: number) => {
+    const printings = into.get(r.productId) ?? new Map<string, number>();
+    printings.set(r.printing, usd);
+    into.set(r.productId, printings);
+  };
   for (const r of rows) {
-    // A lowest listing is never a point on a card's line: the history is market figures only.
-    if (r.market == null) continue;
-    const printings = shelf.get(r.productId) ?? new Map<string, number>();
-    printings.set(r.printing, r.market);
-    shelf.set(r.productId, printings);
+    // A lowest listing on its own is never a point on a card's line: the history is market figures.
+    if (r.market != null) {
+      put(shelf, r, r.market);
+      put(ownShelf, r, r.market);
+    } else if (r.disbelieved != null && r.listing != null) {
+      put(ownShelf, r, r.disbelieved);
+      listingOf.set(`${r.productId}|${r.printing}`, r.listing);
+    }
   }
   const products: Record<string, number | null> = {};
   const runs = new Map<string, Record<string, number | null>>();
@@ -138,7 +155,10 @@ export function cardPricesFromShelf(
     for (const run of runLinksOf(link))
       runs.set(run.edition, { ...runs.get(run.edition), [id]: run.productId });
   }
-  const points = cardPricesFromTcgcsv(language, products, shelf, usdToEur, date);
+  const points = cardPricesFromTcgcsv(language, products, ownShelf, usdToEur, date).map((p) => {
+    const usd = listingOf.get(`${products[p.tcgId]}|${p.printing}`);
+    return usd == null ? p : { ...p, listing: Math.round(usd * usdToEur * 100) / 100 };
+  });
   const own = new Set(points.map((p) => `${p.tcgId}\u0001${p.printing}`));
   for (const [edition, ofRun] of runs) {
     for (const p of cardPricesFromTcgcsv(language, ofRun, shelf, usdToEur, date)) {

@@ -47,7 +47,7 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
   const out: ShelfPrices = new Map();
   let answered = 0;
   await mapLimit(groups, 8, async (g) => {
-    let rows: { productId: number; subTypeName: string; marketPrice: number | null }[];
+    let rows: TcgcsvPriceRow[];
     try {
       ({ results: rows } = await read<{ results: typeof rows }>(
         `${BASE}/${category}/${g.groupId}/prices`,
@@ -57,9 +57,11 @@ export async function shelfPrices(category: number): Promise<ShelfPrices> {
     }
     answered++;
     for (const r of rows) {
-      if (!(typeof r.marketPrice === "number" && r.marketPrice > 0)) continue;
+      // A market figure under half the printing's own cheapest listing is none (believedMarket).
+      const market = shelfFigureOf(r)?.market;
+      if (market == null) continue;
       const printings = out.get(r.productId) ?? new Map<string, number>();
-      printings.set(r.subTypeName, r.marketPrice);
+      printings.set(r.subTypeName, market);
       out.set(r.productId, printings);
     }
   });
@@ -79,6 +81,13 @@ export type ShelfPrinting = {
   printing: string;
   market: number | null;
   listing?: number | null;
+  /**
+   * The market figure TCGplayer published and the rule did not believe (under half `listing`,
+   * believedMarket in price-basis.mjs), beside that listing. Never stored as today's price; the
+   * history keeps it with the listing, so its reader can take it out and hold the line
+   * (price-months.mjs). Absent on every other row.
+   */
+  disbelieved?: number;
 };
 
 /** A shelf row as tcgcsv publishes it: the figures this app reads. */
@@ -121,7 +130,16 @@ export async function shelfPrintings(
     for (const r of results) {
       const figure = shelfFigureOf(r);
       if (!figure) continue;
-      rows.push({ productId: r.productId, printing: printingName(r.subTypeName), ...figure });
+      const disbelieved =
+        figure.market == null && typeof r.marketPrice === "number" && r.marketPrice > 0
+          ? { disbelieved: r.marketPrice }
+          : {};
+      rows.push({
+        productId: r.productId,
+        printing: printingName(r.subTypeName),
+        ...figure,
+        ...disbelieved,
+      });
     }
   });
   return { rows, groups: groups.length, answered };

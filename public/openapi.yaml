@@ -239,10 +239,10 @@ components:
     Price:
       type: object
       required: [market, basis]
-      description: "One card's price, in euros: TCGplayer's market figure, English and Japanese cards alike, converted from dollars at the ECB's daily rate. Where TCGplayer publishes no market figure for the printing but lists it, the price is its lowest listing (since 2026-09-18): `market` null, `lowestListing` the figure, `basis` `lowest-listing`. A client must say so wherever it shows one. A listing is never summed into a value (`value`, `unpriced` and `listed` on the lists). Where TCGplayer publishes neither the price is null; no other market stands in."
+      description: "One card's price, in euros: TCGplayer's market figure, English and Japanese cards alike, converted from dollars at the ECB's daily rate. Where TCGplayer publishes no market figure for the printing but lists it, the price is its lowest listing (since 2026-09-18): `market` null, `lowestListing` the figure, `basis` `lowest-listing`. The same where the market figure is under half the printing's own lowest listing (since 2026-09-28): that figure is one old or odd sale nothing on offer comes near, and is not believed. A client must say so wherever it shows one. A listing is never summed into a value (`value`, `unpriced` and `listed` on the lists). Where TCGplayer publishes neither the price is null; no other market stands in."
       properties:
         market: { type: [number, "null"], description: "What one copy trades at: TCGplayer's market figure for the printing, in euros. Null on a price that is a lowest listing." }
-        lowestListing: { type: [number, "null"], description: "TCGplayer's lowest asking price for the printing, in euros, only where it has no market figure. Absent on a market price." }
+        lowestListing: { type: [number, "null"], description: "TCGplayer's lowest asking price for the printing, in euros, only where it has no market figure or one under half this listing. Absent on a market price." }
         basis: { type: string, enum: [market, lowest-listing], description: "Which figure the price is: `market` (read `market`) or `lowest-listing` (read `lowestListing`)." }
 
     ImageSize:
@@ -1353,7 +1353,7 @@ paths:
                     additionalProperties: { type: number }
                     description: >-
                       Since 2026-09-18: today's lowest listing in euros of each printing TCGplayer lists and
-                      has no market figure for, keyed as `printings` on a point keys them
+                      has no market figure for (or one under half this listing, since 2026-09-28), keyed as `printings` on a point keys them
                       (`reverse-holofoil`, `cosmos-holofoil`). Such a printing has no line; show its
                       listing labelled as one, never summed. Absent where no printing has one.
         "400": { $ref: "#/components/responses/BadRequest" }
@@ -1849,10 +1849,11 @@ paths:
         ranked by what one copy moved in euros, never by percentage: a common that doubled is a
         bigger number and a smaller event than a Charizard that gained eight euros. A printing
         under a euro at either end of the window, with one reading in it, or that moved under ten
-        cents is left out, and so is a 1st Edition printing that reads under four fifths of the same card's
-        Unlimited in the same finish on any day of the window, a figure filed on the wrong
-        product. A card appears once, at the printing that moved most, named in `printing`. `up`
-        is the largest gain first, `down` the largest loss first, ten each at most. Two empty lists mean nothing moved.
+        cents is left out, and so is one whose figure on the window's last day is held (a stray
+        sale, or a market figure under half the printing's own lowest listing, see `Price`). A card
+        appears once, at the printing that moved most, named in `printing`. `up` is the largest
+        gain first, `down` the largest loss first, ten each at most. Two empty lists mean nothing
+        moved.
 
         Open: nothing in it is anybody's, so a caller who names nobody and a named caller are
         answered the same body, and every 200 may be held by a shared cache. A credential that is

@@ -272,89 +272,54 @@ describe("a dip that came back", () => {
   });
 });
 
-describe("a 1st Edition below its own Unlimited", () => {
-  // Team Rocket's Dark Charizard, 2026-09-21: the 1st Edition holo fell from €231.96 to €106.13 and
-  // stayed, beside an Unlimited holo at about €335. Home showed it as the week's biggest fall.
-  const darkCharizard = [
-    at("base5-4", "2026-09-15", {
-      "1st-edition-holofoil": 231.96,
-      "unlimited-holofoil": 334.73,
-    }),
-    at("base5-4", "2026-09-21", {
-      "1st-edition-holofoil": 106.13,
-      "unlimited-holofoil": 334.73,
-    }),
-    at("base5-4", "2026-09-22", {
-      "1st-edition-holofoil": 106.94,
-      "unlimited-holofoil": 340.1,
-    }),
-  ];
+describe("a figure held on the window's last day", () => {
+  // Team Rocket's Dark Charizard, 2026-09-21: the 1st Edition holo's market fell from $231.96 to
+  // $121.94 and stayed, with the cheapest copy on offer at $980. Home showed it as the week's
+  // biggest fall. From the night the listing is kept beside such a figure, the line holds it.
+  const lines = daysFromMonths(
+    [
+      {
+        language: "en",
+        tcg_id: "rocket-4",
+        printing: "1st-edition-holofoil",
+        month: "2026-09-01",
+        cents: Array.from({ length: 31 }, (_, i) =>
+          i + 1 < 21 ? 23196 : i + 1 <= 22 ? 12194 : null,
+        ),
+        listing_cents: Array.from({ length: 31 }, (_, i) => (i + 1 === 22 ? 98000 : null)),
+      },
+    ],
+    "2026-09-01",
+  );
 
-  it("is no mover: Dark Charizard's fall is left out, and a real fall stays", () => {
+  it("is held: the day with a listing four times the market figure reads the day before", () => {
+    const last = lines.find((d) => d.date === "2026-09-22");
+    expect(last?.printings?.["1st-edition-holofoil"]).toBe(121.94);
+    expect(last?.held?.["1st-edition-holofoil"]).toBe(121.94);
+  });
+
+  it("is no mover, and a real fall stays", () => {
     const { up, down } = marketMoversOf(
       [
-        { tcgId: "base5-4", printing: "1st-edition-holofoil" },
+        { tcgId: "rocket-4", printing: "1st-edition-holofoil" },
         { tcgId: "sv1-1", printing: "holofoil" },
       ],
-      [...darkCharizard, ...moved("sv1-1", 50, 40)],
+      [...lines, ...moved("sv1-1", 50, 40)],
       WINDOW,
     );
     expect(down.map((m) => [m.tcgId, m.change])).toEqual([["sv1-1", -10]]);
     expect(up).toEqual([]);
   });
 
-  it("leaves the Unlimited's own move a candidate", () => {
-    const { up } = marketMoversOf(
-      [
-        { tcgId: "base5-4", printing: "1st-edition-holofoil" },
-        { tcgId: "base5-4", printing: "unlimited-holofoil" },
-      ],
-      darkCharizard,
-      WINDOW,
-    );
-    expect(up.map((m) => [m.tcgId, m.printing, m.change])).toEqual([
-      ["base5-4", "unlimited-holofoil", 5.37],
-    ]);
-  });
-
-  it("is left out when it read below on one day of the window only", () => {
+  it("still moves when the last day's figure is its own", () => {
     const { down } = marketMoversOf(
-      [{ tcgId: "inverted-one-day", printing: "1st-edition-holofoil" }],
+      [{ tcgId: "rocket-4", printing: "1st-edition-holofoil" }],
       [
-        at("inverted-one-day", "2026-09-15", {
-          "1st-edition-holofoil": 900,
-          "unlimited-holofoil": 500,
-        }),
-        at("inverted-one-day", "2026-09-18", {
-          "1st-edition-holofoil": 300,
-          "unlimited-holofoil": 500,
-        }),
-        at("inverted-one-day", "2026-09-22", {
-          "1st-edition-holofoil": 800,
-          "unlimited-holofoil": 500,
-        }),
+        at("rocket-4", "2026-09-15", { "1st-edition-holofoil": 900 }),
+        at("rocket-4", "2026-09-22", { "1st-edition-holofoil": 850 }),
       ],
       WINDOW,
     );
-    expect(down).toEqual([]);
-  });
-
-  it("still moves when it reads above its Unlimited, or where the Unlimited has no figure", () => {
-    const { down } = marketMoversOf(
-      [
-        { tcgId: "first-above", printing: "1st-edition-holofoil" },
-        { tcgId: "first-alone", printing: "1st-edition" },
-      ],
-      [
-        at("first-above", "2026-09-15", { "1st-edition-holofoil": 900, "unlimited-holofoil": 400 }),
-        at("first-above", "2026-09-22", { "1st-edition-holofoil": 850, "unlimited-holofoil": 400 }),
-        ...moved("first-alone", 30, 20, "1st-edition"),
-      ],
-      WINDOW,
-    );
-    expect(down.map((m) => [m.tcgId, m.change])).toEqual([
-      ["first-above", -50],
-      ["first-alone", -10],
-    ]);
+    expect(down.map((m) => [m.tcgId, m.change])).toEqual([["rocket-4", -50]]);
   });
 });

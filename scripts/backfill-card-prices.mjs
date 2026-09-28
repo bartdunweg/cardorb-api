@@ -70,7 +70,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
-import { pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
+import { believedMarket, pointFromTcgplayer } from "../src/lib/core/price-basis.mjs";
 import {
   finishPrintingKey,
   historyKey,
@@ -285,9 +285,11 @@ function tcgcsvDay(date, category = CATEGORY_EN) {
     if (!existsSync(file)) continue;
     const { results } = JSON.parse(readFileSync(file, "utf8"));
     for (const r of results) {
-      if (!(r.marketPrice > 0)) continue;
+      // The night's rule: a market figure under half the printing's own lowest listing is none.
+      const market = believedMarket(r.marketPrice, r.lowPrice);
+      if (market === null) continue;
       const m = byProduct.get(r.productId) ?? new Map();
-      m.set(r.subTypeName, r.marketPrice);
+      m.set(r.subTypeName, market);
       byProduct.set(r.productId, m);
     }
   }

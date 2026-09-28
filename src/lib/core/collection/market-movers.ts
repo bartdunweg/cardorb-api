@@ -10,7 +10,6 @@
  * candidates in Postgres (market_mover_candidates) and lay their lines out through the reader every
  * chart uses, so a figure one odd sale set is held over before it gets here.
  */
-import { invertedRunPrintings } from "../run-prices.mjs";
 import { headlineChanges } from "./headline-printing";
 import { splitByMove, type CardPricePoint } from "./movers";
 
@@ -74,11 +73,14 @@ export type MarketMoversOptions = {
  * down, before the lists are cut, and `printing` says which printing it was. A card whose runs went
  * opposite ways is shown by the bigger of the two and not in both lists.
  *
- * A 1st Edition that reads below its own Unlimited in the same finish on any day of the window is no
- * mover (run-prices.mjs): one of the two figures is filed on the wrong product or a stray sale that
- * stuck, and the stray rule cannot tell, since the line fell once and held. Team Rocket's Dark
- * Charizard stood on Home as the week's biggest fall, EUR 125 on a 1st Edition holo at a third of
- * its Unlimited. Only the 1st Edition is left out: its Unlimited's own move stays a candidate.
+ * A printing whose figure on the window's last day is held is no mover: its move would end on an
+ * earlier figure standing in for today's, not on a sale. The line holds a figure the stray rule
+ * takes out, and since 2026-09-28 a market figure under half the printing's own cheapest listing
+ * (believedMarket in price-basis.mjs, held in price-months.mjs). Team Rocket's Dark Charizard
+ * showed why: a 1st Edition holo "fell" EUR 125 to a market of $121.94 while the cheapest copy on
+ * offer was $980, and Home showed it as the week's biggest fall. The days before the listing was
+ * kept carry that fall as TCGplayer sent it, so for a week the held figure is the fallen one; left
+ * out, the move is not shown at all.
  */
 export function marketMoversOf(
   candidates: MarketCandidate[],
@@ -92,19 +94,17 @@ export function marketMoversOf(
     from,
     to,
   );
-  const inverted = new Set<string>();
-  for (const p of points) {
-    if (p.date < from || p.date > to) continue;
-    for (const printing of invertedRunPrintings(p.printings))
-      inverted.add(`${p.tcgId}|${printing}`);
-  }
+  const heldToday = new Set<string>();
+  for (const p of points)
+    if (p.date === to)
+      for (const printing of Object.keys(p.held ?? {})) heldToday.add(`${p.tcgId}|${printing}`);
   const floor = MARKET_MOVER_FLOOR_CENTS / 100;
   const moves: MarketMove[] = [];
   for (const c of candidates) {
-    if (inverted.has(keyOf(c))) continue;
     const m = changes.get(keyOf(c));
     /* The floor again, on the figures as the lines hold them: the store narrowed on what TCGplayer
        sent, and a stray figure held over can bring a printing under it. */
+    if (heldToday.has(keyOf(c))) continue;
     if (!m || m.was < floor || m.now < floor || Math.abs(m.change) < minChange) continue;
     moves.push({
       tcgId: c.tcgId,

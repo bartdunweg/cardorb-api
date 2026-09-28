@@ -436,3 +436,51 @@ describe("cardPricesFromSets across catalogues", () => {
     ]);
   });
 });
+
+describe("cardPricesFromShelf and a market figure under half its listing", () => {
+  // Team Rocket's Dark Charizard, 2026-09-28: 1st Edition holo market $121.94, cheapest copy $980.
+  // Ids invented; the numbers are real.
+  const rows = [
+    {
+      productId: 1,
+      printing: "1st-edition-holofoil",
+      market: null,
+      listing: 980,
+      disbelieved: 121.94,
+    },
+    { productId: 1, printing: "unlimited-holofoil", market: 381.69 },
+    {
+      productId: 2,
+      printing: "1st-edition-holofoil",
+      market: null,
+      listing: 500,
+      disbelieved: 165.55,
+    },
+    { productId: 3, printing: "normal", market: null, listing: 4 },
+  ];
+  const links = {
+    "rocket-4": { productId: 1 },
+    "run-1": { productId: 9, shadowless: { productId: 2 } },
+    "listed-1": { productId: 3 },
+  };
+
+  it("writes the card's own figure with its listing beside it, for the reader to judge", () => {
+    const points = cardPricesFromShelf("en", links, rows, 1, "2026-09-28");
+    expect(points).toContainEqual({
+      language: "en",
+      tcgId: "rocket-4",
+      printing: "1st-edition-holofoil",
+      date: "2026-09-28",
+      price: 121.94,
+      listing: 980,
+      source: "tcgplayer",
+    });
+    expect(points.find((p) => p.printing === "unlimited-holofoil")).not.toHaveProperty("listing");
+  });
+
+  it("writes none for a run, and none for a printing that has only a listing", () => {
+    const points = cardPricesFromShelf("en", links, rows, 1, "2026-09-28");
+    expect(points.filter((p) => p.tcgId === "run-1")).toEqual([]);
+    expect(points.filter((p) => p.tcgId === "listed-1")).toEqual([]);
+  });
+});

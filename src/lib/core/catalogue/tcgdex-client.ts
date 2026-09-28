@@ -9,6 +9,7 @@
  * This file only ever runs inside a call that one of those two already cached.
  */
 import { DAY, mapLimit, catalogueTimeout } from "../util";
+import { believedMarket } from "../price-basis.mjs";
 
 /** TCGplayer's market figure for one printing, in dollars, as TCGdex relays it. */
 export type UsdPrice = {
@@ -267,16 +268,26 @@ export type PrintingFigures = {
 };
 
 /**
- * One printing's dollars: its market figure, or, where TCGplayer has none, its lowest listing
- * (Bart, 2026-09-18). A listing never sits beside a market figure: market is the price wherever
- * it exists. Null where the printing has neither.
+ * One printing's dollars: its market figure, or, where TCGplayer has none or one under half the
+ * printing's own lowest listing (believedMarket, price-basis.mjs), its lowest listing (Bart,
+ * 2026-09-18 and 2026-09-28). A listing never sits beside a market figure: market is the price
+ * wherever it is believed. Null where the printing has neither.
+ *
+ * The one reader of figures that come in live: TCGdex's relay and tcgcsv's group files (which
+ * shelfFigureOf has already judged). A stored row carries a listing only where it has no market
+ * figure, so the rule has nothing to judge there: the night's write judged it.
  */
 export function usdFigureOf(
   v: PrintingFigures | null | undefined,
 ): (UsdPrice & { productId: number | null }) | null {
   if (!v) return null;
   const productId = typeof v.productId === "number" ? v.productId : null;
-  if (typeof v.marketPrice === "number") return { market: v.marketPrice, productId };
+  const disbelieved =
+    typeof v.marketPrice === "number" &&
+    v.marketPrice > 0 &&
+    believedMarket(v.marketPrice, v.lowPrice) === null;
+  if (typeof v.marketPrice === "number" && !disbelieved)
+    return { market: v.marketPrice, productId };
   if (typeof v.lowPrice === "number" && v.lowPrice > 0)
     return { market: null, listing: v.lowPrice, productId };
   return null;

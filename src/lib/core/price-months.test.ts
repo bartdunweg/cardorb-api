@@ -610,3 +610,61 @@ describe("printing names", () => {
     expect(monthOf("2024-02-29")).toBe("2024-02-01");
   });
 });
+
+describe("daysFromMonths and a market figure under half its own listing", () => {
+  // Team Rocket's Dark Charizard 1st Edition holo: $231.96 through 20 September 2026, then a market
+  // of $121.94 beside a cheapest copy of $980. Id invented; the numbers are real, as dollars.
+  const row = (listingOn: number[]) => ({
+    language: "en" as const,
+    tcg_id: "rocket-4",
+    printing: "1st-edition-holofoil",
+    month: "2026-09-01",
+    cents: Array.from({ length: 31 }, (_, i) => (i + 1 <= 20 ? 23196 : i + 1 <= 25 ? 12194 : null)),
+    listing_cents: Array.from({ length: 31 }, (_, i) => (listingOn.includes(i + 1) ? 98000 : null)),
+  });
+
+  it("holds the line at the last figure it believes, and says so", () => {
+    const days = daysFromMonths([row([21, 22, 23, 24, 25])]);
+    const day = days.find((d) => d.date === "2026-09-23");
+    expect(day?.printings?.["1st-edition-holofoil"]).toBe(231.96);
+    expect(day?.held?.["1st-edition-holofoil"]).toBe(121.94);
+  });
+
+  it("holds it even where the figure before it is near it, which a stray one would go back to", () => {
+    // 21 September has no listing (a day stored before the listing was kept) and reads as it was.
+    const days = daysFromMonths([row([22, 23, 24, 25])]);
+    expect(days.find((d) => d.date === "2026-09-21")?.printings?.["1st-edition-holofoil"]).toBe(
+      121.94,
+    );
+    expect(days.find((d) => d.date === "2026-09-22")?.held?.["1st-edition-holofoil"]).toBe(121.94);
+  });
+
+  it("leaves a figure at half its listing or over alone", () => {
+    const days = daysFromMonths([
+      { ...row([]), listing_cents: Array.from({ length: 31 }, () => 24000) },
+    ]);
+    expect(days.every((d) => !d.held)).toBe(true);
+  });
+});
+
+describe("monthsFromDays and a listing", () => {
+  it("stores the listing beside the figure only on a day that has one", () => {
+    const [plain] = monthsFromDays([
+      { language: "en", tcgId: "a", printing: "holofoil", date: "2026-09-02", price: 3 },
+    ]);
+    expect(plain).not.toHaveProperty("listing_cents");
+    const [listed] = monthsFromDays([
+      {
+        language: "en",
+        tcgId: "a",
+        printing: "holofoil",
+        date: "2026-09-02",
+        price: 121.94,
+        listing: 980,
+      },
+    ]);
+    expect(listed?.cents[1]).toBe(12194);
+    expect(listed?.listing_cents?.[1]).toBe(98000);
+    expect(listed?.listing_cents?.[0]).toBeNull();
+  });
+});

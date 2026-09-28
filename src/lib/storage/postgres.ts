@@ -428,7 +428,13 @@ type PriceMonthRecord = {
   printing: string;
   month: string;
   cents: (number | null)[] | null;
+  /** The lowest listing beside a market figure not believed (migration 20260928120000). */
+  listing_cents?: (number | null)[] | null;
 };
+
+/** The error PostgREST answers before migration 20260928120000 has added `listing_cents`. */
+const missingListingCents = (message: string | undefined) =>
+  /listing_cents/.test(message ?? "") && /does not exist|schema cache/.test(message ?? "");
 
 /** A card whose price history is asked for: its id, and the catalogue the id is from. */
 export type PricedCard = { tcgId: string; language: PriceLanguage };
@@ -462,12 +468,15 @@ export async function listCardPrices(
     const ids = [...new Set(cards.filter((c) => c.language === language).map((c) => c.tcgId))];
     for (let i = 0; i < ids.length; i += 200) chunks.push({ language, ids: ids.slice(i, i + 200) });
   }
+  /* With the listing beside a figure not believed, so daysFromMonths can hold the line over it; the
+     columns alone for the minutes between a deploy and its migration (migrate.yml). */
+  let columns = "language,tcg_id,printing,month,cents,listing_cents";
   for (const { language, ids: chunk } of chunks) {
     const rows: PriceMonthRecord[] = [];
     for (let page = 0; ; page++) {
       let query = db
         .from("card_price_months")
-        .select("language,tcg_id,printing,month,cents")
+        .select(columns)
         .eq("language", language)
         .in("tcg_id", chunk)
         // From before `since`: the days a line's first ones are judged against (lineReadFrom).
@@ -478,8 +487,13 @@ export async function listCardPrices(
         .order("printing", { ascending: true })
         .order("month", { ascending: true })
         .range(page * PAGE, page * PAGE + PAGE - 1);
+      if (error && missingListingCents(error.message) && columns.endsWith(",listing_cents")) {
+        columns = "language,tcg_id,printing,month,cents";
+        page--;
+        continue;
+      }
       if (error) throw new Error(`Reading card prices failed: ${error.message}`);
-      const got = (data ?? []) as PriceMonthRecord[];
+      const got = (data ?? []) as unknown as PriceMonthRecord[];
       rows.push(...got);
       if (got.length < PAGE) break;
     }

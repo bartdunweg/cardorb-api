@@ -373,9 +373,45 @@ export function priceFromUsd(usd, rate) {
 }
 
 /**
+ * How far under the printing's own cheapest listing its market figure may sit and still be believed:
+ * half of it.
+ *
+ * TCGplayer's market figure is drawn from past sales, and for a card that hardly sells it can be one
+ * old or odd sale that nothing on offer today comes near. Team Rocket's Dark Charizard, 2026-09-28:
+ * its 1st Edition holo at a market of $121.94 while the cheapest copy for sale was $980, and Home
+ * showed a visitor a fall to that figure as the week's biggest. The same on all nine 1st Edition
+ * holos that read under their own Unlimited that day (Neo Genesis Lugia $164.80 against a cheapest
+ * $2,999.99, Neo Destiny Dark Porygon2 $39.21 against $6,999.99). Our links were right: TCGplayer
+ * files both runs as subtypes of one product, and these are its own figures.
+ *
+ * Under half, the market figure is not believed and the printing is read as one with no market
+ * figure: priced at its lowest listing, labelled as one (`basis: "lowest-listing"`), shown as
+ * "From" and never summed, and no point in the price history (the owner, 2026-09-28: prevent it,
+ * do not cure it). Half, not a closer ratio: a listing is an asking price, and a market figure a
+ * little under the cheapest copy is the ordinary state of a card whose last sales were cheaper.
+ */
+export const MARKET_UNDER_LISTING_RATIO = 0.5;
+
+/**
+ * A printing's market figure where it is believed: above zero, and not under half the printing's own
+ * lowest listing (MARKET_UNDER_LISTING_RATIO). Null otherwise. With no listing to hold it against,
+ * a market figure stands.
+ *
+ * @param {number | null | undefined} market
+ * @param {number | null | undefined} listing the printing's lowest current listing
+ * @returns {number | null}
+ */
+export function believedMarket(market, listing) {
+  if (typeof market !== "number" || !(market > 0)) return null;
+  if (typeof listing === "number" && listing > 0 && market < listing * MARKET_UNDER_LISTING_RATIO)
+    return null;
+  return market;
+}
+
+/**
  * A tcgcsv price row's figure as tcgplayer_prices keeps it: the market figure, or, where TCGplayer
- * publishes none, the lowest listing (Bart, 2026-09-18). Never both. Null where it publishes
- * neither, and the row is left out.
+ * publishes none or one that is not believed (believedMarket), the lowest listing (Bart,
+ * 2026-09-18). Never both. Null where there is neither, and the row is left out.
  *
  * Here, in plain JavaScript, for the reason at the top of this file: the price job (tcgcsv.ts)
  * writes by it and the morning check (scripts/data-health.mjs) holds the store to it.
@@ -384,8 +420,8 @@ export function priceFromUsd(usd, rate) {
  * @returns {{ market: number, listing: null } | { market: null, listing: number } | null}
  */
 export function shelfFigureOf(r) {
-  if (typeof r.marketPrice === "number" && r.marketPrice > 0)
-    return { market: r.marketPrice, listing: null };
+  const market = believedMarket(r.marketPrice, r.lowPrice);
+  if (market !== null) return { market, listing: null };
   if (typeof r.lowPrice === "number" && r.lowPrice > 0)
     return { market: null, listing: r.lowPrice };
   return null;

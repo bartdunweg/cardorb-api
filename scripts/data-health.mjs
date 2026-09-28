@@ -48,7 +48,6 @@ import {
 } from "../src/lib/core/tcgplayer-rules.mjs";
 import { strayRarityEntries } from "../src/lib/core/binder-rarity-words.mjs";
 import { PRINT_RUN_NAMES, UNMAPPED_SUBTYPES, runsOfSubtypes } from "../src/lib/core/print-runs.mjs";
-import { invertedRunPrintings, unlimitedTwinOf } from "../src/lib/core/run-prices.mjs";
 import { NEVER_FILLS, SAYS_MORE } from "../src/lib/core/japanese-rarity-rules.mjs";
 import {
   disjointFinishesBySet,
@@ -591,7 +590,12 @@ const jaLinks = JSON.parse(
 
 /**
  * A printing TCGplayer lists and has no market figure for is priced at its lowest listing, and
- * labelled so (Bart, 2026-09-18; R-DATA-004).
+ * labelled so (Bart, 2026-09-18; R-DATA-004). So is a printing whose market figure is under half its
+ * own lowest listing (believedMarket in price-basis.mjs, 2026-09-28): TCGplayer's market for a card
+ * that hardly sells can be one old sale nothing on offer comes near, which put Team Rocket's Dark
+ * Charizard 1st Edition at $121.94 beside a cheapest copy of $980 and on Home as the week's biggest
+ * fall. Such a row stored with its market figure is "stored at another figure" below, and the detail
+ * says how many of the shelf's listed printings are there for that reason.
  *
  * The rule is shelfFigureOf() in tcgcsv.ts, which the price job writes tcgplayer_prices with, and
  * priceFromUsd() in price-basis.mjs, which every answer's price is made by. This holds the store to
@@ -622,6 +626,8 @@ if (day) {
       if (g != null) wanted[85].add(g);
     }
   const shelf = new Map();
+  /** The printings whose market figure tcgcsv publishes and the rule does not believe. */
+  const disbelieved = new Set();
   let unread = 0;
   const pending = Object.entries(wanted).flatMap(([cat, gs]) => [...gs].map((g) => [cat, g]));
   await Promise.all(
@@ -637,7 +643,10 @@ if (day) {
         }
         for (const r of (await res.json()).results ?? []) {
           if (!linkedProducts.has(r.productId)) continue;
-          shelf.set(`${r.productId}|${printingName(r.subTypeName)}`, shelfFigureOf(r));
+          const figure = shelfFigureOf(r);
+          shelf.set(`${r.productId}|${printingName(r.subTypeName)}`, figure);
+          if (r.marketPrice > 0 && figure?.market == null)
+            disbelieved.add(`${r.productId}|${printingName(r.subTypeName)}`);
         }
       }
     }),
@@ -673,6 +682,22 @@ if (day) {
     if (price?.basis !== "lowest-listing" || price.market != null || !(price.lowestListing > 0))
       unlabelled.push(key);
   }
+  /* The rule of 2026-09-28 on its own line, since it is the one a reader would see: a market figure
+     TCGplayer publishes under half the printing's own lowest listing, still stored as a market
+     figure, is a card priced, summed and charted at a sale nothing on offer comes near. */
+  const disbelievedStored = [...disbelieved].filter((key) => stored.get(key)?.market != null);
+  check(
+    "No stored market figure is under half its own lowest listing",
+    unread <= (wanted[3].size + wanted[85].size) * 0.1 && disbelievedStored.length === 0,
+    `${disbelieved.size} linked printings on ${day} whose market figure is under half their own lowest listing (believedMarket), ${disbelievedStored.length} of them still stored with that market figure${
+      disbelievedStored.length
+        ? `: ${disbelievedStored
+            .slice(0, 10)
+            .map((key) => `${key} market ${stored.get(key).market}`)
+            .join("; ")}`
+        : ""
+    }`,
+  );
   /* A group tcgcsv did not answer this morning leaves its printings unread, not wrong: named, and
      a failure only when most of the shelf is missing. */
   const readEnough = unread <= (wanted[3].size + wanted[85].size) * 0.1;
@@ -680,7 +705,7 @@ if (day) {
   check(
     "A printing with no market figure is priced at its lowest listing",
     readEnough && listedOnShelf > 0 && worst.length === 0,
-    `${listedOnShelf} linked printings with a listing and no market figure on ${day}; ${unlisted.length} not stored at their listing, ${wrongListing.length} stored at another figure, ${listingBesideMarket.length} holding a listing beside a market figure, ${unlabelled.length} of ${[...stored.values()].filter((r) => r.listing != null).length} stored listings not labelled as one${
+    `${listedOnShelf} linked printings with a listing and no market figure on ${day} (${disbelieved.size} of them with a market figure under half their own lowest listing); ${unlisted.length} not stored at their listing, ${wrongListing.length} stored at another figure, ${listingBesideMarket.length} holding a listing beside a market figure, ${unlabelled.length} of ${[...stored.values()].filter((r) => r.listing != null).length} stored listings not labelled as one${
       worst.length ? `: ${worst.slice(0, 10).join("; ")}` : ""
     }; ${unread} of ${wanted[3].size + wanted[85].size} tcgcsv groups did not answer`,
   );
@@ -1914,7 +1939,11 @@ const SPIKE_MAX_CARDS = 400;
   const asked = candidates.slice(0, SPIKE_MAX_CARDS);
   const rows = asked.length
     ? await query(
-        `select r.language, r.tcg_id, r.printing, r.month::text as month, r.cents
+        /* The listing beside a figure not believed as well, so `standing` is the line a reader
+           sees (daysFromMonths holds that figure). Through to_jsonb, which answers null for a column
+           a database does not have yet (migration 20260928120000). */
+        `select r.language, r.tcg_id, r.printing, r.month::text as month, r.cents,
+                to_jsonb(r) -> 'listing_cents' as listing_cents
          from card_price_months r
          where r.month >= date_trunc('month', current_date - 140)::date
            and (r.language, r.tcg_id) in (${asked
@@ -2036,66 +2065,6 @@ const FLIP_ACCEPTED = new Map([
             .join("; ")}`
         : ""
     }${accepted ? `; ${accepted} accepted (FLIP_ACCEPTED)` : ""}`,
-  );
-}
-
-/**
- * A 1st Edition that TCGplayer prices below the same card's Unlimited in the same finish. The first
- * run is the scarce one and never trades under its reprint, so one of the two figures is filed on the
- * wrong product or is a stray sale that stuck (run-prices.mjs). Bart, 2026-09-28: Team Rocket's Dark
- * Charizard (base5-4) read its 1st Edition holo at EUR 106 beside an Unlimited holo at EUR 335 after
- * falling from EUR 232 on 2026-09-21, and Home showed a visitor that fall as the week's biggest. The
- * market movers leave such a 1st Edition out since then; this lists every card whose stored figures
- * break the rule, each printing at its latest reading in the last 40 days, every English card and
- * not only held ones, because the movers read the whole catalogue.
- *
- * INVERTED_RUNS_ACCEPTED holds the pairs looked at and found to be the market, each with its reason,
- * as `tcgId|1st Edition printing`. Nobody has looked yet, so it is empty and the check says how many.
- */
-const INVERTED_RUNS_ACCEPTED = new Map();
-{
-  const rows = await query(
-    `select m.tcg_id, m.printing, m.month::text as month,
-            (select c from unnest(m.cents) with ordinality t(c, i)
-             where c is not null and m.month + (i::int - 1) >= current_date - 40
-             order by i desc limit 1) as last_c
-     from card_price_months m
-     where m.language = 'en' and m.month >= date_trunc('month', current_date - 40)::date
-       and (m.printing like '1st-edition%' or m.printing like 'unlimited%')`,
-  );
-  /** Per card, each printing's latest figure: the rows come a month at a time, the latest wins. */
-  const latest = new Map();
-  for (const r of [...rows].sort((a, b) => (a.month < b.month ? -1 : 1))) {
-    if (r.last_c == null) continue;
-    const card = latest.get(r.tcg_id) ?? {};
-    card[r.printing] = r.last_c;
-    latest.set(r.tcg_id, card);
-  }
-  const inverted = [...latest].flatMap(([tcgId, printings]) =>
-    invertedRunPrintings(printings).map((printing) => ({
-      key: `${tcgId}|${printing}`,
-      first: printings[printing],
-      unlimited: printings[unlimitedTwinOf(printing)],
-    })),
-  );
-  const open = inverted
-    .filter((i) => !INVERTED_RUNS_ACCEPTED.has(i.key))
-    .sort((a, b) => b.unlimited - b.first - (a.unlimited - a.first));
-  const accepted = inverted.length - open.length;
-  const euros = (cents) => `€${(cents / 100).toFixed(2)}`;
-  check(
-    "No 1st Edition is priced under four fifths of its own Unlimited",
-    open.length === 0,
-    `${open.length} English printings read below the Unlimited of the same card and finish${
-      open.length
-        ? `: ${open
-            .slice(0, 20)
-            .map(
-              (i) => `${i.key.replace("|", " ")} ${euros(i.first)} against ${euros(i.unlimited)}`,
-            )
-            .join("; ")}${open.length > 20 ? `; and ${open.length - 20} more` : ""}`
-        : ""
-    }${accepted ? `; ${accepted} accepted (INVERTED_RUNS_ACCEPTED)` : ""}`,
   );
 }
 
